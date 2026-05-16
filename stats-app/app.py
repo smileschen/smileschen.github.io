@@ -15,7 +15,7 @@ with col_controls:
     st.markdown("### Controls")
     
     p = st.slider("Population proportion (p)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
-    n = st.slider("Sample size (n)", min_value=10, max_value=100, value=12, step=1)
+    n = st.slider("Sample size (n)", min_value=10, max_value=100, value=40, step=1)
     
     if n * p < 10 or n * (1 - p) < 10:
         st.warning("Warning: n*p or n*(1-p) is less than 10. The normal approximation may not be perfectly accurate.")
@@ -23,7 +23,7 @@ with col_controls:
     conf_level_str = st.selectbox("Confidence level:", ["99%", "95%", "90%", "80%"], index=1)
     conf_level = float(conf_level_str.strip('%')) / 100.0
     
-    R = st.selectbox("Replicates (R)", [10, 20, 50, 100], index=1)
+    R = st.selectbox("Replicates (R)", [10, 20, 50, 100], index=2)
     simulate_clicked = st.button("Simulate", type="primary")
 
 # ==========================================
