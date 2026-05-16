@@ -58,8 +58,19 @@ if 'samples' in st.session_state:
     with col_sample:
         st.markdown("### Inspect a Sample")
         
-        # New Feature: Selector to choose which replicate to inspect
-        inspect_index = st.number_input("Select Replicate to Inspect:", min_value=1, max_value=locked_R, value=1) - 1
+        # New Feature: Generate a list of labels for the dropdown, appending a star to misses
+        dropdown_options = []
+        for i in range(locked_R):
+            label = f"Replicate {i + 1}"
+            if not captured[i]:
+                label += " *"  # Add star if it didn't capture true p
+            dropdown_options.append(label)
+            
+        # Dropdown selector
+        selected_label = st.selectbox("Select Replicate to Inspect:", dropdown_options)
+        
+        # Get the index back from the selection (0-indexed)
+        inspect_index = dropdown_options.index(selected_label)
         
         current_sample = samples[inspect_index]
         p_hat_current = p_hats[inspect_index]
@@ -88,7 +99,12 @@ if 'samples' in st.session_state:
         
         # Display the explicit calculations for the selected replicate
         st.markdown("---")
-        st.markdown(f"**Replicate #{inspect_index + 1} Calculations:**")
+        
+        # Inform the user what the star means if they selected a missed replicate
+        if not captured[inspect_index]:
+            st.markdown(f"**Replicate #{inspect_index + 1} Calculations:** :red[*(Did not capture $p$)*]")
+        else:
+            st.markdown(f"**Replicate #{inspect_index + 1} Calculations:**")
         
         # 1. Sample Proportion
         st.markdown(f"**Sample Proportion ($\hat{{p}}$):** {successes} / {locked_n}")
@@ -101,13 +117,17 @@ if 'samples' in st.session_state:
         
         # 3. Margin of Error
         moe_current = moe_all[inspect_index]
-        st.markdown(f"**Margin of Error (MOE) at {conf_level_str} ($z^* \approx {z_score:.3f}$):**")
+        # Fixed: Used 'rf' (raw string) to properly escape the \approx command for LaTeX
+        st.markdown(rf"**Margin of Error (MOE) at {conf_level_str} ($z^* \approx {z_score:.3f}$):**")
         st.latex(rf"MOE = z^* \times SE = {z_score:.3f} \times {se_current:.4f} = {moe_current:.4f}")
         
-        # 4. Interval Bounds
+        # 4. Interval Bounds (Removed the formula, colored dark red if missed)
         st.markdown("**Confidence Interval:**")
-        st.latex(rf"(\hat{{p}} - MOE,\; \hat{{p}} + MOE)")
-        st.latex(rf"({lower_bounds[inspect_index]:.4f},\; {upper_bounds[inspect_index]:.4f})")
+        if captured[inspect_index]:
+            st.latex(rf"({lower_bounds[inspect_index]:.4f},\; {upper_bounds[inspect_index]:.4f})")
+        else:
+            # Highlight the interval in dark red using LaTeX formatting
+            st.latex(rf"\color{{#8B0000}} ({lower_bounds[inspect_index]:.4f},\; {upper_bounds[inspect_index]:.4f})")
 
     with col_plot:
         st.markdown("### Confidence Intervals")
@@ -152,7 +172,7 @@ if 'samples' in st.session_state:
         fig.update_layout(
             xaxis=dict(title="Proportion", range=[0, 1], tickvals=[0, 0.2, 0.4, 0.6, 0.8, 1.0]),
             yaxis=dict(showticklabels=False, range=[-1, locked_R]), 
-            height=600, # Increased height slightly to accommodate the math on the left
+            height=600, 
             margin=dict(l=20, r=20, t=20, b=20)
         )
         
