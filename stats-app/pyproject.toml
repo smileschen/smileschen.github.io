@@ -1,11 +1,11 @@
 [project]
 name = "stats-app"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.14"
+description = "A Streamlit app for simulating confidence intervals"
+requires-python = ">=3.9"
 dependencies = [
-    "matplotlib>=3.10.9",
-    "numpy>=2.4.5",
-    "streamlit>=1.57.0",
+    "streamlit>=1.30.0",
+    "numpy>=1.24.0",
+    "plotly>=5.18.0",
+    "scipy>=1.11.0"
 ]
