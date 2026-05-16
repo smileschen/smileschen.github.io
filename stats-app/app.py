@@ -6,6 +6,32 @@ import time
 
 st.set_page_config(page_title="Confidence Interval Simulator", layout="wide")
 
+# ==========================================
+# DIALOG / POP-UP EXPLANATION
+# ==========================================
+@st.dialog("How This App Works")
+def how_it_works():
+    st.markdown("This app is designed to illustrate the concept of **confidence intervals for a population proportion** based on a sample proportion.")
+    
+    st.markdown("### What happens when you simulate?")
+    st.markdown("When you click the **Simulate** button, the computer generates $R$ independent replicates (samples). Each replicate represents drawing a random sample of $n$ 'coin flips', with a probability $p$ of landing on heads (represented by red circles).")
+    st.markdown("For each of these random samples, the app calculates a sample proportion ($\hat{p}$) and builds a confidence interval around it.")
+    
+    st.markdown("### The Core Concept")
+    st.markdown("Because each sample is completely random, the confidence interval shifts left and right every time. **Some of these random samples will produce intervals that successfully capture the true value of $p$, and some will not.**")
+    
+    st.info("The key takeaway: Over the long run, the proportion of these intervals that *do* capture the true value of $p$ is expected to match your chosen **Confidence Level**.")
+    
+    st.markdown("### In Real Life")
+    st.markdown("In reality, you only ever get to see **one** random sample. You don't know if your specific sample is one that successfully captured the true value of $p$, or if it is one of the rare ones that missed. However, because we know that 95% (or whatever confidence level you chose) of all possible intervals will capture the true value, when you calculate a single CI, you can be '95% confident' that it successfully captured the true value of $p$.")
+    
+    st.markdown("### Interactive Features")
+    st.markdown("* **Inspect Replicates:** Use the dropdown in the middle column to inspect the exact head/tail outcomes for any of the generated replicates. Replicates that failed to capture the true value of $p$ are clearly marked with a star (`*`).")
+    st.markdown("* **Dynamic Confidence Levels:** Try changing the Confidence Level dropdown *without* clicking Simulate again. You can watch how adjusting the level instantly changes the width of the intervals and affects how many replicates successfully capture $p$, all using the exact same underlying data!")
+    
+# ==========================================
+# MAIN LAYOUT
+# ==========================================
 col_controls, col_sample, col_plot = st.columns([1, 1.5, 2])
 
 # ==========================================
@@ -13,6 +39,12 @@ col_controls, col_sample, col_plot = st.columns([1, 1.5, 2])
 # ==========================================
 with col_controls:
     st.markdown("### Controls")
+    
+    # Button to trigger the explanation pop-up
+    if st.button("ℹ️ How it works"):
+        how_it_works()
+        
+    st.markdown("---") # Add a little divider for visual cleanliness
     
     p = st.slider("Population proportion (p)", min_value=0.0, max_value=1.0, value=0.5, step=0.01)
     n = st.slider("Sample size (n)", min_value=10, max_value=100, value=40, step=1)
@@ -58,7 +90,7 @@ if 'samples' in st.session_state:
     with col_sample:
         st.markdown("### Inspect a Sample")
         
-        # New Feature: Generate a list of labels for the dropdown, appending a star to misses
+        # Generate a list of labels for the dropdown, appending a star to misses
         dropdown_options = []
         for i in range(locked_R):
             label = f"Replicate {i + 1}"
@@ -100,7 +132,6 @@ if 'samples' in st.session_state:
         # Display the explicit calculations for the selected replicate
         st.markdown("---")
         
-        # Inform the user what the star means if they selected a missed replicate
         if not captured[inspect_index]:
             st.markdown(f"**Replicate #{inspect_index + 1} Calculations:** :red[*(Did not capture $p$)*]")
         else:
@@ -117,16 +148,14 @@ if 'samples' in st.session_state:
         
         # 3. Margin of Error
         moe_current = moe_all[inspect_index]
-        # Fixed: Used 'rf' (raw string) to properly escape the \approx command for LaTeX
         st.markdown(rf"**Margin of Error (MOE) at {conf_level_str} ($z^* \approx {z_score:.3f}$):**")
         st.latex(rf"MOE = z^* \times SE = {z_score:.3f} \times {se_current:.4f} = {moe_current:.4f}")
         
-        # 4. Interval Bounds (Removed the formula, colored dark red if missed)
+        # 4. Interval Bounds
         st.markdown("**Confidence Interval:**")
         if captured[inspect_index]:
             st.latex(rf"({lower_bounds[inspect_index]:.4f},\; {upper_bounds[inspect_index]:.4f})")
         else:
-            # Highlight the interval in dark red using LaTeX formatting
             st.latex(rf"\color{{#8B0000}} ({lower_bounds[inspect_index]:.4f},\; {upper_bounds[inspect_index]:.4f})")
 
     with col_plot:
@@ -137,17 +166,16 @@ if 'samples' in st.session_state:
         fig.add_vline(x=true_p, line_dash="dash", line_color="black")
         
         for i in range(locked_R):
-            # Highlight the currently inspected replicate in bright orange
             is_inspected = (i == inspect_index)
             
             if is_inspected:
-                interval_color = "#FF8C00" # Orange for the selected one
+                interval_color = "#FF8C00" 
                 line_width = 4
                 opacity = 1.0
             else:
                 interval_color = "#333333" if captured[i] else "red"
                 line_width = 2
-                opacity = 0.4 if not is_inspected else 1.0 # Fade the others slightly
+                opacity = 0.4 if not is_inspected else 1.0 
             
             fig.add_trace(go.Scatter(
                 x=[lower_bounds[i], upper_bounds[i]],
