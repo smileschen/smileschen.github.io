@@ -8,7 +8,6 @@ import time
 # --- SETUP & CONFIGURATION ---
 st.set_page_config(page_title="The CI Detective", layout="wide", initial_sidebar_state="collapsed")
 
-# Simple custom CSS for styling
 st.markdown("""
     <style>
     .big-font { font-size:1.4rem; color: #31333F; margin-bottom:1rem;}
@@ -18,7 +17,6 @@ st.markdown("""
 
 # --- HELPER FUNCTIONS ---
 def calculate_ci_single(p_hat, n, confidence=0.95):
-    """Calculates standard Wald confidence interval for a single proportion."""
     if p_hat == 0 or p_hat == 1:
         return 0, 1 
     z_score = norm.ppf(1 - (1 - confidence) / 2)
@@ -28,11 +26,9 @@ def calculate_ci_single(p_hat, n, confidence=0.95):
     return lower, upper
 
 def generate_all_intervals():
-    """Generates a hidden true p, and 100 random intervals."""
     true_p = round(np.random.uniform(0.20, 0.80), 2)
     n = 100 
     conf_level = 0.95
-    
     intervals = []
     p_hats = []
     
@@ -54,39 +50,31 @@ if 'game_step' not in st.session_state:
 # --- MAIN APPLICATION FLOW ---
 st.title("🧩 The Confidence Interval Detective")
 
-# ==============================================================================
 # PHASE 0: The Introduction 
-# ==============================================================================
 if st.session_state.game_step == 0:
     st.divider()
     st.markdown('<div class="big-font">Your Case, Detective: Find the Secret Population Proportion (p)</div>', unsafe_allow_html=True)
-    
     col1, col2 = st.columns(2)
     with col1:
         st.write("I have secretly selected a **true value for p** between 0.20 and 0.80.")
         st.write("You cannot know the truth! But you are allowed to collect a single random sample.")
         st.write("We will use your ONE sample to calculate a 95% Confidence Interval.")
-        
         if st.button("Collect My Random Sample"):
             st.session_state.game_step = 1
             st.rerun()
-            
     with col2:
         st.markdown('<div class="stat-box">', unsafe_allow_html=True)
         st.markdown("##### The Challenge")
         st.write("Can you correctly interpret what your single interval tells you about the *hidden* truth? Don't fall for the classic traps!")
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ==============================================================================
 # PHASE 1: The "Animation" 
-# ==============================================================================
 elif st.session_state.game_step == 1:
     st.divider()
     st.subheader("Simulating Data Collection...")
     st.write("We are taking 100 perfectly valid random samples of size n=100 and creating 100 unlabeled 95% confidence intervals.")
     
     t_p, n_s, ints, phats = generate_all_intervals()
-    
     st.session_state.secret_p = t_p
     st.session_state.secret_n = n_s
     st.session_state.all_intervals = ints
@@ -106,22 +94,18 @@ elif st.session_state.game_step == 1:
 
     anim_plot = st.empty()
     st.progress(0)
-    
     for i in range(1, 101, 10):
         temp_l, temp_u = ints[np.random.randint(0, 100)]
-        
         with anim_plot.container():
             fig, ax = plt.subplots(figsize=(10, 1.8))
             ax.set_title("Generating Sample Intervals...")
-            
-            # Formatting identical to Phase 2
             ax.xaxis.set_major_locator(MultipleLocator(0.05))
             ax.grid(axis='x', linestyle='--', alpha=0.5)
-            
-            ax.plot([temp_l, temp_u], [0, 0], color='gray', alpha=0.5, linewidth=4)
+            ax.plot([temp_l, temp_u], [0, 0], color='gray', alpha=0.5, linewidth=2)
             ax.set_xlim(0, 1)
             ax.set_xlabel("Unlabeled Proportion")
             ax.set_yticks([]) 
+            fig.tight_layout() # Added for alignment consistency
             st.pyplot(fig)
             time.sleep(0.1) 
             st.progress(i)
@@ -130,9 +114,7 @@ elif st.session_state.game_step == 1:
     st.session_state.game_step = 2
     st.rerun()
 
-# ==============================================================================
 # PHASE 2: The Investigation
-# ==============================================================================
 elif st.session_state.game_step >= 2:
     p_idx = st.session_state.picked_idx
     l, u = st.session_state.all_intervals[p_idx]
@@ -141,39 +123,44 @@ elif st.session_state.game_step >= 2:
     st.divider()
     st.markdown('<div class="big-font">Step 2: Inspect Your Isolated Interval</div>', unsafe_allow_html=True)
     
-    fig_lonely, ax_lonely = plt.subplots(figsize=(10, 1.8))
+    fig_lonely, ax_lonely = plt.subplots(figsize=(10, 2.5))
     ax_lonely.set_title("YOUR Collected 95% Confidence Interval")
-    
     ax_lonely.xaxis.set_major_locator(MultipleLocator(0.05))
     ax_lonely.grid(axis='x', linestyle='--', alpha=0.5)
-    ax_lonely.axvline(claimed_val, color='blue', linestyle='-', alpha=0.3, linewidth=2, label='Claimed Value')
     
-    ax_lonely.plot([l, u], [0, 0], color='royalblue', linewidth=6, label='Your Interval')
+    # Changed to black dashed line for high contrast against the blue interval
+    ax_lonely.axvline(claimed_val, color='black', linestyle='--', alpha=0.8, linewidth=2, label='Claimed Value')
+    
+    ax_lonely.plot([l, u], [0, 0], color='royalblue', linewidth=1, label='Your Interval')
     ax_lonely.scatter([(l+u)/2], [0], color='royalblue', s=100, zorder=5)
+    
+    # Added labels for the endpoints of the interval
+    y_offset = 0.1 # Small offset to push text slightly above the line
+    ax_lonely.text(l, y_offset, f"{l:.4f}", ha='center', color='royalblue', fontweight='bold', fontsize=10)
+    ax_lonely.text(u, y_offset, f"{u:.4f}", ha='center', color='royalblue', fontweight='bold', fontsize=10)
     
     ax_lonely.set_xlim(0, 1)
     ax_lonely.set_xlabel("Sample Proportion (p-hat) context")
     ax_lonely.set_yticks([]) 
+    fig_lonely.tight_layout() # Ensures uniform margins to match Phase 3 plot
     st.pyplot(fig_lonely)
     
     st.write("The random generator handed you this interval.")
-    
     st.divider()
     col3, col4 = st.columns([1, 1])
     
-    # Store exact strings for precise evaluation in Step 3
     q1_opt_plausible = f"{claimed_val:.2f} is plausible because it is INSIDE the interval, but we cannot say p is EXACTLY {claimed_val:.2f}."
-    q1_opt_ruled_out = f"{claimed_val:.2f} is ruled out because it is outside the interval."
+    q1_opt_ruled_out = f"{claimed_val:.2f} is outside the interval, so I can rule out the value with 95% confidence."
     q1_opt_definitely = f"p is definitely {claimed_val:.2f} because it is inside the interval."
     
     q2_opt_certain = "I am absolutely certain the true p is in this interval."
-    q2_opt_confident = "I am 95% confident the true p is in this interval, acknowledging a 5% chance of an unlucky sample."
+    q2_opt_confident = "I am 95% confident the true p is in this interval, acknowledging a 5% chance that my random sample could mislead me."
     q2_opt_impossible = "It is impossible to make any statement about this interval without knowing the true p."
 
     with col3:
         st.markdown('<div class="stat-box">', unsafe_allow_html=True)
-        st.markdown(f"**The Claim:** The claim is that the secret true proportion is **{claimed_val:.2f}**.")
-        
+        st.markdown(f"**The Claim:** The claim is that the secret true proportion in the population is **{claimed_val:.2f}**.")
+        st.markdown(f"**Your 95% CI:** [{l:.4f}, {u:.4f}]")
         st.radio("Q1: Based *only* on your isolated interval above, what can you conclude about the claimed value of {claimed_val:.2f}?".format(claimed_val=claimed_val),
                  ["Wait... I'm not ready to answer.", q1_opt_plausible, q1_opt_ruled_out, q1_opt_definitely],
                  key="interpretation_q")
@@ -181,10 +168,8 @@ elif st.session_state.game_step >= 2:
 
     with col4:
         st.markdown('<div class="stat-box">', unsafe_allow_html=True)
-        st.write("**Wait!** We are playing a game with hidden knowledge.")
         st.write("In the real world, you **only** have your single lonely blue line above. You do NOT get to see the overall reality.")
-        
-        st.radio("Q2: In a REAL study, how would you classify your single blue interval right now?",
+        st.radio("Q2: In a real study, how would you classify your single blue interval right now?",
                  ["Choose an option...", q2_opt_certain, q2_opt_confident, q2_opt_impossible],
                  key="reality_check_q")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -194,9 +179,7 @@ elif st.session_state.game_step >= 2:
             st.session_state.game_step = 3
             st.rerun()
 
-# ==============================================================================
 # PHASE 3: The Grand Reveal 
-# ==============================================================================
 if st.session_state.game_step == 3:
     st.divider()
     st.markdown('<div class="big-font">Step 3: The Grand Reveal (Context)</div>', unsafe_allow_html=True)
@@ -207,11 +190,10 @@ if st.session_state.game_step == 3:
     l, u = ints[p_idx]
     
     fig_full, ax_full = plt.subplots(figsize=(10, 6))
-    
     for i, (lower, upper) in enumerate(ints):
         captured = lower <= true_p <= upper
         if i == p_idx:
-            ax_full.plot([lower, upper], [i, i], color='royalblue', linewidth=4, alpha=1.0, label='YOUR Investigation')
+            ax_full.plot([lower, upper], [i, i], color='royalblue', linewidth=3, alpha=1.0, label='YOUR Investigation')
             ax_full.scatter([(lower+upper)/2], [i], color='royalblue', s=30, zorder=10)
         else:
             col = 'green' if captured else 'red'
@@ -219,18 +201,19 @@ if st.session_state.game_step == 3:
             
     ax_full.axvline(true_p, color='black', linestyle='--', linewidth=2, label=f'Secret Truth p={true_p:.2f}')
     ax_full.set_xlim(0, 1)
+    
+    # Added matching locator and grid style to perfectly align with Phase 2
+    ax_full.xaxis.set_major_locator(MultipleLocator(0.05))
+    ax_full.grid(axis='x', linestyle='--', alpha=0.5) 
+    
     ax_full.set_xlabel("Proportion")
-    ax_full.set_ylabel("Sample Number (1-100)")
+    ax_full.set_yticks([]) 
     ax_full.legend(loc='lower right')
     ax_full.set_title("The Long Run: 100 Valid 95% Confidence Intervals")
-    ax_full.grid(axis='x', linestyle='--', alpha=0.3)
+    fig_full.tight_layout() # Ensures uniform margins to match Phase 2 plot
     st.pyplot(fig_full)
     
-    # ==========================================================================
-    # --- Interpretation Feedback & Transparency ---
-    # ==========================================================================
     st.divider()
-    
     col5, col6 = st.columns([1, 1])
     
     with col5:
@@ -239,62 +222,56 @@ if st.session_state.game_step == 3:
         
         if st.session_state.is_rigged_miss and st.session_state.first_time:
             st.error("🚨 TRANSPARENCY NOTICE 🚨")
-            st.markdown(f"**Yes, we rigged it.** Because this was your first time, the simulation was intentionally programmed to hand you one of the few 'unlucky' (red) samples that misses the hidden truth of p={true_p:.2f}.")
+            st.markdown(f"**Yes, we rigged it.** Because this was your first time, the simulation was intentionally programmed to hand you an 'unlucky' sample that misses the hidden truth of p={true_p:.2f}.")
             st.write("---")
-            st.write("**The Lesson: Real life sometimes produces random results that lead you to the wrong conclusion.** Statistical methods that are correct 95% of the time, *will naturally fail* 5% of the time. In the real world, you only get ONE blue line. You never know if you got a lucky good sample, or an unlucky sample. You just have to trust the overall mathematical system.")
-            
+            st.write("**Real life sometimes produces random results that lead you to the wrong conclusion.** Statistical methods that are correct 95% of the time, *will naturally fail* 5% of the time. In the real world, you only get ONE confidence interval. You never know if you got a lucky good sample, or an unlucky sample. You just have to trust the overall process.")
         elif st.session_state.first_time and not st.session_state.is_rigged_miss:
              if captured:
-                st.success(f"**Result: Luck!** By sheer random chance, your interval captured the truth p={true_p:.2f}!")
+                st.success(f"**Result:** Your interval captured the truth p={true_p:.2f}!")
              else:
                  st.error(f"**Result: Statistical Bad Luck!** By random chance, your interval failed to capture the truth p={true_p:.2f}!")
         else:
             if captured:
-                st.success(f"**Result: Luck!** This time, truly at random, your valid statistical process captured the secret truth of p={true_p:.2f}.")
+                st.success(f"**Result:** This time your confidence interval captured the true population value of p={true_p:.2f}.")
             else:
-                st.error(f"**Result: Statistical Bad Luck!** At random, your valid statistical process naturally resulted in an 'unlucky' sample that missed the secret truth of p={true_p:.2f}.")
-                
+                st.error(f"**Result: Bad Luck!** At random, your random sample naturally resulted in an 'unlucky' sample. The resulting confidence interval missed the true propulation proportion of p={true_p:.2f}.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col6:
         st.markdown('<div class="stat-box">', unsafe_allow_html=True)
         st.subheader("Your Answers vs. Reality")
         
-        # --- Evaluate Q1 ---
+        # Evaluate Q1
         u_ans1 = st.session_state.interpretation_q
-        
         if captured:
             if "plausible" in u_ans1:
                 st.success(f"✅ **Q1 Interpretation:** Correct! You evaluated p={true_p:.2f} accurately based only on the evidence of your isolated interval.")
-            elif "ruled out" in u_ans1:
+            elif "rule out" in u_ans1:
                 st.error(f"❌ **Q1 Interpretation:** Incorrect. In your specific game, p={true_p:.2f} was INSIDE your interval, so it is a plausible value.")
             elif "definitely" in u_ans1:
                 st.error(f"❌ **Q1 Interpretation:** Incorrect. Even though {true_p:.2f} is inside the interval, we cannot be certain that p is exactly equal to {true_p:.2f}.")
         else:
-            if "ruled out" in u_ans1:
+            if "rule out" in u_ans1:
                 st.success(f"✅ **Q1 Interpretation:** Correct! You evaluated p={true_p:.2f} accurately based only on the evidence of your isolated interval.")
             elif "plausible" in u_ans1:
-                st.error(f"❌ **Q1 Interpretation:** Incorrect. In your specific game, p={true_p:.2f} was OUTSIDE your interval, so it is ruled out.")
+                st.error(f"❌ **Q1 Interpretation:** Incorrect. In your specific game, p={true_p:.2f} was OUTSIDE your interval, so you can rule out with confidence, acknowledging you might still be wrong.")
             elif "definitely" in u_ans1:
-                st.error(f"❌ **Q1 Interpretation:** Incorrect. {true_p:.2f} is NOT inside your interval, so it cannot be definitely true.")
+                st.error(f"❌ **Q1 Interpretation:** Incorrect. {true_p:.2f} is NOT inside your interval, so we would have evidence that p is not {true_p:.2f}.")
              
-        # --- Evaluate Q2 --- 
+        # Evaluate Q2 
         u_ans2 = st.session_state.reality_check_q
-        
         if "acknowledging a 5% chance" in u_ans2:
-             st.success("✅ **Q2 Reality Check:** Spot on, Detective. You cannot be certain, but you can be confident. You trust the procedure, knowing it works 95% of the time, while accepting the 5% risk of being wrong.")
+             st.success("✅ **Q2 Reality Check:** Correct! You cannot be certain, but you can be confident. You trust the procedure, knowing it works 95% of the time, while accepting a 5% risk of being wrong.")
         elif "absolutely certain" in u_ans2:
              st.error("❌ **Q2 Reality Check:** Incorrect. You fell for the certainty trap! You can be 95% confident in your interval, but you can never be absolutely certain.")
         elif "impossible to make any statement" in u_ans2:
              st.error("❌ **Q2 Reality Check:** Incorrect. Don't fall into statistical nihilism! It is not impossible to make a statement. You are allowed to be 95% confident, as long as you accept the 5% risk of failure.")
-
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.divider()
-    
     if st.session_state.first_time:
          st.session_state.first_time = False
-         if st.button("Start Again (Play Truly Random Game)"):
+         if st.button("Start Again (Play a Truly Random Game that hasn't been rigged)"):
               del st.session_state.secret_p
               st.session_state.game_step = 0
               st.rerun()
