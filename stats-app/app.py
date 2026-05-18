@@ -9,13 +9,13 @@ st.set_page_config(page_title="Confidence Interval Simulator", layout="wide")
 # ==========================================
 # DIALOG / POP-UP EXPLANATION
 # ==========================================
-@st.dialog("How This App Works")
+@st.dialog("How This App Works", width="large")
 def how_it_works():
     st.markdown("This app is designed to illustrate the concept of **confidence intervals for a population proportion** based on a sample proportion.")
     
     st.markdown("### What happens when you simulate?")
     st.markdown("When you click the **Simulate** button, the computer generates $R$ independent replicates (samples). Each replicate represents drawing a random sample of $n$ 'coin flips', with a probability $p$ of landing on heads (represented by red circles).")
-    st.markdown("For each of these random samples, the app calculates a sample proportion ($\hat{p}$) and builds a confidence interval around it.")
+    st.markdown("For each of these random samples, the app calculates a sample proportion ($\\hat{p}$) and builds a confidence interval around it.")
     
     st.markdown("### The Core Concept")
     st.markdown("Because each sample is completely random, the confidence interval shifts left and right every time. **Some of these random samples will produce intervals that successfully capture the true value of $p$, and some will not.**")
@@ -28,6 +28,16 @@ def how_it_works():
     st.markdown("### Interactive Features")
     st.markdown("* **Inspect Replicates:** Use the dropdown in the middle column to inspect the exact head/tail outcomes for any of the generated replicates. Replicates that failed to capture the true value of $p$ are clearly marked with a star (`*`).")
     st.markdown("* **Dynamic Confidence Levels:** Try changing the Confidence Level dropdown *without* clicking Simulate again. You can watch how adjusting the level instantly changes the width of the intervals and affects how many replicates successfully capture $p$, all using the exact same underlying data!")
+    
+# ==========================================
+# FIRST VISIT TRIGGER
+# ==========================================
+# Check if this is the user's first time loading the app
+if "has_seen_instructions" not in st.session_state:
+    # Mark that they have now seen the instructions
+    st.session_state["has_seen_instructions"] = True
+    # Trigger the dialog
+    how_it_works()
     
 # ==========================================
 # MAIN LAYOUT
@@ -138,7 +148,7 @@ if 'samples' in st.session_state:
             st.markdown(f"**Replicate #{inspect_index + 1} Calculations:**")
         
         # 1. Sample Proportion
-        st.markdown(f"**Sample Proportion ($\hat{{p}}$):** {successes} / {locked_n}")
+        st.markdown(f"**Sample Proportion ($\\hat{{p}}$):** {successes} / {locked_n}")
         st.latex(rf"\hat{{p}} = {p_hat_current:.4f}")
         
         # 2. Standard Error
@@ -204,7 +214,7 @@ if 'samples' in st.session_state:
             margin=dict(l=20, r=20, t=20, b=20)
         )
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
         
         st.markdown(f"**Replicates that captured true $p$:** {np.sum(captured)} / {locked_R}")
         st.markdown(f"**Capture Rate:** <span style='color:green; font-size:1.2em;'>{capture_rate*100:.1f}%</span>", unsafe_allow_html=True)
