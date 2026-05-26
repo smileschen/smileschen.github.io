@@ -25,7 +25,7 @@ if st.session_state['stage'] == 0:
         st.session_state['is_cheating'] = is_cheating
         
         if is_cheating:
-            st.session_state['p_true'] = np.random.uniform(0.30, 0.45)
+            st.session_state['p_true'] = np.random.uniform(0.35, 0.45)
         else:
             st.session_state['p_true'] = 0.50
             
