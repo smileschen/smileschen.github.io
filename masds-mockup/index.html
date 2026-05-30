@@ -1,0 +1,923 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UCLA MASDS Applicant Command Center</title>
+  <style>
+    :root {
+      --blue: #2774ae;
+      --blue-dark: #003b5c;
+      --gold: #ffd100;
+      --ink: #102033;
+      --muted: #5d6b7c;
+      --line: #dce5ee;
+      --paper: #f6f8fb;
+      --white: #ffffff;
+      --green: #1c7c54;
+      --red: #b8462d;
+      --teal: #006c78;
+      --purple: #5a4b81;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 9px clamp(18px, 4vw, 56px);
+      background: var(--blue-dark);
+      color: #dcecf8;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    .topbar span {
+      white-space: nowrap;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      min-height: 76px;
+      padding: 0 clamp(18px, 4vw, 56px);
+      background: rgba(255, 255, 255, .96);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      min-width: 230px;
+      color: var(--blue-dark);
+      font-weight: 950;
+      line-height: 1.05;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 46px;
+      height: 46px;
+      border-radius: 4px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      letter-spacing: 0;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 3px;
+      color: #677487;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 2vw, 24px);
+      color: #334155;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .button,
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 11px 16px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      font-weight: 900;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button {
+      background: var(--gold);
+      color: #1e293b;
+    }
+
+    .secondary-button {
+      background: #fff;
+      color: var(--blue-dark);
+      border-color: #b9c8d8;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(320px, 430px);
+      gap: clamp(28px, 5vw, 70px);
+      align-items: center;
+      padding: clamp(44px, 7vw, 86px) clamp(18px, 4vw, 56px) 36px;
+      background:
+        linear-gradient(135deg, rgba(39, 116, 174, .12), rgba(255, 255, 255, .95) 42%),
+        #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 1.2;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      font-weight: 950;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin-bottom: 18px;
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: .95;
+      letter-spacing: 0;
+      color: #08243a;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin-bottom: 0;
+      color: #4d5b6c;
+      font-size: clamp(18px, 2vw, 22px);
+      line-height: 1.48;
+    }
+
+    .hero-actions,
+    .section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 26px;
+    }
+
+    .deadline-panel {
+      align-self: stretch;
+      display: grid;
+      align-content: start;
+      gap: 16px;
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #d4dde8;
+      box-shadow: 0 18px 60px rgba(15, 35, 55, .12);
+    }
+
+    .deadline-date {
+      padding: 18px;
+      border-radius: 6px;
+      background: #fff7dc;
+      border: 1px solid #f2d55f;
+    }
+
+    .deadline-date span {
+      display: block;
+      color: #6c5a12;
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .deadline-date strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--red);
+      font-size: clamp(30px, 4vw, 40px);
+      line-height: .95;
+    }
+
+    .fact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .fact {
+      min-height: 106px;
+      padding: 14px;
+      border-radius: 6px;
+      background: #f7fafc;
+      border: 1px solid #e1e8ef;
+    }
+
+    .fact strong {
+      display: block;
+      color: var(--blue-dark);
+      font-size: 18px;
+      line-height: 1.1;
+    }
+
+    .fact span {
+      display: block;
+      margin-top: 7px;
+      color: #607080;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 650;
+    }
+
+    .anchor-strip {
+      position: sticky;
+      top: 76px;
+      z-index: 15;
+      display: flex;
+      overflow: auto;
+      gap: 1px;
+      background: #d8e1ea;
+      border-bottom: 1px solid #cad6e2;
+    }
+
+    .anchor-strip a {
+      flex: 1;
+      min-width: 132px;
+      padding: 15px 14px;
+      background: #fff;
+      color: #334155;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .anchor-strip a:first-child {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .band {
+      padding: clamp(34px, 6vw, 72px) clamp(18px, 4vw, 56px);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .band.alt {
+      background: #f7fafc;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 420px);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 0;
+      color: #08243a;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .section-head p {
+      margin-bottom: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .decision-grid,
+    .advantage-grid,
+    .requirement-grid,
+    .outcome-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .decision-card,
+    .advantage-card,
+    .requirement-card,
+    .outcome-card {
+      min-height: 220px;
+      padding: 22px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #dbe4ee;
+    }
+
+    .decision-card strong,
+    .advantage-card strong,
+    .requirement-card strong,
+    .outcome-card strong {
+      display: block;
+      color: var(--blue-dark);
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .decision-card span,
+    .advantage-card span,
+    .requirement-card span,
+    .outcome-card span {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .advantage-card {
+      min-height: 250px;
+      border-top: 5px solid var(--blue);
+    }
+
+    .advantage-card:nth-child(2) {
+      border-top-color: var(--gold);
+    }
+
+    .advantage-card:nth-child(3) {
+      border-top-color: var(--green);
+    }
+
+    .advantage-kicker {
+      display: inline-flex;
+      margin-bottom: 16px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #eef6fb;
+      color: var(--blue-dark);
+      font-size: 12px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .step {
+      display: inline-grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-weight: 950;
+    }
+
+    .layout-two {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: clamp(24px, 4vw, 48px);
+      align-items: start;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+    }
+
+    .check-row {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 14px;
+      padding: 17px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #dbe4ee;
+    }
+
+    .check {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--green);
+      font-weight: 950;
+    }
+
+    .check-row strong {
+      display: block;
+      color: #102033;
+      font-size: 17px;
+    }
+
+    .check-row span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .side-card {
+      position: sticky;
+      top: 145px;
+      padding: 20px;
+      border-radius: 8px;
+      background: var(--blue-dark);
+      color: #fff;
+    }
+
+    .side-card h3 {
+      margin-bottom: 8px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .side-card p {
+      color: #d8e9f6;
+      line-height: 1.5;
+    }
+
+    .side-card .button {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    .mini-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .mini-list div {
+      padding: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .09);
+      color: #e8f2fb;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 750;
+    }
+
+    .curriculum {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .semester-tabs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .semester-tabs a {
+      padding: 15px 16px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #dbe4ee;
+      color: #334155;
+      font-weight: 900;
+    }
+
+    .semester-tabs a:first-child {
+      color: #fff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .course-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .course {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #dbe4ee;
+    }
+
+    .course strong {
+      color: #102033;
+      font-size: 18px;
+    }
+
+    .course span {
+      margin-top: 5px;
+      display: block;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .pill {
+      align-self: start;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #eef6fb;
+      color: var(--blue-dark);
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .value-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+      gap: 18px;
+      align-items: stretch;
+      padding: 22px;
+      border-radius: 8px;
+      background: #08243a;
+      color: #fff;
+    }
+
+    .value-panel h2 {
+      color: #fff;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.02;
+      margin-bottom: 14px;
+    }
+
+    .value-panel p {
+      max-width: 700px;
+      color: #d6e6f3;
+      line-height: 1.6;
+    }
+
+    .value-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .value-stats div {
+      padding: 16px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .1);
+      border: 1px solid rgba(255, 255, 255, .16);
+    }
+
+    .value-stats strong {
+      display: block;
+      color: var(--gold);
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .value-stats span {
+      display: block;
+      margin-top: 8px;
+      color: #e4edf5;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .outcome-card {
+      border-top: 5px solid var(--blue);
+    }
+
+    .outcome-card:nth-child(2) {
+      border-top-color: var(--teal);
+    }
+
+    .outcome-card:nth-child(3) {
+      border-top-color: var(--purple);
+    }
+
+    .contact-band {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: center;
+      padding: 26px clamp(18px, 4vw, 56px);
+      background: var(--gold);
+      color: #1f2937;
+    }
+
+    .contact-band h2 {
+      margin-bottom: 4px;
+      font-size: clamp(24px, 3vw, 38px);
+      line-height: 1.05;
+    }
+
+    .contact-band p {
+      margin-bottom: 0;
+      color: #3d4450;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .contact-band .secondary-button {
+      border-color: rgba(0, 0, 0, .2);
+    }
+
+    footer {
+      padding: 30px clamp(18px, 4vw, 56px);
+      background: #0b1f32;
+      color: #cdddea;
+    }
+
+    footer strong {
+      color: #fff;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .section-head,
+      .layout-two,
+      .curriculum,
+      .value-panel,
+      .contact-band {
+        grid-template-columns: 1fr;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .anchor-strip {
+        top: 76px;
+      }
+
+      .side-card {
+        position: static;
+      }
+
+      .decision-grid,
+      .advantage-grid,
+      .requirement-grid,
+      .outcome-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .topbar {
+        display: none;
+      }
+
+      .site-nav {
+        position: static;
+      }
+
+      .anchor-strip {
+        position: static;
+      }
+
+      .brand {
+        min-width: 0;
+      }
+
+      .fact-grid,
+      .value-stats {
+        grid-template-columns: 1fr;
+      }
+
+      .course {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span>UCLA Department of Statistics and Data Science</span>
+    <span>In-person evening program for working professionals</span>
+  </div>
+
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a class="brand" href="#">
+      <span class="brand-mark">UCLA</span>
+      <span>MASDS <small>Applied Statistics and Data Science</small></span>
+    </a>
+    <div class="nav-links">
+      <a href="#fit">Program Fit</a>
+      <a href="#admissions">Admissions</a>
+      <a href="#curriculum">Curriculum</a>
+      <a href="#outcomes">Outcomes</a>
+      <a class="button" href="#apply">Apply</a>
+    </div>
+  </nav>
+
+  <header class="hero" id="overview">
+    <div>
+      <p class="eyebrow">Master of Applied Statistics and Data Science</p>
+      <h1>A UCLA data science master's built around working professionals.</h1>
+      <p class="hero-copy">Get the rigor and reputation of a UCLA statistics education, the accountability of in-person learning, and an evening format designed for full-time professionals in Los Angeles.</p>
+      <div class="hero-actions">
+        <a class="button" href="#apply">Start your application</a>
+        <a class="secondary-button" href="#admissions">Review requirements</a>
+      </div>
+    </div>
+
+    <aside class="deadline-panel" aria-label="Application highlights">
+      <div class="deadline-date">
+        <span>Fall 2027 application deadline</span>
+        <strong>Feb. 1, 2027</strong>
+      </div>
+      <div class="fact-grid">
+        <div class="fact"><strong>In person</strong><span>Learn, present, and build relationships face-to-face.</span></div>
+        <div class="fact"><strong>Flexible</strong><span>Take one or two classes per quarter as your schedule allows.</span></div>
+        <div class="fact"><strong>UCLA</strong><span>A globally recognized public university credential.</span></div>
+        <div class="fact"><strong>Network</strong><span>Events and projects connect students with industry.</span></div>
+      </div>
+    </aside>
+  </header>
+
+  <nav class="anchor-strip" aria-label="Applicant sections">
+    <a href="#fit">Fit</a>
+    <a href="#advantage">Why In Person</a>
+    <a href="#admissions">Admissions</a>
+    <a href="#curriculum">Curriculum</a>
+    <a href="#value">Tuition + Value</a>
+    <a href="#outcomes">Outcomes</a>
+    <a href="#apply">Next Steps</a>
+  </nav>
+
+  <main>
+    <section class="band" id="fit">
+      <div class="section-head">
+        <h2>First, decide whether MASDS fits your life and goals.</h2>
+      <p>MASDS is designed for students who want rigorous graduate training in statistics and data science while continuing to grow professionally.</p>
+      </div>
+      <div class="decision-grid">
+        <article class="decision-card">
+          <span class="step">1</span>
+          <strong>You want rigorous statistical foundations.</strong>
+          <span>Build depth in statistical judgment, modeling, uncertainty, computing, and applied data science.</span>
+        </article>
+        <article class="decision-card">
+          <span class="step">2</span>
+          <strong>You need a working-professional format.</strong>
+          <span>Attend evening classes in person while continuing to work, build experience, and apply what you learn.</span>
+        </article>
+        <article class="decision-card">
+          <span class="step">3</span>
+          <strong>You want a career-oriented UCLA credential.</strong>
+          <span>Connect coursework with thesis projects, industry relationships, alumni outcomes, and a UCLA graduate credential.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="band alt" id="advantage">
+      <div class="section-head">
+        <h2>The in-person format is a defining advantage.</h2>
+        <p>The in-person experience gives students regular access to faculty, classmates, campus resources, and professional networking opportunities in Los Angeles.</p>
+      </div>
+      <div class="advantage-grid">
+        <article class="advantage-card">
+          <span class="advantage-kicker">Learning environment</span>
+          <strong>Face-to-face learning creates real mastery.</strong>
+          <span>Students meet faculty and classmates in person, ask questions live, present work, and complete assessments in a structured academic setting that supports integrity and genuine skill-building.</span>
+        </article>
+        <article class="advantage-card">
+          <span class="advantage-kicker">UCLA signal</span>
+          <strong>A prestigious degree with campus presence.</strong>
+          <span>Earn a graduate degree from UCLA's Department of Statistics and Data Science, part of one of the world's leading public research universities.</span>
+        </article>
+        <article class="advantage-card">
+          <span class="advantage-kicker">Professional network</span>
+          <strong>Evening classes keep careers moving.</strong>
+          <span>The schedule lets working professionals continue gaining experience while building a UCLA peer network through classes, industry events, thesis projects, and partner connections.</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="band" id="admissions">
+      <div class="section-head">
+        <h2>Apply with a clear sense of what we look for.</h2>
+        <p>We welcome applicants from a range of academic and professional backgrounds. A bachelor's degree is required, but a statistics major is not.</p>
+      </div>
+      <div class="layout-two">
+        <div class="checklist">
+          <div class="check-row"><span class="check">✓</span><div><strong>Confirm prerequisite preparation</strong><span>Strong applicants typically have quantitative preparation in linear algebra, multivariable calculus, probability, statistics, and programming.</span></div></div>
+          <div class="check-row"><span class="check">✓</span><div><strong>Prepare application materials</strong><span>Applicants submit transcripts, statements, a resume or CV, and two letters of recommendation through UCLA's graduate application system.</span></div></div>
+          <div class="check-row"><span class="check">✓</span><div><strong>Review deadlines and program codes</strong><span>The Fall 2027 application deadline is February 1, 2027. Applicants use Major Code 00J3 when applying.</span></div></div>
+          <div class="check-row"><span class="check">✓</span><div><strong>Highlight professional experience</strong><span>The program values documented work experience, especially applying quantitative methods in research, business, or other professional settings.</span></div></div>
+        </div>
+        <aside class="side-card">
+          <h3>Application snapshot</h3>
+          <p>Applications are submitted through UCLA's Application for Graduate Admission. Complete applications are reviewed in the order received.</p>
+          <a class="button" href="#apply">Apply for Fall 2027</a>
+          <div class="mini-list">
+            <div>Fall 2027 deadline: February 1, 2027</div>
+            <div>Late applications may be considered case-by-case</div>
+            <div>Major code: 00J3</div>
+            <div>Email: mas-office@stat.ucla.edu</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="band alt" id="curriculum">
+      <div class="section-head">
+        <h2>Move through a 44-unit curriculum at a pace that fits your life.</h2>
+        <p>Students complete core courses, electives, and a written thesis. Take two classes per quarter to finish in about two years, or take one class in busier quarters and continue at a more flexible pace.</p>
+      </div>
+      <div class="curriculum">
+        <nav class="semester-tabs" aria-label="Curriculum phases">
+          <a href="#">Foundations</a>
+          <a href="#">Applied Modeling</a>
+          <a href="#">Data Science Practice</a>
+          <a href="#">Thesis + Launch</a>
+        </nav>
+        <div class="course-list">
+          <article class="course">
+            <div><strong>Statistical thinking and inference</strong><span>Model uncertainty, evaluate evidence, and understand the assumptions behind analytical decisions.</span></div>
+            <span class="pill">Core</span>
+          </article>
+          <article class="course">
+            <div><strong>Machine learning and modern analytics</strong><span>Connect statistical foundations to predictive modeling, model evaluation, and applied data products.</span></div>
+            <span class="pill">Applied</span>
+          </article>
+          <article class="course">
+            <div><strong>Data management, computing, and communication</strong><span>Emphasize practical workflows, programming, and the ability to explain findings to technical and nontechnical audiences.</span></div>
+            <span class="pill">Practice</span>
+          </article>
+          <article class="course">
+            <div><strong>Thesis with faculty and industry connection</strong><span>Every student completes a written thesis based on original analysis, supervised by UCLA faculty and an industry partner when available.</span></div>
+            <span class="pill">Launch</span>
+          </article>
+          <article class="course">
+            <div><strong>Flexible pacing for working professionals</strong><span>Complete the program in two years by taking two classes each quarter, or take one class in busier quarters and reduce your tuition for those terms because tuition is based on units taken.</span></div>
+            <span class="pill">Flexible</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="value">
+      <div class="value-panel">
+        <div>
+          <p class="eyebrow">Tuition + value</p>
+          <h2>A UCLA graduate program with flexible quarterly costs.</h2>
+          <p>MASDS tuition is charged by the unit. If work gets busy and you take fewer classes in a quarter, your tuition for that quarter is lower because you are enrolled in fewer units.</p>
+          <div class="section-actions">
+            <a class="button" href="#">View tuition details</a>
+            <a class="secondary-button" href="#curriculum">Explore flexible pacing</a>
+          </div>
+        </div>
+        <div class="value-stats">
+          <div><strong>$1,229</strong><span>Per unit for Academic Year 2025-26.</span></div>
+          <div><strong>44</strong><span>Minimum units required for the MASDS degree.</span></div>
+          <div><strong>1-2</strong><span>Classes per quarter, depending on your schedule.</span></div>
+          <div><strong>UCLA</strong><span>Public university prestige with Los Angeles access.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band alt" id="outcomes">
+      <div class="section-head">
+        <h2>Build a professional network while building technical depth.</h2>
+        <p>MASDS connects rigorous coursework with thesis projects, industry exposure, and opportunities to meet professionals working with data across sectors.</p>
+      </div>
+      <div class="outcome-grid">
+        <article class="outcome-card"><strong>Placement and roles</strong><span>Prepare for data science, analytics, statistics, and quantitative roles across research, business, technology, and public-sector environments.</span></article>
+        <article class="outcome-card"><strong>Networking events</strong><span>Meet industry professionals, alumni, guest speakers, and employers through events that are made more valuable by the in-person UCLA setting.</span></article>
+        <article class="outcome-card"><strong>Partners and thesis projects</strong><span>Complete original analysis on a real-world problem, often with input from an industry partner and supervision from UCLA faculty.</span></article>
+      </div>
+    </section>
+
+    <section class="contact-band" id="apply">
+      <div>
+        <h2>Ready to evaluate your fit?</h2>
+        <p>Start your Fall 2027 application, join an information session, or contact the MASDS office with questions about preparation, pacing, or admissions.</p>
+      </div>
+      <div class="hero-actions">
+        <a class="secondary-button" href="#">Start application</a>
+        <a class="secondary-button" href="#">Join info session</a>
+        <a class="secondary-button" href="#">Contact admissions</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>UCLA MASDS</strong> Master of Applied Statistics and Data Science, Department of Statistics and Data Science.
+  </footer>
+</body>
+</html>
