@@ -399,6 +399,45 @@
       align-items: start;
     }
 
+    .video-feature {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(280px, .9fr);
+      gap: clamp(24px, 4vw, 48px);
+      align-items: center;
+    }
+
+    .video-frame {
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+      background: #0b1f32;
+      border: 1px solid #cfd9e4;
+      box-shadow: 0 18px 50px rgba(15, 35, 55, .14);
+    }
+
+    .video-frame iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-copy h2 {
+      margin-bottom: 14px;
+      color: #08243a;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .video-copy p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
     .checklist {
       display: grid;
       gap: 12px;
@@ -650,6 +689,7 @@
       .hero,
       .section-head,
       .layout-two,
+      .video-feature,
       .curriculum,
       .value-panel,
       .contact-band {
@@ -808,7 +848,28 @@
       </div>
     </section>
 
-    <section class="band" id="admissions">
+    <section class="band" id="video">
+      <div class="video-feature">
+        <div class="video-frame">
+          <iframe
+            src="https://www.youtube.com/embed/GpxyZNpHI3E"
+            title="UCLA Master of Applied Statistics and Data Science program video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-copy">
+          <p class="eyebrow">Program overview</p>
+          <h2>See what makes MASDS a UCLA experience.</h2>
+          <p>Hear more about the program's in-person instruction, applied curriculum, faculty expertise, and career-focused preparation for students building data science and analytics careers.</p>
+          <div class="section-actions">
+            <a class="button" href="#admissions">Review admissions</a>
+            <a class="secondary-button" href="https://www.youtube.com/watch?v=GpxyZNpHI3E">Watch on YouTube</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band alt" id="admissions">
       <div class="section-head">
         <h2>Apply with a clear sense of what we look for.</h2>
         <p>We welcome applicants from a range of academic and professional backgrounds. A bachelor's degree is required, but a statistics major is not.</p>
