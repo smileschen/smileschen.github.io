@@ -520,6 +520,39 @@ h3 {
   background: #fff;
 }
 
+.faq-list {
+  display: grid;
+  gap: 12px;
+}
+
+.faq-list details {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.faq-list summary {
+  cursor: pointer;
+  padding: 18px 20px;
+  color: var(--ucla-dark-blue);
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.faq-list details[open] summary {
+  border-bottom: 1px solid var(--line);
+  background: #eef5fb;
+}
+
+.faq-answer {
+  padding: 18px 20px 20px;
+}
+
+.faq-answer p:last-child {
+  margin-bottom: 0;
+}
+
 table {
   width: 100%;
   min-width: 720px;
