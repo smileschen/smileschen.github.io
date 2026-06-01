@@ -63,11 +63,12 @@ p {
   top: 0;
   z-index: 20;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
   min-height: 76px;
-  padding: 0 clamp(18px, 4vw, 56px);
+  padding: 10px clamp(18px, 4vw, 56px);
   background: rgba(255, 255, 255, .96);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(16px);
@@ -106,13 +107,20 @@ p {
 .nav-links {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: clamp(10px, 1.6vw, 20px);
+  flex: 1 1 520px;
+  min-width: 260px;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
   color: #334155;
   font-size: 13px;
   font-weight: 850;
 }
 
 .nav-links a {
+  flex: 0 0 auto;
   padding: 8px 0;
 }
 
@@ -628,12 +636,6 @@ tr:last-child td {
   font-weight: 800;
 }
 
-@media (max-width: 1100px) {
-  .nav-links {
-    display: none;
-  }
-}
-
 @media (max-width: 940px) {
   .hero,
   .section-head,
@@ -663,10 +665,18 @@ tr:last-child td {
 
   .site-nav {
     position: static;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .brand {
     min-width: 0;
+  }
+
+  .nav-links {
+    flex-basis: 100%;
+    justify-content: flex-start;
+    padding-bottom: 4px;
   }
 
   .fact-grid,
