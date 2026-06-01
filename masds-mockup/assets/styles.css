@@ -299,6 +299,10 @@ h3 {
   grid-template-columns: 1fr;
 }
 
+.schedule-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -712,6 +716,7 @@ tr:last-child td {
   }
 
   .card-grid,
+  .schedule-grid,
   .stat-grid,
   .partner-grid,
   .photo-grid {
