@@ -77,8 +77,8 @@ p {
 .brand {
   display: flex;
   align-items: center;
-  gap: 13px;
-  min-width: 230px;
+  gap: 14px;
+  min-width: 260px;
   color: var(--ucla-dark-blue);
   font-weight: 950;
   line-height: 1.05;
@@ -88,12 +88,17 @@ p {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  border-radius: 4px;
+  width: 64px;
+  height: 38px;
+  padding: 8px 9px;
   background: var(--ucla-blue);
-  color: #fff;
-  font-size: 13px;
+}
+
+.brand-mark img,
+.footer-logo img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .brand small {
@@ -102,6 +107,10 @@ p {
   color: #677487;
   font-size: 12px;
   font-weight: 800;
+}
+
+.brand > span:last-child {
+  min-width: 0;
 }
 
 .nav-links {
@@ -301,6 +310,7 @@ h3 {
 
 .schedule-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
 }
 
 .photo-grid {
@@ -551,6 +561,27 @@ h3 {
   background: #fff;
 }
 
+.schedule-card {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 24px;
+}
+
+.schedule-card strong,
+.schedule-card span {
+  margin: 0;
+}
+
+.schedule-table table {
+  min-width: 0;
+}
+
+.schedule-table th,
+.schedule-table td {
+  padding: 12px 14px;
+}
+
 .faq-list {
   display: grid;
   gap: 12px;
@@ -693,6 +724,22 @@ tr:last-child td {
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 24px;
   align-items: start;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.footer-logo {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 72px;
+  height: 42px;
+  padding: 9px 10px;
+  background: var(--ucla-blue);
 }
 
 .footer strong {
