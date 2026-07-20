@@ -38,6 +38,22 @@ a {
   text-decoration: none;
 }
 
+main a:not(.button):not(.secondary-button):not(.dark-button),
+.page-hero a:not(.button):not(.secondary-button):not(.dark-button) {
+  color: var(--ucla-dark-blue);
+  text-decoration-line: underline;
+  text-decoration-color: rgba(39, 116, 174, .5);
+  text-decoration-thickness: .08em;
+  text-underline-offset: .18em;
+  transition: color .18s ease, text-decoration-color .18s ease;
+}
+
+main a:not(.button):not(.secondary-button):not(.dark-button):hover,
+.page-hero a:not(.button):not(.secondary-button):not(.dark-button):hover {
+  color: var(--ucla-blue);
+  text-decoration-color: currentColor;
+}
+
 p {
   color: var(--muted);
   line-height: 1.62;
@@ -749,6 +765,16 @@ tr:last-child td {
 .footer a {
   color: #dcecf8;
   font-weight: 800;
+  text-decoration-line: underline;
+  text-decoration-color: rgba(220, 236, 248, .55);
+  text-decoration-thickness: .08em;
+  text-underline-offset: .18em;
+  transition: color .18s ease, text-decoration-color .18s ease;
+}
+
+.footer a:hover {
+  color: #fff;
+  text-decoration-color: currentColor;
 }
 
 @media (max-width: 940px) {
