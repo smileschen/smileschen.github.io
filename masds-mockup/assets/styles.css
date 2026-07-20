@@ -275,6 +275,10 @@ h3 {
   border-radius: 8px;
 }
 
+.info-card p {
+  margin: 0;
+}
+
 .deadline-panel {
   align-self: stretch;
   display: grid;
