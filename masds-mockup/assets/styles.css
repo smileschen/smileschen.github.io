@@ -38,7 +38,7 @@ a {
   text-decoration: none;
 }
 
-main a:not(.button):not(.secondary-button):not(.dark-button),
+main a:not(.button):not(.secondary-button):not(.dark-button):not(.partner-link),
 .page-hero a:not(.button):not(.secondary-button):not(.dark-button) {
   color: var(--ucla-dark-blue);
   text-decoration-line: underline;
@@ -48,7 +48,7 @@ main a:not(.button):not(.secondary-button):not(.dark-button),
   transition: color .18s ease, text-decoration-color .18s ease;
 }
 
-main a:not(.button):not(.secondary-button):not(.dark-button):hover,
+main a:not(.button):not(.secondary-button):not(.dark-button):not(.partner-link):hover,
 .page-hero a:not(.button):not(.secondary-button):not(.dark-button):hover {
   color: var(--ucla-blue);
   text-decoration-color: currentColor;
@@ -322,6 +322,64 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
+}
+
+.partner-organization {
+  display: grid;
+  grid-template-rows: 180px auto;
+  gap: 16px;
+  align-items: start;
+  text-align: center;
+}
+
+.partner-logo {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.partner-logo img {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: block;
+  width: calc(100% - 32px);
+  height: calc(100% - 32px);
+  max-width: none;
+  object-fit: contain;
+  object-position: center;
+}
+
+.partner-organization strong {
+  align-self: center;
+  font-size: 17px;
+}
+
+.partner-link {
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.partner-link:hover {
+  border-color: rgba(39, 116, 174, .5);
+  box-shadow: 0 10px 24px rgba(15, 35, 55, .1);
+  transform: translateY(-2px);
+}
+
+.partner-link:hover strong {
+  color: var(--ucla-blue);
+}
+
+.partner-link:focus-visible {
+  outline: 3px solid var(--ucla-gold);
+  outline-offset: 3px;
 }
 
 .vertical-card-grid {
