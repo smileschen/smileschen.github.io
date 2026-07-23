@@ -38,11 +38,47 @@ a {
   text-decoration: none;
 }
 
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  padding: 12px 16px;
+  border: 3px solid var(--ucla-gold);
+  border-radius: 6px;
+  background: var(--ucla-dark-blue);
+  color: var(--white);
+  font-weight: 900;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--ucla-dark-blue);
+}
+
 main a:not(.button):not(.secondary-button):not(.dark-button):not(.partner-link),
 .page-hero a:not(.button):not(.secondary-button):not(.dark-button) {
   color: var(--ucla-dark-blue);
   text-decoration-line: underline;
-  text-decoration-color: rgba(39, 116, 174, .5);
+  text-decoration-color: currentColor;
   text-decoration-thickness: .08em;
   text-underline-offset: .18em;
   transition: color .18s ease, text-decoration-color .18s ease;
@@ -61,6 +97,7 @@ p {
 
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 18px;
   padding: 9px clamp(18px, 4vw, 56px);
@@ -71,7 +108,7 @@ p {
 }
 
 .topbar span {
-  white-space: nowrap;
+  white-space: normal;
 }
 
 .site-nav {
@@ -131,14 +168,14 @@ p {
 
 .nav-links {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: clamp(10px, 1.6vw, 20px);
   flex: 1 1 520px;
   min-width: 260px;
   max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: thin;
+  overflow-x: visible;
   color: #334155;
   font-size: 13px;
   font-weight: 850;
@@ -163,21 +200,23 @@ p {
   min-height: 44px;
   padding: 11px 16px;
   border-radius: 6px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   font-weight: 900;
   font-size: 14px;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
 }
 
 .button {
   background: var(--ucla-gold);
   color: #1e293b;
+  border-color: #6c5a12;
 }
 
 .secondary-button {
   background: #fff;
   color: var(--ucla-dark-blue);
-  border-color: #b9c8d8;
+  border-color: var(--muted);
 }
 
 .dark-button {
@@ -378,8 +417,9 @@ h3 {
 }
 
 .partner-link:focus-visible {
-  outline: 3px solid var(--ucla-gold);
-  outline-offset: 3px;
+  outline: 3px solid var(--white);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--ucla-dark-blue);
 }
 
 .vertical-card-grid {
@@ -583,6 +623,12 @@ h3 {
   gap: 12px;
 }
 
+.checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .check-row {
   display: grid;
   grid-template-columns: 34px 1fr;
@@ -688,6 +734,13 @@ h3 {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+  scrollbar-gutter: stable;
+}
+
+.table-wrap:focus-visible {
+  outline: 3px solid var(--white);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--ucla-dark-blue);
 }
 
 .schedule-card {
@@ -729,6 +782,12 @@ h3 {
   color: var(--ucla-dark-blue);
   font-weight: 900;
   line-height: 1.35;
+}
+
+.faq-list summary:focus-visible {
+  outline: 3px solid var(--ucla-dark-blue);
+  outline-offset: -4px;
+  box-shadow: none;
 }
 
 .faq-list details[open] summary {
@@ -918,7 +977,7 @@ tr:last-child td {
   }
 }
 
-@media (max-width: 620px) {
+@media (max-width: 760px) {
   .topbar {
     display: none;
   }
@@ -946,5 +1005,19 @@ tr:last-child td {
 
   .hero {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

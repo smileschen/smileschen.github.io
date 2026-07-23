@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="topbar"><span>UCLA Department of Statistics and Data Science</span><span>Fall 2027 deadline: March 1, 2027</span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><span>MASDS <small>Applied Statistics and Data Science</small></span></a>
@@ -21,7 +22,7 @@
     </div>
   </nav>
 
-  <header class="page-hero">
+  <header class="page-hero" id="main-content" tabindex="-1">
     <p class="eyebrow">Application process</p>
     <h1>Apply with a clear sense of what we look for.</h1>
     <p class="page-copy">We welcome applicants from a range of academic and professional backgrounds. A bachelor's degree is required, but an undergraduate degree in statistics is not.</p>
@@ -33,12 +34,13 @@
 
   <main>
     <section class="band">
+      <h2 class="sr-only">Application steps</h2>
       <div class="layout-two">
-        <div class="checklist">
-          <div class="check-row"><span class="check">1</span><div><h3>Confirm your preparation</h3><p>Applicants should have taken courses in linear algebra, multivariable calculus, and probability and statistics. Applicants should also have experience in computer programming; any programming language is acceptable. MASDS courses are taught in R and Python.</p><p>If the undergraduate degree is not in STEM, the application should show evidence of coursework in the areas listed above through community college, university, university extension, or post-baccalaureate coursework.</p></div></div>
-          <div class="check-row"><span class="check">2</span><div><h3>Prepare application materials</h3><p>Applicants submit transcripts, a statement of purpose, a personal statement, a resume or CV, GRE Scores (if available), and two letters of recommendation through UCLA's graduate application system. The program values documented work experience, especially applying quantitative methods in research, business, or other professional settings, but work experience is not required.</p></div></div>
-          <div class="check-row"><span class="check">3</span><div><h3>Submit through UCLA Graduate Admission</h3><p>All applicants apply online through UCLA's Application for Graduate Admission. Use Major Code <strong>00J3</strong> for MASDS.</p></div></div>
-        </div>
+        <ol class="checklist">
+          <li class="check-row"><span class="check">1</span><div><h3>Confirm your preparation</h3><p>Applicants should have taken courses in linear algebra, multivariable calculus, and probability and statistics. Applicants should also have experience in computer programming; any programming language is acceptable. MASDS courses are taught in R and Python.</p><p>If the undergraduate degree is not in STEM, the application should show evidence of coursework in the areas listed above through community college, university, university extension, or post-baccalaureate coursework.</p></div></li>
+          <li class="check-row"><span class="check">2</span><div><h3>Prepare application materials</h3><p>Applicants submit transcripts, a statement of purpose, a personal statement, a resume or CV, GRE Scores (if available), and two letters of recommendation through UCLA's graduate application system. The program values documented work experience, especially applying quantitative methods in research, business, or other professional settings, but work experience is not required.</p></div></li>
+          <li class="check-row"><span class="check">3</span><div><h3>Submit through UCLA Graduate Admission</h3><p>All applicants apply online through UCLA's Application for Graduate Admission. Use Major Code <strong>00J3</strong> for MASDS.</p></div></li>
+        </ol>
         <aside class="side-card">
           <h3>Application snapshot</h3>
           <p>Applications are reviewed in two annual cycles, for fall and winter admission.</p>
@@ -97,6 +99,6 @@
     </section>
   </main>
 
-  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><div><strong>Questions?</strong><br>Email masds-office@stat.ucla.edu for departmental admissions questions.</div></div><a href="get-in-touch.html">Get in touch</a></div></footer>
+  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt=""></span><div><strong>Questions?</strong><br>Email masds-office@stat.ucla.edu for departmental admissions questions.</div></div><a href="get-in-touch.html">Get in touch</a></div></footer>
 </body>
 </html>

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="topbar"><span>UCLA Department of Statistics and Data Science</span><span>Core courses, electives, internship, and individual study options</span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><span>MASDS <small>Applied Statistics and Data Science</small></span></a>
@@ -21,7 +22,7 @@
     </div>
   </nav>
 
-  <header class="page-hero">
+  <header class="page-hero" id="main-content" tabindex="-1">
     <p class="eyebrow">Available courses</p>
     <h1>Build depth across statistical foundations, computing, modeling, and communication.</h1>
     <p class="page-copy">MASDS students complete required core courses and choose electives that support their technical interests and professional goals.</p>
@@ -33,17 +34,18 @@
         <h2>Required core</h2>
         <p>These seven courses provide the shared foundation for the MASDS degree.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Required core courses">
         <table>
-          <thead><tr><th>Course</th><th>Title</th><th>Area</th></tr></thead>
+          <caption class="sr-only">Required core courses</caption>
+          <thead><tr><th scope="col">Course</th><th scope="col">Title</th><th scope="col">Area</th></tr></thead>
           <tbody>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Statistics 400</a></td><td>Introduction to Probability Models</td><td><span class="pill">Probability</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Statistics 401</a></td><td>Survey of Methods in Modern Statistics</td><td><span class="pill">Methods</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Statistics 402</a></td><td>Applied Regression</td><td><span class="pill">Modeling</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Statistics 403</a></td><td>Mathematical Statistics</td><td><span class="pill">Theory</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Statistics 404</a></td><td>Statistical Computing and Programming</td><td><span class="pill">Computing</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Statistics 405</a></td><td>Data Management</td><td><span class="pill">Data</span></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Statistics 421</a></td><td>Advanced Statistical Communication</td><td><span class="pill">Communication</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Statistics 400</a></th><td>Introduction to Probability Models</td><td><span class="pill">Probability</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Statistics 401</a></th><td>Survey of Methods in Modern Statistics</td><td><span class="pill">Methods</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Statistics 402</a></th><td>Applied Regression</td><td><span class="pill">Modeling</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Statistics 403</a></th><td>Mathematical Statistics</td><td><span class="pill">Theory</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Statistics 404</a></th><td>Statistical Computing and Programming</td><td><span class="pill">Computing</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Statistics 405</a></th><td>Data Management</td><td><span class="pill">Data</span></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Statistics 421</a></th><td>Advanced Statistical Communication</td><td><span class="pill">Communication</span></td></tr>
           </tbody>
         </table>
       </div>
@@ -54,27 +56,28 @@
         <h2>Elective options</h2>
         <p>MASDS students complete at least four 4-unit elective courses. Electives must follow MASDS rules and may include approved 400-level statistics courses, certain 200-level courses, internship credit, or individual study.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Elective course options">
         <table>
-          <thead><tr><th>Course</th><th>Title</th></tr></thead>
+          <caption class="sr-only">Elective course options</caption>
+          <thead><tr><th scope="col">Course</th><th scope="col">Title</th></tr></thead>
           <tbody>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS411">Statistics 411</a></td><td>Multivariate Statistical Analysis</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS412">Statistics 412</a></td><td>Advanced Regression and Predictive Modeling</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS413">Statistics 413</a></td><td>Machine Learning and Artificial Intelligence</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS414">Statistics 414</a></td><td>From Predictive Artificial Intelligence to Generative Artificial Intelligence</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS415">Statistics 415</a></td><td>Introduction to Forecasting</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS416">Statistics 416</a></td><td>Spatial-Temporal Point Processes and Geostatistical Applications</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS417">Statistics 417</a></td><td>Models in Finance</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS418">Statistics 418</a></td><td>Tools in Data Science</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS419">Statistics 419</a></td><td>Experimental Design</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS420">Statistics 420</a></td><td>Causal Inference</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS422">Statistics 422</a></td><td>Data Visualization</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS423">Statistics 423</a></td><td>Longitudinal Data Analysis</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS424">Statistics 424</a></td><td>Teamwork &amp; Leadership in Data Science</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS425">Statistics 425</a></td><td>Large Language Models in Text Mining</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS426">Statistics 426</a></td><td>Deep Learning</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS427">Statistics 427</a></td><td>Applied Bayesian Statistics</td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS428">Statistics 428</a></td><td>Applied SQL for Data Science</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS411">Statistics 411</a></th><td>Multivariate Statistical Analysis</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS412">Statistics 412</a></th><td>Advanced Regression and Predictive Modeling</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS413">Statistics 413</a></th><td>Machine Learning and Artificial Intelligence</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS414">Statistics 414</a></th><td>From Predictive Artificial Intelligence to Generative Artificial Intelligence</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS415">Statistics 415</a></th><td>Introduction to Forecasting</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS416">Statistics 416</a></th><td>Spatial-Temporal Point Processes and Geostatistical Applications</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS417">Statistics 417</a></th><td>Models in Finance</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS418">Statistics 418</a></th><td>Tools in Data Science</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS419">Statistics 419</a></th><td>Experimental Design</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS420">Statistics 420</a></th><td>Causal Inference</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS422">Statistics 422</a></th><td>Data Visualization</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS423">Statistics 423</a></th><td>Longitudinal Data Analysis</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS424">Statistics 424</a></th><td>Teamwork &amp; Leadership in Data Science</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS425">Statistics 425</a></th><td>Large Language Models in Text Mining</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS426">Statistics 426</a></th><td>Deep Learning</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS427">Statistics 427</a></th><td>Applied Bayesian Statistics</td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS428">Statistics 428</a></th><td>Applied SQL for Data Science</td></tr>
           </tbody>
         </table>
       </div>
@@ -105,16 +108,17 @@
         <article class="card schedule-card">
           <strong>Two courses per quarter</strong>
           <span>Finish in two years by taking two courses most quarters.</span>
-          <div class="table-wrap schedule-table">
+          <div class="table-wrap schedule-table" tabindex="0" role="region" aria-label="Sample schedule with two courses in most quarters">
             <table>
-              <thead><tr><th>Term</th><th>Sample courses</th></tr></thead>
+          <caption class="sr-only">Sample schedule with two courses in most quarters</caption>
+              <thead><tr><th scope="col">Term</th><th scope="col">Sample courses</th></tr></thead>
               <tbody>
-                <tr><td>Fall Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Stats 400</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Stats 401</a></td></tr>
-                <tr><td>Winter Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Stats 402</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Stats 403</a></td></tr>
-                <tr><td>Spring Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Stats 404</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Stats 405</a></td></tr>
-                <tr><td>Fall Year 2</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Stats 421</a>, Elective 1, thesis work</td></tr>
-                <tr><td>Winter Year 2</td><td>Elective 2, Elective 3, thesis work</td></tr>
-                <tr><td>Spring Year 2</td><td>Elective 4, thesis work</td></tr>
+                <tr><th scope="row">Fall Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Stats 400</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Stats 401</a></td></tr>
+                <tr><th scope="row">Winter Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Stats 402</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Stats 403</a></td></tr>
+                <tr><th scope="row">Spring Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Stats 404</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Stats 405</a></td></tr>
+                <tr><th scope="row">Fall Year 2</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Stats 421</a>, Elective 1, thesis work</td></tr>
+                <tr><th scope="row">Winter Year 2</th><td>Elective 2, Elective 3, thesis work</td></tr>
+                <tr><th scope="row">Spring Year 2</th><td>Elective 4, thesis work</td></tr>
               </tbody>
             </table>
           </div>
@@ -122,20 +126,21 @@
         <article class="card schedule-card">
           <strong>One course most quarters</strong>
           <span>Finish in 10 regular quarters by taking one course most quarters and two courses in at least one quarter.</span>
-          <div class="table-wrap schedule-table">
+          <div class="table-wrap schedule-table" tabindex="0" role="region" aria-label="Sample schedule with one course per quarter">
             <table>
-              <thead><tr><th>Term</th><th>Sample courses</th></tr></thead>
+          <caption class="sr-only">Sample schedule with one course per quarter</caption>
+              <thead><tr><th scope="col">Term</th><th scope="col">Sample courses</th></tr></thead>
               <tbody>
-                <tr><td>Fall Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Stats 401</a></td></tr>
-                <tr><td>Winter Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Stats 402</a></td></tr>
-                <tr><td>Spring Year 1</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Stats 404</a></td></tr>
-                <tr><td>Fall Year 2</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Stats 400</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Stats 421</a></td></tr>
-                <tr><td>Winter Year 2</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Stats 403</a></td></tr>
-                <tr><td>Spring Year 2</td><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Stats 405</a></td></tr>
-                <tr><td>Fall Year 3</td><td>Elective 1</td></tr>
-                <tr><td>Winter Year 3</td><td>Elective 2, thesis work</td></tr>
-                <tr><td>Spring Year 3</td><td>Elective 3, thesis work</td></tr>
-                <tr><td>Fall Year 4</td><td>Elective 4, thesis work</td></tr>
+                <tr><th scope="row">Fall Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS401">Stats 401</a></td></tr>
+                <tr><th scope="row">Winter Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS402">Stats 402</a></td></tr>
+                <tr><th scope="row">Spring Year 1</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS404">Stats 404</a></td></tr>
+                <tr><th scope="row">Fall Year 2</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS400">Stats 400</a>, <a href="https://catalog.registrar.ucla.edu/course/2026/STATS421">Stats 421</a></td></tr>
+                <tr><th scope="row">Winter Year 2</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS403">Stats 403</a></td></tr>
+                <tr><th scope="row">Spring Year 2</th><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS405">Stats 405</a></td></tr>
+                <tr><th scope="row">Fall Year 3</th><td>Elective 1</td></tr>
+                <tr><th scope="row">Winter Year 3</th><td>Elective 2, thesis work</td></tr>
+                <tr><th scope="row">Spring Year 3</th><td>Elective 3, thesis work</td></tr>
+                <tr><th scope="row">Fall Year 4</th><td>Elective 4, thesis work</td></tr>
               </tbody>
             </table>
           </div>
@@ -148,21 +153,22 @@
         <h2>Selected 200-level replacements</h2>
         <p>Some 200-level courses replace similar 400-level courses. These courses are usually taken by PhD students and are generally taught during the day. Students may not take both the 200-level course and its corresponding 400-level equivalent.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Selected 200-level course replacements">
         <table>
-          <thead><tr><th>200-level course</th><th>Similar 400-level course</th></tr></thead>
+          <caption class="sr-only">Selected 200-level course replacements</caption>
+          <thead><tr><th scope="col">200-level course</th><th scope="col">Similar 400-level course</th></tr></thead>
           <tbody>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS211">211</a> Topics in Econ and Machine Learning</td><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS425">425</a></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATSM231A">M231A</a> Pattern Recognition and Machine Learning</td><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS413">413</a></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS240">240</a> Multivariate Analysis</td><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS411">411</a></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATS256">256</a> Causality</td><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS420">420</a></td></tr>
-            <tr><td><a href="https://catalog.registrar.ucla.edu/course/2026/STATSC161">C161</a>/<a href="https://catalog.registrar.ucla.edu/course/2026/STATSC261">C261</a> Introduction to Pattern Recognition and Machine Learning</td><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS414">414</a></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS211">211</a> Topics in Econ and Machine Learning</th><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS425">425</a></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATSM231A">M231A</a> Pattern Recognition and Machine Learning</th><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS413">413</a></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS240">240</a> Multivariate Analysis</th><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS411">411</a></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATS256">256</a> Causality</th><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS420">420</a></td></tr>
+            <tr><th scope="row"><a href="https://catalog.registrar.ucla.edu/course/2026/STATSC161">C161</a>/<a href="https://catalog.registrar.ucla.edu/course/2026/STATSC261">C261</a> Introduction to Pattern Recognition and Machine Learning</th><td>Similar to <a href="https://catalog.registrar.ucla.edu/course/2026/STATS414">414</a></td></tr>
           </tbody>
         </table>
       </div>
     </section>
   </main>
 
-  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><div><strong>Planning courses?</strong><br>Course availability, waiver approvals, and enrollment restrictions should be confirmed with the MASDS office.</div></div><a href="get-in-touch.html">Ask a question</a></div></footer>
+  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt=""></span><div><strong>Planning courses?</strong><br>Course availability, waiver approvals, and enrollment restrictions should be confirmed with the MASDS office.</div></div><a href="get-in-touch.html">Ask a question</a></div></footer>
 </body>
 </html>

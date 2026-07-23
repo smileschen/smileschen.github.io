@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="topbar"><span>UCLA Department of Statistics and Data Science</span><span>44 units, core courses, electives, and thesis</span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><span>MASDS <small>Applied Statistics and Data Science</small></span></a>
@@ -21,7 +22,7 @@
     </div>
   </nav>
 
-  <header class="page-hero">
+  <header class="page-hero" id="main-content" tabindex="-1">
     <p class="eyebrow">Program details</p>
     <h1>Graduate training in statistics, data science, and applied problem solving.</h1>
     <p class="page-copy">MASDS students complete at least 44 course units—seven required core courses and at least four electives—plus a written thesis based on original analysis.</p>
@@ -29,6 +30,7 @@
 
   <main>
     <section class="band">
+      <h2 class="sr-only">Program overview</h2>
       <div class="stat-grid">
         <div class="stat"><strong>44 units</strong><span>Minimum course credit required for the MASDS degree.</span></div>
         <div class="stat"><strong>7 core courses</strong><span>Required graduate courses in statistical theory, methods, computing, data management, and communication.</span></div>
@@ -83,16 +85,16 @@
         <h2>Thesis timeline and commencement</h2>
         <p>Students begin planning thesis work before the second year and complete program milestones with faculty and program guidance.</p>
       </div>
-      <div class="checklist">
-        <div class="check-row"><span class="check">1</span><div><h3>Select a faculty advisor</h3><p>Students should begin thinking about a faculty advisor and committee chair before they begin thesis work.</p></div></div>
-        <div class="check-row"><span class="check">2</span><div><h3>Nominate the master's committee</h3><p>Students complete the Nomination of Master's Committee form at least the quarter before advancing to candidacy.</p></div></div>
-        <div class="check-row"><span class="check">3</span><div><h3>Advance to candidacy</h3><p>The Advancement to Candidacy petition and unofficial transcripts are submitted within the first two weeks of the quarter the student plans to graduate.</p></div></div>
-        <div class="check-row"><span class="check">4</span><div><h3>File the thesis</h3><p>Students send a complete draft to all committee members at least two months before the thesis filing deadline, then upload the final thesis for committee approval.</p></div></div>
-      </div>
+      <ol class="checklist">
+        <li class="check-row"><span class="check">1</span><div><h3>Select a faculty advisor</h3><p>Students should begin thinking about a faculty advisor and committee chair before they begin thesis work.</p></div></li>
+        <li class="check-row"><span class="check">2</span><div><h3>Nominate the master's committee</h3><p>Students complete the Nomination of Master's Committee form at least the quarter before advancing to candidacy.</p></div></li>
+        <li class="check-row"><span class="check">3</span><div><h3>Advance to candidacy</h3><p>The Advancement to Candidacy petition and unofficial transcripts are submitted within the first two weeks of the quarter the student plans to graduate.</p></div></li>
+        <li class="check-row"><span class="check">4</span><div><h3>File the thesis</h3><p>Students send a complete draft to all committee members at least two months before the thesis filing deadline, then upload the final thesis for committee approval.</p></div></li>
+      </ol>
       <p>Departmental policy for June Commencement eligibility is to complete MASDS coursework and file the thesis by the end of the Summer immediately after Commencement.</p>
     </section>
   </main>
 
-  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><div><strong>UCLA MASDS</strong><br>Explore available courses and electives to plan your path.</div></div><a href="available-courses.html">View courses</a></div></footer>
+  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt=""></span><div><strong>UCLA MASDS</strong><br>Explore available courses and electives to plan your path.</div></div><a href="available-courses.html">View courses</a></div></footer>
 </body>
 </html>

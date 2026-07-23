@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to main content</a>
   <div class="topbar"><span>UCLA Department of Statistics and Data Science</span><span>Tuition varies by units taken</span></div>
   <nav class="site-nav" aria-label="Primary navigation">
     <a class="brand" href="index.html"><span class="brand-mark"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><span>MASDS <small>Applied Statistics and Data Science</small></span></a>
@@ -21,7 +22,7 @@
     </div>
   </nav>
 
-  <header class="page-hero">
+  <header class="page-hero" id="main-content" tabindex="-1">
     <p class="eyebrow">Cost of attendance · 2025–2026</p>
     <h1>2025–2026 tuition and fees.</h1>
     <p class="page-copy">MASDS tuition is charged by the unit. If work gets busy and you take fewer courses in a quarter, your tuition for that quarter is lower because you are enrolled in fewer units.</p>
@@ -52,13 +53,14 @@
         <h2>Example quarterly costs with UCSHIP health insurance</h2>
         <p>These examples use the program information provided for Academic Year 2025-26. UCSHIP is UCLA's student health insurance plan. It is included because health insurance is automatic for UCLA students unless a waiver is approved.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="2025–2026 quarterly costs with UCSHIP health insurance">
         <table>
-          <thead><tr><th>Quarter</th><th>Fees</th><th>Tuition for 1 course</th><th>Total for 1 course</th><th>Tuition for 2 courses</th><th>Total for 2 courses</th></tr></thead>
+          <caption class="sr-only">2025–2026 quarterly costs with UCSHIP health insurance</caption>
+          <thead><tr><th scope="col">Quarter</th><th scope="col">Fees</th><th scope="col">Tuition for 1 course</th><th scope="col">Total for 1 course</th><th scope="col">Tuition for 2 courses</th><th scope="col">Total for 2 courses</th></tr></thead>
           <tbody>
-            <tr><td>Fall</td><td>$2,978.35</td><td>$4,916.00</td><td>$7,894.35</td><td>$9,832.00</td><td>$12,810.35</td></tr>
-            <tr><td>Winter</td><td>$2,883.03</td><td>$4,916.00</td><td>$7,799.03</td><td>$9,832.00</td><td>$12,715.03</td></tr>
-            <tr><td>Spring</td><td>$2,882.03</td><td>$4,916.00</td><td>$7,798.03</td><td>$9,832.00</td><td>$12,714.03</td></tr>
+            <tr><th scope="row">Fall</th><td>$2,978.35</td><td>$4,916.00</td><td>$7,894.35</td><td>$9,832.00</td><td>$12,810.35</td></tr>
+            <tr><th scope="row">Winter</th><td>$2,883.03</td><td>$4,916.00</td><td>$7,799.03</td><td>$9,832.00</td><td>$12,715.03</td></tr>
+            <tr><th scope="row">Spring</th><td>$2,882.03</td><td>$4,916.00</td><td>$7,798.03</td><td>$9,832.00</td><td>$12,714.03</td></tr>
           </tbody>
         </table>
       </div>
@@ -69,13 +71,14 @@
         <h2>Example quarterly costs with UCSHIP health insurance waived</h2>
         <p>Students who already have qualifying health insurance may apply to waive UCSHIP, the UCLA student health insurance plan. If approved, the UCSHIP charge is credited back and the quarterly total is lower.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="2025–2026 quarterly costs with an approved UCSHIP waiver">
         <table>
-          <thead><tr><th>Quarter</th><th>Fees without UCSHIP</th><th>Tuition for 1 course</th><th>Total for 1 course</th><th>Tuition for 2 courses</th><th>Total for 2 courses</th></tr></thead>
+          <caption class="sr-only">2025–2026 quarterly costs with an approved UCSHIP waiver</caption>
+          <thead><tr><th scope="col">Quarter</th><th scope="col">Fees without UCSHIP</th><th scope="col">Tuition for 1 course</th><th scope="col">Total for 1 course</th><th scope="col">Tuition for 2 courses</th><th scope="col">Total for 2 courses</th></tr></thead>
           <tbody>
-            <tr><td>Fall</td><td>$684.35</td><td>$4,916.00</td><td>$5,600.35</td><td>$9,832.00</td><td>$10,516.35</td></tr>
-            <tr><td>Winter</td><td>$589.03</td><td>$4,916.00</td><td>$5,505.03</td><td>$9,832.00</td><td>$10,421.03</td></tr>
-            <tr><td>Spring</td><td>$588.03</td><td>$4,916.00</td><td>$5,504.03</td><td>$9,832.00</td><td>$10,420.03</td></tr>
+            <tr><th scope="row">Fall</th><td>$684.35</td><td>$4,916.00</td><td>$5,600.35</td><td>$9,832.00</td><td>$10,516.35</td></tr>
+            <tr><th scope="row">Winter</th><td>$589.03</td><td>$4,916.00</td><td>$5,505.03</td><td>$9,832.00</td><td>$10,421.03</td></tr>
+            <tr><th scope="row">Spring</th><td>$588.03</td><td>$4,916.00</td><td>$5,504.03</td><td>$9,832.00</td><td>$10,420.03</td></tr>
           </tbody>
         </table>
       </div>
@@ -86,23 +89,24 @@
         <h2>Detailed fee breakdown</h2>
         <p>The table below shows the 2025-26 fees included in the cost examples. The one-time Document Fee applies in Fall for new students.</p>
       </div>
-      <div class="table-wrap">
+      <div class="table-wrap" tabindex="0" role="region" aria-label="2025–2026 detailed student fee breakdown">
         <table>
-          <thead><tr><th>Fee</th><th>Fall</th><th>Winter</th><th>Spring</th></tr></thead>
+          <caption class="sr-only">2025–2026 detailed student fee breakdown</caption>
+          <thead><tr><th scope="col">Fee</th><th scope="col">Fall</th><th scope="col">Winter</th><th scope="col">Spring</th></tr></thead>
           <tbody>
-            <tr><td>Student Services Fee</td><td>$430.00</td><td>$430.00</td><td>$430.00</td></tr>
-            <tr><td>UCGPC Fee, optional with opt-out available</td><td>$3.00</td><td>$2.00</td><td>$2.00</td></tr>
-            <tr><td>UC Student Health Insurance Plan (UCSHIP)</td><td>$2,294.00</td><td>$2,294.00</td><td>$2,294.00</td></tr>
-            <tr><td>Ackerman Student Union Fee</td><td>$27.00</td><td>$27.00</td><td>$27.00</td></tr>
-            <tr><td>Graduate Students Association Fee</td><td>$12.75</td><td>$12.75</td><td>$12.75</td></tr>
-            <tr><td>Graduate Writing Center Fee</td><td>$7.52</td><td>$7.52</td><td>$7.52</td></tr>
-            <tr><td>Student Programs, Activities, and Resources Complex (SPARC) Fee</td><td>$45.00</td><td>$45.00</td><td>$45.00</td></tr>
-            <tr><td>Student Seismic Fee</td><td>$38.00</td><td>$38.00</td><td>$38.00</td></tr>
-            <tr><td>Wooden Center Fee</td><td>$15.00</td><td>$15.00</td><td>$15.00</td></tr>
-            <tr><td>BruinGo Universal Access Transit Pass</td><td>$11.76</td><td>$11.76</td><td>$11.76</td></tr>
-            <tr><td>Document Fee, one-time Fall fee for new students</td><td>$94.32</td><td>-</td><td>-</td></tr>
-            <tr><td><strong>Total fees with UCSHIP</strong></td><td><strong>$2,978.35</strong></td><td><strong>$2,883.03</strong></td><td><strong>$2,882.03</strong></td></tr>
-            <tr><td><strong>Total fees with approved UCSHIP waiver</strong></td><td><strong>$684.35</strong></td><td><strong>$589.03</strong></td><td><strong>$588.03</strong></td></tr>
+            <tr><th scope="row">Student Services Fee</th><td>$430.00</td><td>$430.00</td><td>$430.00</td></tr>
+            <tr><th scope="row">UCGPC Fee, optional with opt-out available</th><td>$3.00</td><td>$2.00</td><td>$2.00</td></tr>
+            <tr><th scope="row">UC Student Health Insurance Plan (UCSHIP)</th><td>$2,294.00</td><td>$2,294.00</td><td>$2,294.00</td></tr>
+            <tr><th scope="row">Ackerman Student Union Fee</th><td>$27.00</td><td>$27.00</td><td>$27.00</td></tr>
+            <tr><th scope="row">Graduate Students Association Fee</th><td>$12.75</td><td>$12.75</td><td>$12.75</td></tr>
+            <tr><th scope="row">Graduate Writing Center Fee</th><td>$7.52</td><td>$7.52</td><td>$7.52</td></tr>
+            <tr><th scope="row">Student Programs, Activities, and Resources Complex (SPARC) Fee</th><td>$45.00</td><td>$45.00</td><td>$45.00</td></tr>
+            <tr><th scope="row">Student Seismic Fee</th><td>$38.00</td><td>$38.00</td><td>$38.00</td></tr>
+            <tr><th scope="row">Wooden Center Fee</th><td>$15.00</td><td>$15.00</td><td>$15.00</td></tr>
+            <tr><th scope="row">BruinGo Universal Access Transit Pass</th><td>$11.76</td><td>$11.76</td><td>$11.76</td></tr>
+            <tr><th scope="row">Document Fee, one-time Fall fee for new students</th><td>$94.32</td><td>-</td><td>-</td></tr>
+            <tr><th scope="row"><strong>Total fees with UCSHIP</strong></th><td><strong>$2,978.35</strong></td><td><strong>$2,883.03</strong></td><td><strong>$2,882.03</strong></td></tr>
+            <tr><th scope="row"><strong>Total fees with approved UCSHIP waiver</strong></th><td><strong>$684.35</strong></td><td><strong>$589.03</strong></td><td><strong>$588.03</strong></td></tr>
           </tbody>
         </table>
       </div>
@@ -163,6 +167,6 @@
     </section>
   </main>
 
-  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt="UCLA"></span><div><strong>UCLA MASDS</strong><br>Review detailed tuition and fee examples before planning your course load.</div></div><a href="get-in-touch.html">Ask about cost</a></div></footer>
+  <footer class="footer"><div class="footer-grid"><div class="footer-brand"><span class="footer-logo"><img src="assets/img/ucla-logo.svg" alt=""></span><div><strong>UCLA MASDS</strong><br>Review detailed tuition and fee examples before planning your course load.</div></div><a href="get-in-touch.html">Ask about cost</a></div></footer>
 </body>
 </html>
