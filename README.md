@@ -24,7 +24,7 @@ Generate player abilities and hit counts, then use observed hits and at-bats to 
 - [Generate players from a fixed Beta prior](https://smileschen.github.io/baseball/beta_binomial_generation.html)
 - [Generate a league from a hierarchical model](https://smileschen.github.io/baseball/hierarchical_beta_binomial_generation.html)
 - [Infer player abilities from observed hits and at-bats](https://smileschen.github.io/baseball/baseball_hierarchical_inference.html)
-- [Walk through two sweeps of Metropolis within Gibbs](https://smileschen.github.io/baseball/baseball_metropolis_within_gibbs.html)
+- [Walk through four sweeps of Metropolis within Gibbs](https://smileschen.github.io/baseball/baseball_metropolis_within_gibbs.html)
 
 # Additional Links
 
