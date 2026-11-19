@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Visualize a Beta prior, binomial likelihood, and Beta posterior as you change the prior and observed counts.">
   <title>Beta–binomial inference</title>
-  <link rel="stylesheet" href="../beta-distribution/explorer.css">
-  <link rel="stylesheet" href="inference.css">
-  <script src="../beta-distribution/beta-tools.js" defer></script>
-  <script src="inference.js" defer></script>
+  <link rel="stylesheet" href="../beta-distribution/explorer.css?v=3">
+  <link rel="stylesheet" href="inference.css?v=2">
+  <script src="../beta-distribution/beta-tools.js?v=3" defer></script>
+  <script src="inference.js?v=2" defer></script>
 </head>
 <body>
   <main>
@@ -21,18 +21,39 @@
       <section class="card controls" aria-labelledby="prior-title">
         <h2 id="prior-title">Beta prior</h2>
         <p class="control-hint">Use the arrow keys on a slider or type a value. Shape and concentration sliders use a log scale.</p>
+        <fieldset id="center-choice" class="center-choice">
+          <legend>Pair with concentration (K)</legend>
+          <div class="center-options">
+            <label>
+              <input type="radio" name="center" value="omega" checked>
+              <span>Mode (ω)</span>
+            </label>
+            <label>
+              <input type="radio" name="center" value="mean">
+              <span>Mean (μ)</span>
+            </label>
+          </div>
+        </fieldset>
         <div id="prior-controls" class="parameter-set" data-series="1"></div>
 
-        <section class="data-controls" aria-labelledby="data-title">
+        <section class="data-controls" data-series="2" aria-labelledby="data-title">
           <h2 id="data-title">Binomial data</h2>
-          <div class="observation">
+          <div class="control">
             <label for="successes">Successes (<var>x</var>)</label>
+            <input id="successes-slider" type="range" min="0" max="250" step="1" value="100" aria-label="Successes (x) slider">
             <input id="successes" type="number" min="0" max="1000000" step="1" value="100" inputmode="numeric" aria-describedby="data-error" required>
           </div>
-          <div class="observation">
+          <div class="control">
             <label for="trials">Trials (<var>n</var>)</label>
+            <input id="trials-slider" type="range" min="100" max="500" step="1" value="250" aria-label="Trials (n) slider">
             <input id="trials" type="number" min="0" max="1000000" step="1" value="250" inputmode="numeric" aria-describedby="data-error" required>
           </div>
+          <div class="control">
+            <label for="proportion">Proportion of successes (<var>p̂</var>)</label>
+            <input id="proportion-slider" type="range" min="0" max="250" step="1" value="100" aria-label="Proportion of successes slider" aria-describedby="proportion-hint">
+            <input id="proportion" type="number" min="0" max="1" step="any" value="0.4" inputmode="decimal" aria-describedby="proportion-hint data-error" required>
+          </div>
+          <p id="proportion-hint" class="proportion-hint">Proportion edits round to the nearest whole number of successes.</p>
           <p id="data-error" class="validation" role="status" hidden></p>
           <button id="scale-likelihood" type="button" aria-pressed="false" aria-describedby="scale-note">Scale likelihood</button>
           <p id="scale-note" class="scale-note">Scaling multiplies the likelihood by <var>n</var> + 1 to give it unit area.</p>
@@ -53,7 +74,7 @@
             <dl>
               <div>
                 <dt><span class="marker-key mean-key" aria-hidden="true"></span>Prior mean</dt>
-                <dd id="prior-mean"></dd>
+                <dd id="prior-mean-summary"></dd>
               </div>
             </dl>
             <p class="boundary-note" id="prior-boundary" hidden></p>

@@ -5,15 +5,7 @@
 }
 
 .data-controls { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
-.observation {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 6.6rem;
-  gap: 11px;
-  align-items: center;
-  margin-top: 8px;
-  font-size: .875rem;
-}
-.observation input { grid-column: auto; grid-row: auto; }
+.proportion-hint { margin-top: 7px; color: var(--muted); font-size: .875rem; }
 
 #scale-likelihood {
   margin-top: 14px;
