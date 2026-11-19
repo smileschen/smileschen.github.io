@@ -15,6 +15,12 @@ function shapesFromMode(omega, k) {
   return { alpha: 1 + omega * excess, beta: 1 + (1 - omega) * excess };
 }
 
+function shapesFromMean(mean, k) {
+  const smaller = Math.max(minShape, k * Math.min(mean, 1 - mean));
+  const larger = k - smaller;
+  return mean <= 0.5 ? { alpha: smaller, beta: larger } : { alpha: larger, beta: smaller };
+}
+
 function describe({ alpha, beta }) {
   const k = alpha + beta;
   const excess = (alpha - 1) + (beta - 1);
@@ -94,52 +100,79 @@ parameterTemplate.innerHTML = `
       <input type="range">
       <input type="number" step="any" inputmode="decimal">
     </div>
+    <div class="control" data-parameter="mean" hidden>
+      <label>Mean (μ)</label>
+      <input type="range">
+      <input type="number" step="any" inputmode="decimal">
+    </div>
     <div class="control" data-parameter="k">
       <label>Concentration (K)</label>
       <input type="range">
       <input type="number" step="any" inputmode="decimal">
     </div>
-    <p class="formula">α = 1 + ω(K − 2)<br>β = 1 + (1 − ω)(K − 2)</p>
+    <p class="formula" data-formula="omega">α = 1 + ω(K − 2)<br>β = 1 + (1 − ω)(K − 2)</p>
+    <p class="formula" data-formula="mean" hidden>α = μK<br>β = (1 − μ)K</p>
     <p class="unavailable" hidden>Set both shapes to at least 1 and their sum above 2 to use these controls.</p>
   </fieldset>
   <p class="validation" role="status" hidden></p>
 `;
 
-function inputBounds(key, parameters) {
+function inputBounds(view, key) {
+  const { alpha, beta } = view.values;
+  const total = alpha + beta;
   switch (key) {
-    case "alpha": return [minShape, maxConcentration - parameters.beta];
-    case "beta": return [minShape, maxConcentration - parameters.alpha];
+    case "alpha": return [minShape, Math.max(minShape, maxConcentration - beta)];
+    case "beta": return [minShape, Math.max(minShape, maxConcentration - alpha)];
     case "omega": return [0, 1];
-    case "k": return [2, maxConcentration];
+    case "mean": {
+      const low = minShape / total;
+      return [low, 1 - low];
+    }
+    case "k": {
+      const low = view.center === "mean"
+        ? Math.min(maxConcentration, total * (minShape / Math.min(alpha, beta)))
+        : 2;
+      return [low, maxConcentration];
+    }
   }
 }
 
-function sliderBounds(key, parameters) {
-  return key === "k" ? [2.001, maxConcentration] : inputBounds(key, parameters);
+function sliderBounds(view, key) {
+  return key === "k" && view.center === "omega" ? [2.001, maxConcentration] : inputBounds(view, key);
 }
 
-function toSlider(key, value, parameters) {
-  if (key === "omega") return Math.round(sliderSteps * (value ?? 0));
-  const [low, high] = sliderBounds(key, parameters);
+function linearSlider(key) {
+  return key === "omega" || key === "mean";
+}
+
+function toSlider(view, key, value) {
+  const [low, high] = sliderBounds(view, key);
   if (value <= low || high <= low) return 0;
-  return Math.min(sliderSteps, Math.round(sliderSteps * Math.log(value / low) / Math.log(high / low)));
+  const fraction = linearSlider(key)
+    ? (value - low) / (high - low)
+    : Math.log(value / low) / Math.log(high / low);
+  return Math.min(sliderSteps, Math.round(sliderSteps * fraction));
 }
 
-function fromSlider(key, position, parameters) {
+function fromSlider(view, key, position) {
   const weight = position / sliderSteps;
-  if (key === "omega") return weight;
-  const [low, high] = sliderBounds(key, parameters);
+  const [low, high] = sliderBounds(view, key);
   if (position === 0) return low;
   if (position === sliderSteps) return high;
-  const value = Number((low * (high / low) ** weight).toPrecision(8));
-  return Math.max(low, Math.min(high, value));
+  const value = linearSlider(key) ? low + weight * (high - low) : low * (high / low) ** weight;
+  return Math.max(low, Math.min(high, Number(value.toPrecision(8))));
 }
 
-function createParameterView({ prefix, title, controls, initial, onChange }) {
-  controls.append(parameterTemplate.content.cloneNode(true));
+function createParameterView({ prefix, title, controls, initial, center = "omega", allowMean = false, onChange }) {
+  const content = parameterTemplate.content.cloneNode(true);
+  if (!allowMean) {
+    content.querySelector('[data-parameter="mean"]').remove();
+    content.querySelector('[data-formula="mean"]').remove();
+  }
+  controls.append(content);
   controls.querySelector("[data-distribution-title]").textContent = title;
   const view = {
-    controls, values: initial, onChange,
+    controls, values: initial, center, onChange,
     fields: {},
     color: getComputedStyle(controls).getPropertyValue("--series").trim(),
     status: controls.querySelector(".validation")
@@ -159,10 +192,10 @@ function createParameterView({ prefix, title, controls, initial, onChange }) {
     number.setAttribute("aria-label", name);
     number.setAttribute("aria-describedby", view.status.id);
     label.htmlFor = number.id;
-    view.fields[key] = { range, number, label: label.textContent };
+    view.fields[key] = { row, range, number, label: label.textContent };
 
     range.addEventListener("input", () => {
-      update(view, key, fromSlider(key, range.valueAsNumber, view.values));
+      update(view, key, fromSlider(view, key, range.valueAsNumber));
     });
     number.addEventListener("input", () => update(view, key, number.valueAsNumber, number));
   }
@@ -172,32 +205,42 @@ function createParameterView({ prefix, title, controls, initial, onChange }) {
 
 function syncControls(view, edited) {
   const state = describe(view.values);
-  const available = state.omega !== null;
-  view.controls.querySelector(".alternative").disabled = !available;
-  view.controls.querySelector(".formula").hidden = !available;
+  const useMode = view.center === "omega";
+  const available = !useMode || state.omega !== null;
+  const alternative = view.controls.querySelector(".alternative");
+  const meanFormula = alternative.querySelector('[data-formula="mean"]');
+  alternative.disabled = !available;
+  alternative.querySelector("legend").textContent = useMode ? "Mode and concentration" : "Mean and concentration";
+  view.fields.omega.row.hidden = !useMode;
+  if (view.fields.mean) view.fields.mean.row.hidden = useMode;
+  alternative.querySelector('[data-formula="omega"]').hidden = !useMode || !available;
+  if (meanFormula) meanFormula.hidden = useMode;
   view.controls.querySelector(".unavailable").hidden = available;
   view.status.hidden = true;
   view.status.textContent = "";
   for (const [key, { range, number }] of Object.entries(view.fields)) {
     const value = state[key];
-    const [low, high] = inputBounds(key, state);
+    const [low, high] = inputBounds(view, key);
     number.min = low;
     number.max = high;
     number.removeAttribute("aria-invalid");
-    if (number !== edited) number.value = value === null ? "" : String(Number(value.toPrecision(8)));
-    range.value = toSlider(key, value, state);
-    range.setAttribute("aria-valuetext", value === null ? "Unavailable" : display(value));
+    const text = value === null ? "" : String(Number(value.toPrecision(8)));
+    if (number !== edited) number.value = text;
+    range.disabled = low >= high;
+    range.value = toSlider(view, key, value);
+    range.setAttribute("aria-valuetext", text || "Unavailable");
   }
 }
 
 function update(view, key, value, edited) {
-  const [low, high] = inputBounds(key, view.values);
-  const invalid = !Number.isFinite(value) || value < low || value > high || (key === "k" && value === 2);
+  const [low, high] = inputBounds(view, key);
+  const modeConcentration = key === "k" && view.center === "omega";
+  const invalid = !Number.isFinite(value) || value < low || value > high || (modeConcentration && value === 2);
   if (invalid) {
     view.fields[key].number.setAttribute("aria-invalid", "true");
-    view.status.textContent = key === "k"
+    view.status.textContent = modeConcentration
       ? `Enter a concentration greater than 2 and at most ${display(high)}.`
-      : `Enter ${view.fields[key].label} from ${display(low)} to ${display(high)}.`;
+      : `Enter ${view.fields[key].label} from ${low} to ${high}.`;
     view.status.hidden = false;
     return;
   }
@@ -205,8 +248,10 @@ function update(view, key, value, edited) {
   if (key === "alpha" || key === "beta") {
     view.values[key] = value;
   } else {
-    const { omega, k } = describe(view.values);
-    view.values = shapesFromMode(key === "omega" ? value : omega, key === "k" ? value : k);
+    const state = describe(view.values);
+    const center = key === "k" ? state[view.center] : value;
+    const k = key === "k" ? value : state.k;
+    view.values = view.center === "mean" ? shapesFromMean(center, k) : shapesFromMode(center, k);
   }
   syncControls(view, edited);
   view.onChange();

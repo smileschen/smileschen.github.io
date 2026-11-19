@@ -79,6 +79,23 @@ h3 { font-size: .98rem; }
 .compare input:checked::before { background: white; left: 18px; }
 :where(input, button, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
+.center-choice { margin-bottom: 16px; }
+.center-choice legend { font-size: .875rem; padding-bottom: 5px; }
+.center-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--ground);
+}
+.center-options label { position: relative; text-align: center; cursor: pointer; }
+.center-options input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.center-options span { display: block; padding: 6px 8px; border-radius: 5px; font-size: .875rem; font-weight: 600; }
+.center-options input:checked + span { background: var(--accent); color: white; }
+.center-options input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+
 [data-series="1"] { --series: #17629e; --series-paper: #f0f7fd; }
 [data-series="2"] { --series: #a94727; --series-paper: #fcf3ec; }
 
@@ -175,4 +192,5 @@ canvas { display: block; width: 100%; height: clamp(320px, 42vw, 435px); margin-
 @media (forced-colors: active) {
   .compare input { appearance: auto; width: auto; height: auto; }
   .compare input::before { display: none; }
+  .center-options input:checked + span { forced-color-adjust: none; background: Highlight; color: HighlightText; }
 }

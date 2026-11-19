@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Explore the Beta density with shape, mode, and concentration controls. Compare two densities on the same axes.">
   <title>Beta distribution explorer</title>
-  <link rel="stylesheet" href="explorer.css">
-  <script src="beta-tools.js" defer></script>
-  <script src="explorer.js?v=2" defer></script>
+  <link rel="stylesheet" href="explorer.css?v=3">
+  <script src="beta-tools.js?v=3" defer></script>
+  <script src="explorer.js?v=3" defer></script>
 </head>
 <body>
   <main>
@@ -26,6 +26,19 @@
           </label>
         </div>
         <p class="control-hint">Use the arrow keys on a slider or type a value. Shape and concentration sliders use a log scale.</p>
+        <fieldset id="center-choice" class="center-choice">
+          <legend>Pair with concentration (K)</legend>
+          <div class="center-options">
+            <label>
+              <input type="radio" name="center" value="omega" checked>
+              <span>Mode (ω)</span>
+            </label>
+            <label>
+              <input type="radio" name="center" value="mean">
+              <span>Mean (μ)</span>
+            </label>
+          </div>
+        </fieldset>
         <div id="first-controls" class="parameter-set" data-series="1"></div>
         <div id="second-controls" class="parameter-set" data-series="2" hidden></div>
       </section>

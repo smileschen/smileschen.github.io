@@ -1,6 +1,7 @@
 "use strict";
 
 const compare = byId("compare");
+const centerChoice = byId("center-choice");
 
 function createView(index, controls, summary, initial) {
   const view = createParameterView({
@@ -8,6 +9,8 @@ function createView(index, controls, summary, initial) {
     title: `Distribution ${index}`,
     controls,
     initial,
+    center: centerChoice?.querySelector("input:checked")?.value,
+    allowMean: Boolean(centerChoice),
     onChange: refresh
   });
   summary.append(byId("summary-template").content.cloneNode(true));
@@ -42,4 +45,10 @@ function refresh() {
 }
 
 compare.addEventListener("change", refresh);
+centerChoice?.addEventListener("change", event => {
+  for (const view of views) {
+    view.center = event.target.value;
+    syncControls(view);
+  }
+});
 refresh();
