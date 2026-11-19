@@ -22,6 +22,7 @@ Step through multivariate MCMC with the same two-dimensional normal target. Each
 Generate player abilities and hit counts, then use observed hits and at-bats to estimate individual abilities and the shared population mode.
 
 - [Explore and compare Beta distributions](https://smileschen.github.io/beta-distribution/)
+- [Explore Bayesian updating with a Beta prior](https://smileschen.github.io/bayesian-inference/)
 - [Generate players from a fixed Beta prior](https://smileschen.github.io/baseball/beta_binomial_generation.html)
 - [Generate a league from a hierarchical model](https://smileschen.github.io/baseball/hierarchical_beta_binomial_generation.html)
 - [Infer player abilities from observed hits and at-bats](https://smileschen.github.io/baseball/baseball_hierarchical_inference.html)

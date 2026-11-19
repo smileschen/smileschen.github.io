@@ -6,12 +6,14 @@
   <meta name="description" content="Explore the Beta density with shape, mode, and concentration controls. Compare two densities on the same axes.">
   <title>Beta distribution explorer</title>
   <link rel="stylesheet" href="explorer.css">
-  <script src="explorer.js" defer></script>
+  <script src="beta-tools.js" defer></script>
+  <script src="explorer.js?v=2" defer></script>
 </head>
 <body>
   <main>
     <header class="page-heading">
       <h1>Beta distribution explorer</h1>
+      <nav aria-label="Related tool"><a href="../bayesian-inference/">Bayesian inference</a></nav>
     </header>
 
     <div class="workspace">
@@ -43,39 +45,6 @@
     </div>
     <noscript><p>Enable JavaScript to change the parameters and draw the density.</p></noscript>
   </main>
-
-  <template id="parameter-template">
-    <h3 class="series-heading" data-distribution-title></h3>
-    <fieldset>
-      <legend>Shape parameters</legend>
-      <div class="control" data-parameter="alpha">
-        <label>Shape 1 (α)</label>
-        <input type="range">
-        <input type="number" step="any" inputmode="decimal">
-      </div>
-      <div class="control" data-parameter="beta">
-        <label>Shape 2 (β)</label>
-        <input type="range">
-        <input type="number" step="any" inputmode="decimal">
-      </div>
-    </fieldset>
-    <fieldset class="alternative">
-      <legend>Mode and concentration</legend>
-      <div class="control" data-parameter="omega">
-        <label>Mode (ω)</label>
-        <input type="range">
-        <input type="number" step="any" inputmode="decimal">
-      </div>
-      <div class="control" data-parameter="k">
-        <label>Concentration (K)</label>
-        <input type="range">
-        <input type="number" step="any" inputmode="decimal">
-      </div>
-      <p class="formula">α = 1 + ω(K − 2)<br>β = 1 + (1 − ω)(K − 2)</p>
-      <p class="unavailable" hidden>Set both shapes to at least 1 and their sum above 2 to use these controls.</p>
-    </fieldset>
-    <p class="validation" role="status" hidden></p>
-  </template>
 
   <template id="summary-template">
     <h3 class="series-heading" data-beta-label></h3>

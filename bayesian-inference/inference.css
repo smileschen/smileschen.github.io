@@ -1,0 +1,39 @@
+[data-series="3"] { --series: #08766d; --series-paper: #eaf6f2; }
+[data-series="3"] .series-heading::before {
+  width: 22px;
+  background: linear-gradient(90deg, var(--series) 0 55%, transparent 55% 73%, var(--series) 73% 82%, transparent 82%);
+}
+
+.data-controls { margin-top: 16px; padding-top: 13px; border-top: 1px solid var(--border); }
+.observation {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.6rem;
+  gap: 11px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: .875rem;
+}
+.observation input { grid-column: auto; grid-row: auto; }
+
+#scale-likelihood {
+  margin-top: 14px;
+  padding: 7px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  background: var(--paper);
+  color: var(--accent);
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+#scale-likelihood:hover { background: #eef6fd; }
+#scale-likelihood[aria-pressed="true"] { background: var(--accent); color: white; }
+.scale-note, .curve-parameters, .update-rule { font-size: .875rem; color: var(--muted); }
+.scale-note { margin-top: 7px; }
+.inference-summaries { grid-template-columns: repeat(auto-fit, minmax(min(174px, 100%), 1fr)); }
+.inference-summaries .summary h3 { margin-bottom: 3px; }
+.inference-summaries .summary dl { margin-top: 7px; gap: 6px 14px; }
+.curve-parameters { overflow-wrap: anywhere; }
+.update-rule { margin-top: 12px; }

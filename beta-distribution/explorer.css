@@ -15,7 +15,8 @@
 body { margin: 0; background: var(--ground); color: var(--ink); }
 main { max-width: 1290px; margin: 0 auto; padding: 30px clamp(16px, 4vw, 54px) 44px; }
 h1, h2, h3, p, dl, dd { margin: 0; }
-.page-heading { margin-bottom: 24px; }
+.page-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 18px; margin-bottom: 24px; }
+.page-heading a { color: var(--accent); text-underline-offset: 3px; }
 h1 { font-size: clamp(1.9rem, 4.2vw, 3rem); line-height: 1.1; letter-spacing: -.045em; }
 h2 { font-size: 1.18rem; letter-spacing: -.02em; }
 h3 { font-size: .98rem; }
@@ -76,7 +77,7 @@ h3 { font-size: .98rem; }
 
 .compare input:checked { background: var(--accent); border-color: var(--accent); }
 .compare input:checked::before { background: white; left: 18px; }
-:where(input):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:where(input, button, a):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
 [data-series="1"] { --series: #17629e; --series-paper: #f0f7fd; }
 [data-series="2"] { --series: #a94727; --series-paper: #fcf3ec; }

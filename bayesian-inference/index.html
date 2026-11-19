@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Visualize a Beta prior, binomial likelihood, and Beta posterior as you change the prior and observed counts.">
+  <title>Beta–binomial inference</title>
+  <link rel="stylesheet" href="../beta-distribution/explorer.css">
+  <link rel="stylesheet" href="inference.css">
+  <script src="../beta-distribution/beta-tools.js" defer></script>
+  <script src="inference.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="page-heading">
+      <h1>Beta–binomial inference</h1>
+      <nav aria-label="Related tool"><a href="../beta-distribution/">Beta distribution explorer</a></nav>
+    </header>
+
+    <div class="workspace">
+      <section class="card controls" aria-labelledby="prior-title">
+        <h2 id="prior-title">Beta prior</h2>
+        <p class="control-hint">Use the arrow keys on a slider or type a value. Shape and concentration sliders use a log scale.</p>
+        <div id="prior-controls" class="parameter-set" data-series="1"></div>
+
+        <section class="data-controls" aria-labelledby="data-title">
+          <h2 id="data-title">Binomial data</h2>
+          <div class="observation">
+            <label for="successes">Successes (<var>x</var>)</label>
+            <input id="successes" type="number" min="0" max="1000000" step="1" value="100" inputmode="numeric" aria-describedby="data-error" required>
+          </div>
+          <div class="observation">
+            <label for="trials">Trials (<var>n</var>)</label>
+            <input id="trials" type="number" min="0" max="1000000" step="1" value="250" inputmode="numeric" aria-describedby="data-error" required>
+          </div>
+          <p id="data-error" class="validation" role="status" hidden></p>
+          <button id="scale-likelihood" type="button" aria-pressed="false" aria-describedby="scale-note">Scale likelihood</button>
+          <p id="scale-note" class="scale-note">Scaling multiplies the likelihood by <var>n</var> + 1 to give it unit area.</p>
+        </section>
+      </section>
+
+      <section class="card plot-card" aria-labelledby="plot-title">
+        <div class="card-heading">
+          <h2 id="plot-title">Prior, likelihood, and posterior</h2>
+        </div>
+        <canvas id="density-chart" role="img" aria-label="Beta prior, binomial likelihood, and Beta posterior" aria-describedby="summaries">
+          Summary statistics for the three curves are listed below.
+        </canvas>
+        <div class="summaries inference-summaries" id="summaries">
+          <div class="summary" data-series="1">
+            <h3 class="series-heading">Prior</h3>
+            <p class="curve-parameters" id="prior-description"></p>
+            <dl>
+              <div>
+                <dt><span class="marker-key mean-key" aria-hidden="true"></span>Prior mean</dt>
+                <dd id="prior-mean"></dd>
+              </div>
+            </dl>
+            <p class="boundary-note" id="prior-boundary" hidden></p>
+          </div>
+          <div class="summary" data-series="2">
+            <h3 class="series-heading">Likelihood</h3>
+            <p class="curve-parameters" id="likelihood-description"></p>
+            <dl>
+              <div>
+                <dt><span class="marker-key mode-key" aria-hidden="true"></span>MLE</dt>
+                <dd id="mle"></dd>
+              </div>
+            </dl>
+          </div>
+          <div class="summary" data-series="3">
+            <h3 class="series-heading">Posterior</h3>
+            <p class="curve-parameters" id="posterior-description"></p>
+            <dl>
+              <div>
+                <dt><span class="marker-key mean-key" aria-hidden="true"></span>Mean</dt>
+                <dd id="posterior-mean"></dd>
+              </div>
+              <div>
+                <dt><span class="marker-key mode-key" aria-hidden="true"></span>Mode</dt>
+                <dd id="posterior-mode"></dd>
+              </div>
+            </dl>
+            <p class="boundary-note" id="posterior-boundary" hidden></p>
+          </div>
+        </div>
+        <p class="update-rule">Posterior = Beta(α + x, β + n − x)</p>
+      </section>
+    </div>
+    <noscript><p>Enable JavaScript to change the parameters and draw the curves.</p></noscript>
+  </main>
+</body>
+</html>
