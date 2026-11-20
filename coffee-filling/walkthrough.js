@@ -45,11 +45,11 @@ function offsetAxis(values, step) {
 }
 
 const credibleZ = 1.95996398454;
-const inferenceAxis = offsetAxis(fits.flatMap((fit) => [
-  ...Object.values(fit.machines).map((record) => record.observed),
-  ...[fit.line, ...Object.values(fit.machines)].flatMap(({ mean, sd }) =>
-    [mean - credibleZ * sd, mean + credibleZ * sd]),
-]), 4);
+const inferenceAxis = offsetAxis([
+  ...Object.values(data).flat(),
+  ...fits.flatMap((fit) => [fit.line, ...Object.values(fit.machines)].flatMap(({ mean, sd }) =>
+    [mean - credibleZ * sd, mean + credibleZ * sd])),
+], 4);
 const conditionalAxis = offsetAxis([
   ...chain,
   ...steps.map((step) => step.draw),
@@ -189,9 +189,12 @@ function observedRecords(available) {
 function inferencePlot(fit, previous) {
   const { min, max, ticks } = inferenceAxis;
   const sc = scale(min, max, 49);
-  let body = line(sc.x(0), 17, sc.x(0), 230, "target");
+  const firstRow = 32;
+  const rowSpacing = 53;
+  const axisY = firstRow + (coordinates.length - 1) * rowSpacing + 31;
+  let body = line(sc.x(0), 8, sc.x(0), axisY, "target");
   coordinates.forEach((name, i) => {
-    const row = 29 + i * 45;
+    const row = firstRow + i * rowSpacing;
     const isLine = name === "Line";
     const record = isLine ? fit.line : fit.machines[name];
     body += label(2, row + 5, name, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
@@ -202,19 +205,29 @@ function inferencePlot(fit, previous) {
     const midpoint = sc.x(record.mean);
     const left = sc.x(record.mean - credibleZ * record.sd);
     const right = sc.x(record.mean + credibleZ * record.sd);
-    const postY = row + 7;
+    const postY = row + 13;
+    const diamond = `${midpoint},${postY - 6} ${midpoint + 6},${postY} ${midpoint},${postY + 6} ${midpoint - 6},${postY}`;
     body += line(left, postY, right, postY, "interval") + line(left, postY - 4, left, postY + 4, "interval")
-      + line(right, postY - 4, right, postY + 4, "interval") + mark(midpoint, postY, "posterior-mark");
-    if (!isLine) body += mark(sc.x(record.observed), row - 7, "observed-mark");
+      + line(right, postY - 4, right, postY + 4, "interval")
+      + `<polygon points="${diamond}" class="posterior-mark"><title>Posterior mean ${fillWeight(record.mean)}</title></polygon>`;
+    if (!isLine) {
+      const weights = data[name].map((deviation) => {
+        const x = sc.x(deviation);
+        return `<g><title>Bag weight ${fillWeight(deviation)}</title>${line(x, row - 21, x, row - 9, "bag-tick")}</g>`;
+      }).join("");
+      body += weights + `<g><title>Sample mean ${fillWeight(record.observed)}</title>${mark(sc.x(record.observed), row, "observed-mark")}</g>`;
+    }
     if (name === "A" && previous) {
       const old = sc.x(previous.machines.A.mean);
-      const previousY = row + 18;
+      const previousY = row + 24;
       body += line(old - 3, previousY - 3, old + 3, previousY + 3, "compare-mark")
         + line(old + 3, previousY - 3, old - 3, previousY + 3, "compare-mark");
     }
   });
-  body += horizontalAxis(sc, 238, ticks);
-  return svg(body, 287, `Observed means and posterior means with 95 percent credible intervals. Machine A’s posterior mean offset is ${grams(fit.machines.A.mean)}. Machine B’s is ${grams(fit.machines.B.mean)}. The line’s is ${grams(fit.line.mean)}.`);
+  body += horizontalAxis(sc, axisY, ticks);
+  const estimates = Object.entries(fit.machines)
+    .map(([name, record]) => `Machine ${name} ${fillWeight(record.mean)}`).join(", ");
+  return svg(body, axisY + 49, `Vertical ticks mark individual bag weights, open circles mark sample means, and solid diamonds mark posterior means with 95 percent credible intervals. Posterior mean fills are ${estimates}, line ${fillWeight(fit.line.mean)}.`);
 }
 
 function inferenceView(index) {
@@ -223,12 +236,13 @@ function inferenceView(index) {
   const complete = index === fits.length - 1;
   const introduced = names[1 + index];
   const title = previous ? `Records from ${introduced} update A’s estimate` : "Start with bags from A and B";
-  let cue = `Set aside the machine means used to simulate these bags. The open circles show the observed averages of ${fillWeight(fit.machines.A.observed)} from A’s two bags and ${fillWeight(fit.machines.B.observed)} from B’s eight. B’s record includes the four bags shown earlier.`;
+  let cue = "Set aside the means used to simulate these bags. Each tick marks a bag. Compare A’s two weights and B’s eight with the open circles for their sample means and the green diamonds for their posterior means.";
   if (previous) {
-    cue = `A’s two bags weigh the same as before. Adding ${introduced} changes the estimate for the shared line. Follow the filled dot for A from ${grams(previous.machines.A.mean)} to ${grams(fit.machines.A.mean)}.`;
+    cue = `The new ticks show the bags from ${introduced}. Those bags update the estimate for the shared line. Follow A’s posterior mean from ${grams(previous.machines.A.mean)} to ${grams(fit.machines.A.mean)}.`;
   }
   if (complete) cue += " Compare the intervals for A and B. A’s two bags give less information about its long-run average than B’s eight do.";
-  const legendItems = [["open", "Observed average"], ["posterior", "Posterior mean and 95% interval"]];
+  const legendItems = [["bag-tick", "Individual bag"], ["open", "Sample mean"],
+    ["posterior-diamond", "Posterior mean and 95% credible interval"]];
   if (previous) legendItems.push(["previous", "Previous estimate for A"]);
   const plot = `<h3>Machine and line estimates</h3>${legend(legendItems)}
     ${inferencePlot(fit, previous)}<p class="chart-note">A machine’s interval describes its long-run mean fill.</p>`;

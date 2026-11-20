@@ -126,6 +126,8 @@ thead th { color: var(--muted) }
 .symbol.open { border: 1.8px solid var(--ink); border-radius: 50%; background: white }
 .symbol.draw { border-radius: 50%; background: var(--rust) }
 .symbol.posterior { border-radius: 50%; background: var(--green) }
+.symbol.bag-tick { background: linear-gradient(90deg, transparent 40%, var(--rust) 40% 60%, transparent 60%) }
+.symbol.posterior-diamond { background: var(--green); transform: rotate(45deg) scale(.78) }
 .symbol.previous { font-weight: 750; color: var(--muted) }
 .symbol.center { border-left: 2px dashed var(--green); margin-left: 4px; flex-basis: 8px }
 .symbol.hist { background: #bdd8cd; border: 1px solid var(--green) }
@@ -144,6 +146,7 @@ thead th { color: var(--muted) }
 .chart .interval { stroke: var(--green); stroke-width: 2 }
 .chart .posterior-mark { fill: var(--green) }
 .chart .observed-mark { fill: white; stroke: var(--ink); stroke-width: 1.5 }
+.chart .bag-tick { stroke: var(--rust); stroke-width: 2 }
 .chart .compare-mark { stroke: #667069; stroke-width: 1.4 }
 .chart .histogram { fill: #bdd8cd; stroke: white; stroke-width: .7 }
 @media (max-width: 860px) {
