@@ -1,12 +1,13 @@
 "use strict";
 
-const { target, data, generation, fits, learning, steps, chain, warmup } = coffeeData;
+const { target, data, generation, fits, learning, steps, chain, warmup, lineTrace, posteriorSummary } = coffeeData;
 const names = Object.keys(data);
 const coordinates = [...names, "Line"];
 const chosenMachine = "B";
 const simulatedBags = generation.bags[chosenMachine].slice(0, 4);
 const bagTotal = names.reduce((total, name) => total + data[name].length, 0);
-const generationEnd = 1 + names.length + simulatedBags.length;
+const bagPreviewEnd = 1 + names.length + simulatedBags.length;
+const generationEnd = bagPreviewEnd + 1;
 const sweepCount = steps.at(-1).sweep;
 const indices = { generate: 0, learn: 0, gibbs: 0 };
 const compact = window.matchMedia("(max-width: 600px)");
@@ -28,8 +29,8 @@ const line = (x1, y1, x2, y2, style) =>
   `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="${style}"/>`;
 const mark = (x, y, style, radius = 5.5) =>
   `<circle cx="${x}" cy="${y}" r="${radius}" class="${style}"/>`;
-const diamond = (x, y) =>
-  `<polygon points="${x},${y - 6} ${x + 6},${y} ${x},${y + 6} ${x - 6},${y}" class="posterior-mark"/>`;
+const diamond = (x, y, style = "posterior-mark") =>
+  `<polygon points="${x},${y - 6} ${x + 6},${y} ${x},${y + 6} ${x - 6},${y}" class="${style}"/>`;
 const label = (x, y, text, anchor = "start", style = "") =>
   `<text x="${x}" y="${y}" class="${style}" text-anchor="${anchor}">${text}</text>`;
 
@@ -83,55 +84,78 @@ function densityPath(sc, y, mean, sd) {
 
 function legend(items) {
   return `<p class="legend">${items.map(([style, text]) =>
-    `<span><i class="symbol ${style}" aria-hidden="true">${style === "previous" ? "×" : ""}</i>${text}</span>`
+    `<span><i class="symbol ${style}" aria-hidden="true">${["previous", "truth"].includes(style) ? "×" : ""}</i>${text}</span>`
   ).join("")}</p>`;
 }
 
 const scene = (plot, side, below = "") =>
   `<div class="lesson-grid"><section class="chart-card">${plot}</section><section class="side-card">${side}</section></div>${below}`;
 
-function generationPlot(hasLine, machineCount, bagCount) {
-  const sc = scale(-12, 17, 62);
-  const baseline = 94;
-  const y = (density) => baseline - 660 * density;
-  const path = densityPath(sc, y, 0, 4);
-  let body = `<path d="${path} L ${sc.right} ${baseline} L ${sc.left} ${baseline} Z" class="shade"/>
-    <path d="${path}" class="curve"/>`;
+function generationPlot(hasLine, machineCount, bagCount, allBags) {
+  const sc = scale(-12, 20, 70);
+  const baseline = 72;
+  const y = (density) => baseline - 390 * density;
+  const lineDrawY = y(normal(generation.line, 0, 4));
+  let body = `<path d="${densityPath(sc, y, 0, 4)}" class="line-curve"/>`;
   body += label(sc.left, 17, "Hyperprior for the line offset", "start", "chart-label");
   body += line(sc.left, baseline, sc.right, baseline, "axis");
-  if (hasLine) body += mark(sc.x(generation.line), y(normal(generation.line, 0, 4)), "draw-mark", 7);
+  if (hasLine) body += diamond(sc.x(generation.line), lineDrawY, "line-mark");
   const bagRow = `${chosenMachine} bags`;
-  ["Line", ...names, bagRow].forEach((name, i) => {
-    const row = 121 + 43 * i;
+  const meansRow = 128;
+  const meansY = (density) => meansRow - 183 * density;
+  body += label(2, meansRow - 15, "Machine", "start", "chart-label") + label(2, meansRow + 1, "means", "start", "chart-label");
+  body += line(sc.left, meansRow, sc.right, meansRow, "gridline");
+  if (hasLine) {
+    const lx = sc.x(generation.line);
+    body += line(lx, lineDrawY, lx, meansRow, "target");
+    body += `<path d="${densityPath(sc, meansY, generation.line, 2)}" class="bayes-prior"/>`;
+    body += names.slice(0, machineCount).map((name) => {
+      const draw = generation.machines[name];
+      return mark(sc.x(draw), meansY(normal(draw, generation.line, 2)), "posterior-mark", 4);
+    }).join("");
+  }
+  names.forEach((name, i) => {
+    const row = 171 + 43 * i;
     body += label(2, row - 1, name, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
-    if (i === 0 && hasLine) body += mark(sc.x(generation.line), row, "draw-mark");
-    if (i >= 1 && i <= machineCount) {
-      const mean = generation.machines[name];
-      const bagSd = 4;
-      const machineY = (density) => row - 295 * density;
-      const machinePath = densityPath(sc, machineY, mean, bagSd);
-      body += `<path d="${machinePath} L ${sc.right} ${row} L ${sc.left} ${row} Z" class="shade"/>`;
-      body += `<path d="${machinePath}" class="machine-curve"/>`;
-      body += mark(sc.x(mean), machineY(normal(mean, mean, bagSd)), "posterior-mark", 5);
-    }
-    if (name === bagRow && bagCount) {
+    if (i >= machineCount) return;
+    const mean = generation.machines[name];
+    const bagSd = 4;
+    const machineY = (density) => row - 295 * density;
+    const machinePath = densityPath(sc, machineY, mean, bagSd);
+    body += `<path d="${machinePath} L ${sc.right} ${row} L ${sc.left} ${row} Z" class="shade"/>`;
+    body += `<path d="${machinePath}" class="machine-curve"/>`;
+    body += mark(sc.x(mean), machineY(normal(mean, mean, bagSd)), "posterior-mark", 5);
+    if (allBags) body += data[name].map((v) => {
+      const at = machineY(normal(v, mean, bagSd));
+      return bagTick(sc, v, at - 7, at + 7);
+    }).join("");
+  });
+  let axisY = 324;
+  if (!allBags) {
+    const row = 341;
+    body += label(2, row - 1, bagRow, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
+    if (bagCount) {
       const bMean = sc.x(generation.machines[chosenMachine]);
       body += line(bMean, row - 15, bMean, row + 10, "mean-mark");
       body += simulatedBags.slice(0, bagCount).map((v) => mark(sc.x(v), row, "observed-mark", 4.5)).join("");
     }
-  });
-  body += horizontalAxis(sc, 355, [-10, -5, 0, 5, 10, 15]);
-  const description = hasLine ?
+    axisY = 360;
+  }
+  body += horizontalAxis(sc, axisY, [-10, -5, 0, 5, 10, 15, 20]);
+  const description = allBags
+    ? `Normal curves for the line, machine means and bag weights, with all ${bagTotal} observed weights marked.`
+    : hasLine ?
     `Simulated line offset ${grams(generation.line)}. ${machineCount} machine means with Normal curves for that machine’s bag weights and ${bagCount} simulated bag weights from machine ${chosenMachine} are visible.` :
     "Normal hyperprior for the line offset, centered at zero with standard deviation four grams.";
-  return svg(body, 405, description);
+  return svg(body, axisY + 49, description);
 }
 
 function generationView(index) {
   const hasLine = index >= 1;
   const machineCount = Math.min(names.length, Math.max(0, index - 1));
-  const bagCount = Math.max(0, index - 1 - names.length);
-  const complete = index === generationEnd;
+  const bagCount = Math.min(simulatedBags.length, Math.max(0, index - 1 - names.length));
+  const allBags = index === generationEnd;
+  const previewComplete = index === bagPreviewEnd;
   let title = "Start with the hyperprior";
   let cue = `The hyperprior describes plausible values of the whole line’s average offset before we have weighed any bags. It’s centered at 0 g, which corresponds to the ${target} g label, with a standard deviation of 4 g.`;
   let next = "Draw the line offset";
@@ -153,10 +177,15 @@ function generationView(index) {
     const mean = generation.machines[chosenMachine];
     const comparison = deviation < mean ? "below" : "above";
     cue = `This bag weighs ${fillWeight(deviation)}, ${Math.abs(deviation - mean).toFixed(2)} g ${comparison} machine ${chosenMachine}’s average of ${fillWeight(mean)}. Every bag from ${chosenMachine} is drawn from the same Normal curve.`;
-    next = complete ? `Review all ${bagTotal} weighed bags` : "Draw the next bag";
+    next = previewComplete ? `Show all ${bagTotal} bag weights on the curves` : "Draw the next bag";
   }
-  if (complete) {
+  if (previewComplete) {
     cue = "We’ll keep these four weights in the data we analyze. Both of A’s weights and the last of B’s weights were chosen so the two machines share a sample mean of 255 g.";
+  }
+  if (allBags) {
+    title = "The four machine distributions with 18 weighed bags";
+    cue = "Each orange tick marks one observed bag on its machine’s curve. We have two bags from A, eight from B, and four each from C and D.";
+    next = "Start the Gibbs walkthrough";
   }
   const waiting = '<span class="waiting">awaiting draw</span>';
   const bagItems = simulatedBags.slice(0, bagCount).map((v, i) =>
@@ -168,14 +197,19 @@ function generationView(index) {
   const tree = `<ul class="tree"><li><strong>Line offset</strong> ${hasLine ? `${grams(generation.line)}, shared center ${fillWeight(generation.line)}` : waiting}
     <ul>${machineItems}</ul></li></ul>`;
   const plot = `<h3>From the line to the bags</h3>
-    ${legend([["draw", "Line mean"], ["posterior", "Machine mean"], ["open", "Bag weight"]])}
-    ${generationPlot(hasLine, machineCount, bagCount)}
-    ${machineCount ? '<p class="chart-note">Each small curve shows how bag weights vary around that machine’s mean. The standard deviation is 4 g for each machine.</p>' : ""}
-    ${bagCount ? `<p class="chart-note">The dashed mark on the bag row shows machine ${chosenMachine}’s mean.</p>` : ""}`;
+    ${legend([["line-diamond", "Line mean"], ["posterior", "Machine mean"], [allBags ? "bag-tick" : "open", "Bag weight"]])}
+    ${generationPlot(hasLine, machineCount, bagCount, allBags)}
+    ${hasLine ? '<p class="chart-note">The dashed Normal curve for machine means has SD 2 g. Each green curve for individual bags has SD 4 g.</p>' : ""}`;
+  const side = allBags ? `<h3>The Normal hierarchy</h3>
+    <dl class="readout"><div><dt>Line offset</dt><dd>μ ∼ N(0, 4²)</dd></div>
+    <div><dt>Machine offset given the line</dt><dd>θ<sub>j</sub> ∼ N(μ, 2²)</dd></div>
+    <div><dt>Bag offset given its machine</dt><dd>y<sub>ij</sub> ∼ N(θ<sub>j</sub>, 4²)</dd></div></dl>
+    <p class="chart-note">The second argument is the variance. Bag offsets are measured from the 250 g target.</p>`
+    : `<h3>Simulated values</h3><p>Draw the line once, each machine once, and each bag separately.</p>${tree}`;
   return {
     progress: `Simulated production line · Step ${index + 1} of ${generationEnd + 1}`,
     title, cue, next,
-    html: scene(plot, `<h3>Simulated values</h3><p>Draw the line once, each machine once, and each bag separately.</p>${tree}`),
+    html: scene(plot, side, allBags ? observedRecords(names) : ""),
   };
 }
 
@@ -387,7 +421,7 @@ function inferenceView(index) {
   };
 }
 
-function gibbsDensity({ mean, sd, draw, samples }) {
+function gibbsDensity({ mean, sd, draw, samples, coordinate, before }) {
   const { min, max, ticks } = conditionalAxis;
   const sc = scale(min, max);
   const baseline = 177;
@@ -411,11 +445,24 @@ function gibbsDensity({ mean, sd, draw, samples }) {
     }).join("");
   } else {
     body += `<path d="${path} L ${sc.right} ${baseline} L ${sc.left} ${baseline} Z" class="shade"/>`;
+    const lineUpdate = coordinate === "Line";
+    const priorCenter = lineUpdate ? 0 : before.Line;
+    const x = sc.x(priorCenter);
+    body += line(x, baseline, x, y(.40), "prior-guide");
+    if (lineUpdate) {
+      body += names.map((name) => {
+        const at = sc.x(before[name]);
+        return line(at, baseline, at, baseline - 14, "data-guide");
+      }).join("");
+    } else {
+      const at = sc.x(fits.at(-1).machines[coordinate].observed);
+      body += line(at, baseline, at, y(.40), "data-guide");
+    }
   }
   body += `<path d="${path}" class="curve"/>`;
   if (!samples) {
     body += line(sc.x(mean), y(normal(mean, mean, sd)), sc.x(mean), baseline, "mean-mark");
-    body += mark(sc.x(draw), y(normal(draw, mean, sd)), "draw-mark", 7);
+    body += diamond(sc.x(draw), y(normal(draw, mean, sd)), "draw-mark");
   }
   const description = samples ?
     `Histogram of ${samples.length} line draws and the exact marginal posterior with mean ${grams(mean)} and standard deviation ${sd.toFixed(2)} grams.` :
@@ -481,9 +528,47 @@ function weighedBagsPlot() {
   return svg(body, axisY + 49, `Dot plot of ${bagTotal} observed bag weights by machine. Each dot is one bag.`);
 }
 
+function jointPosteriorLesson() {
+  const middle = width() / 2;
+  const spacing = (width() - 20) / names.length;
+  const box = (x, y, w, text, style) =>
+    `<rect class="${style}" x="${x - w / 2}" y="${y - 16}" width="${w}" height="32" rx="5"/>
+      ${label(x, y + 5, text, "middle", "chart-label")}`;
+  const branches = names.map((name, i) => {
+    const x = 10 + spacing * (i + .5);
+    return `${line(middle, 43, x, 87, "dependency-arrow")}
+      ${line(x, 123, x, 157, "dependency-arrow")}
+      ${box(x, 105, spacing - 6, "Machine " + name, "machine-node")}
+      ${box(x, 175, spacing - 6, data[name].length + " bags", "observed-node")}`;
+  }).join("");
+  const body = `<defs><marker id="dependency-head" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+    <path d="M 0 0 L 5 2.5 L 0 5 Z" fill="#829187"/></marker></defs>
+    ${branches}${box(middle, 27, 130, "Line offset μ", "line-node")}`;
+  return {
+    cue: "We observe the bags and want the joint posterior for five unknown offsets: the line and machines A, B, C, and D.",
+    plot: `<h3>How the parameters and data connect</h3>
+      ${svg(body, 201, "The unknown line offset points to four unknown machine offsets. Each machine has a branch to its own observed bags.")}
+      <p class="equation">p(μ, θ | y) ∝ p(μ) ∏<sub>j</sub>[p(θ<sub>j</sub> | μ) ∏<sub>i</sub>p(y<sub>ij</sub> | θ<sub>j</sub>)]</p>
+      <p class="chart-note">The joint posterior combines the line hyperprior, four machine densities, and one likelihood term per observed bag.</p>`,
+    side: `<h3>Use the links in the model</h3><p>Given the line offset, each machine uses its own bags. Given the four machine offsets, a bag’s weight depends only on its machine.</p>`,
+  };
+}
+
+function gibbsVsMetropolisLesson() {
+  return {
+    cue: "Each Gibbs update draws one offset from its exact full conditional, with the other offsets and the observed bags held fixed.",
+    plot: `<h3>A sweep updates five offsets</h3>
+      <ol class="lesson-list"><li>Start with the current line offset. Use 0 g for the first sweep.</li>
+      <li>Draw A, B, C, and D from their own full conditionals using that line offset and their own bags.</li>
+      <li>Use those four machine draws and the line hyperprior to draw a new line offset. Save all five values and start the next sweep.</li></ol>`,
+    side: `<h3>Direct draws from the conditionals</h3>
+      <p>The earlier Metropolis example proposed a joint move and used a posterior ratio to decide on acceptance. Here the full conditionals are Normal, so Gibbs draws directly and keeps each draw.</p>`,
+  };
+}
+
 function aDistributionLesson() {
   return {
-    cue: "At the current line offset of 0 g, A’s starting distribution has mean 0 and variance 4. A’s two-bag likelihood is centered at +5 g with variance 8.",
+    cue: "Given the current line offset of 0 g, A’s conditional prior is N(0, 4). Its two-bag likelihood is centered at +5 g with variance 8.",
     plot: `<h3>Multiply the two Normal terms</h3>
       <p>Precision is reciprocal variance. Multiplying the prior by the likelihood adds two squared terms in the exponent. After factoring out −½, those terms are</p>
       <p class="equation">(θ<sub>A</sub> − 0)²/4 + (θ<sub>A</sub> − 5)²/8.</p>
@@ -517,43 +602,213 @@ function lineCalculationLesson() {
       <p>The line prior N(0, 16) contributes precision 1/16. Each machine offset has variance 4 g² around the line, so each of the four contributes precision 1/4.</p>
       <p class="equation">V = (1/16 + 4 × 1/4)<sup>−1</sup> = 16/17<br>
       M = (4/17)(θ<sub>A</sub> + θ<sub>B</sub> + θ<sub>C</sub> + θ<sub>D</sub>) ≈ ${grams(update.mean)}</p>
-      <p>Draw the line offset from N(M, 16/17). This draw supplies the current line offset for the next sweep.</p>`,
+      <p>Holding the machine offsets fixed, the bags enter this update through those offsets. B’s eight bags already shaped its draw. Draw the new line offset from N(M, 16/17).</p>`,
+  };
+}
+
+function machineFormulaLesson() {
+  return {
+    cue: "The same precision calculation applies to every machine. The bag count controls the amount of weight on its average.",
+    plot: `<h3>Full conditional for machine j</h3>
+      <p>The conditional prior N(μ, 4) has precision 1/4. The average of n<sub>j</sub> bags has sampling variance 16/n<sub>j</sub>.</p>
+      <p class="equation">V<sub>j</sub> = (1/4 + n<sub>j</sub>/16)<sup>−1</sup> = 16/(n<sub>j</sub> + 4)<br>
+      M<sub>j</sub> = (4μ + n<sub>j</sub>ȳ<sub>j</sub>)/(n<sub>j</sub> + 4)</p>`,
+    side: `<h3>Compare A and B</h3><p>With two bags, A gives its bag average one-third of the total weight. With eight bags, B gives its average two-thirds.</p>`,
+  };
+}
+
+function samplerLesson() {
+  return {
+    cue: "A complete sweep draws all four machine offsets, updates the line, and saves one state. Each machine uses its own number of bags and average offset.",
+    plot: `<h3>The Gibbs loop in R</h3>
+<pre class="r-code"><code>mu &lt;- 0
+for (sweep in seq_len(nrow(saved))) {
+  theta &lt;- rnorm(4, mean = (n * y_bar + 4 * mu) / (n + 4),
+                 sd = sqrt(16 / (n + 4)))
+  mu &lt;- rnorm(1, mean = 4 * sum(theta) / 17,
+              sd = sqrt(16 / 17))
+  saved[sweep, ] &lt;- c(theta, mu)
+}</code></pre>`,
+    side: `<h3>One row per sweep</h3>
+      <p><code>n</code> holds the bag counts and <code>y_bar</code> holds the observed average offsets. Allocate <code>saved</code> with ${lineTrace.length.toLocaleString("en-US")} rows and five columns.</p>
+      <p class="chart-note">The four machine draws share the same current line offset and are conditionally independent. <code>rnorm()</code> takes standard deviation.</p>`,
+  };
+}
+
+function lineHistory(showWarmup) {
+  const values = showWarmup ? [0, ...lineTrace] : [0, ...lineTrace.slice(0, 40)];
+  const finalSweep = values.length - 1;
+  const plotWidth = 342;
+  const sc = scale(0, finalSweep, 42, plotWidth - 20);
+  const { min, max, ticks } = offsetAxis(lineTrace, 2);
+  const baseline = 138;
+  const y = (value) => baseline - 105 * (value - min) / (max - min);
+  let body = label(2, 15, "Line offset (g)", "start", "chart-label");
+  if (showWarmup) {
+    const end = sc.x(warmup);
+    body += `<rect class="warmup-shade" x="${sc.left}" y="33" width="${end - sc.left}" height="105"/>`;
+  }
+  body += ticks.map((tick) =>
+    line(sc.left, y(tick), sc.right, y(tick), "gridline") + label(sc.left - 6, y(tick) + 5, offset(tick, 0), "end")).join("");
+  const timeTicks = showWarmup ? [0, warmup, 2000, 4000, finalSweep] : [0, 10, 20, 30, finalSweep];
+  body += timeTicks.map((tick) => line(sc.x(tick), baseline, sc.x(tick), baseline + 5, "axis")
+    + label(sc.x(tick), baseline + 20, tick.toLocaleString("en-US"), "middle")).join("");
+  body += line(sc.left, baseline, sc.right, baseline, "axis");
+  body += label((sc.left + sc.right) / 2, baseline + 40, "Completed sweep", "middle");
+  const exact = y(fits.at(-1).line.mean);
+  body += line(sc.left, exact, sc.right, exact, "posterior-reference");
+  const history = values.map((value, i) => `${sc.x(i).toFixed(2)},${y(value).toFixed(2)}`).join(" ");
+  body += `<polyline points="${history}" class="trace-line ${showWarmup ? "full-trace" : ""}"/>`;
+  if (!showWarmup) body += mark(sc.x(0), y(0), "draw-mark", 4);
+  const description = showWarmup
+    ? `Trace of all ${finalSweep} line offsets with the first ${warmup} warm-up sweeps shaded. The dashed horizontal line marks the exact posterior mean.`
+    : "First 40 line offsets. The chain starts at zero and soon moves into the region around the exact posterior mean.";
+  return svg(body, baseline + 47, description, plotWidth);
+}
+
+function warmupLesson() {
+  const fullCount = lineTrace.length.toLocaleString("en-US");
+  return {
+    cue: `Starting at 0 g affects the early sweeps. This run discards its first ${warmup} sweeps and keeps ${chain.length.toLocaleString("en-US")} joint draws for inference.`,
+    plot: `<h3>Trace of the line offset</h3>
+      ${legend([["trace", "Line draw"], ["warmup", "Warm-up"], ["reference", "Exact posterior mean"]])}
+      <div class="trace-grid"><div><h4>First 40 sweeps</h4>${lineHistory(false)}</div>
+      <div><h4>All ${fullCount} sweeps</h4>${lineHistory(true)}</div></div>`,
+    side: `<h3>What the trace shows</h3>
+      <p>The first sweep takes the line from 0 g to ${grams(lineTrace[0])}. In this run the following draws quickly move toward the posterior region, then fluctuate around it.</p>
+      <p class="chart-note">A trace helps assess a run. Checking convergence in a new analysis also calls for comparisons across independently started chains.</p>`,
+  };
+}
+
+function savedDrawsLesson() {
+  const exact = fits.at(-1).line;
+  const { mean } = posteriorSummary.Line;
+  const sd = Math.sqrt(chain.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (chain.length - 1));
+  return {
+    cue: `Compare the ${chain.length.toLocaleString("en-US")} retained line offsets with the exact posterior for these same ${bagTotal} bags.`,
+    plot: `<h3>Marginal posterior for the line</h3>
+      ${legend([["hist", "Saved draws"], ["exact", "Exact posterior"]])}
+      ${gibbsDensity({ ...exact, samples: chain })}
+      <p class="chart-note">Sample mean ${grams(mean)} · Sample SD ${sd.toFixed(2)} g<br>Exact mean ${grams(exact.mean)} · Exact SD ${exact.sd.toFixed(2)} g</p>`,
+    side: `<h3>Use the exact curve as a check</h3><p>The Normal hierarchy with known variances gives a closed-form posterior here. Drawing from tractable full conditionals also helps in models where the marginal posteriors are difficult to calculate.</p>`,
+  };
+}
+
+function posteriorLesson() {
+  const order = ["Line", ...names];
+  const { min, max, ticks } = offsetAxis(order.flatMap((name) => {
+    const { lower, upper } = posteriorSummary[name];
+    return [lower, upper];
+  }), 2);
+  const sc = scale(min, max, 86);
+  const axisY = 238;
+  const center = sc.x(posteriorSummary.Line.mean);
+  let body = line(sc.x(0), 10, sc.x(0), axisY, "target")
+    + line(center, 10, center, axisY, "prior-guide");
+  order.forEach((name, i) => {
+    const row = 22 + i * 46;
+    const { mean, lower, upper } = posteriorSummary[name];
+    const isLine = name === "Line";
+    const truth = isLine ? generation.line : generation.machines[name];
+    const x = sc.x(truth);
+    const intervalStyle = isLine ? "line-interval" : "interval";
+    body += label(2, row + 5, isLine ? "Line" : "Machine " + name, "start", "chart-label");
+    body += line(sc.left, row, sc.right, row, "gridline");
+    body += `<g><title>${name} mean ${grams(mean)}. 95% credible interval ${grams(lower)} to ${grams(upper)}.</title>
+      ${line(sc.x(lower), row, sc.x(upper), row, intervalStyle)}
+      ${line(sc.x(lower), row - 4, sc.x(lower), row + 4, intervalStyle)}
+      ${line(sc.x(upper), row - 4, sc.x(upper), row + 4, intervalStyle)}
+      ${mark(sc.x(mean), row, isLine ? "line-mark" : "posterior-mark")}</g>`;
+    if (!isLine) {
+      const observed = fits.at(-1).machines[name].observed;
+      body += `<g><title>${name} bag average ${grams(observed)}</title>${mark(sc.x(observed), row - 10, "average-mark", 4.5)}</g>`;
+    }
+    body += `<g><title>${name} true simulated offset ${grams(truth)}</title>
+      ${line(x - 4, row + 6, x + 4, row + 14, "truth-mark")}
+      ${line(x - 4, row + 14, x + 4, row + 6, "truth-mark")}</g>`;
+  });
+  body += horizontalAxis(sc, axisY, ticks);
+  const description = "Gibbs posterior means and 95 percent credible intervals by offset. Open circles mark bag averages and crosses mark simulated offsets. " +
+    order.map((name) => {
+      const { mean, lower, upper } = posteriorSummary[name];
+      return `${name} mean ${grams(mean)}, 95 percent interval ${grams(lower)} to ${grams(upper)}.`;
+    }).join(" ");
+  return {
+    cue: "Partial pooling pulls the machine estimates toward the shared line mean. A and B have the same observed average, and A’s interval is wider because it has fewer bags.",
+    plot: `<h3>All five offsets after warm-up</h3>
+      ${legend([["posterior", "Gibbs mean and 95% interval"], ["average", "Observed bag average"], ["truth", "True simulated value"]])}
+      ${svg(body, axisY + 49, description)}
+      <p class="chart-note">The dashed vertical line marks the Gibbs estimate for the shared line mean.</p>`,
+    side: `<h3>Check the estimates against the simulation</h3>
+      <p>Use each column of the saved states to estimate its offset. The central 95% of that column gives its credible interval.</p>
+      <p class="chart-note">The X marks show the machine and line offsets chosen during simulation.</p>`,
+  };
+}
+
+function targetLesson() {
+  const { lower, upper } = posteriorSummary.Line;
+  const interval = `${(target + lower).toFixed(1)}–${(target + upper).toFixed(1)} g`;
+  return {
+    cue: `The line’s 95% credible interval on the fill scale is ${interval}. The interval is above the ${target} g target.`,
+    plot: `<h3>Decide where to weigh the next bags</h3>
+      <p>To learn a single machine’s long-run fill, weigh more bags from that machine. To learn the production line’s shared mean, weigh bags from several machines.</p>`,
+    side: `<h3>Think about sampling from A alone</h3>
+      <p>More bags from A can pin down its own average. A still contributes one machine offset to the evidence about the line.</p>`,
   };
 }
 
 const explanations = {
+  0: [
+    { title: "From data back to the five unknowns", render: jointPosteriorLesson },
+    { title: "How Gibbs sampling differs from Metropolis", render: gibbsVsMetropolisLesson },
+  ],
   1: [
     { title: "Where did A’s distribution come from?", render: aDistributionLesson },
     { title: "Calculate A’s conditional distribution", render: () => machineCalculationLesson("A", "5/3", "8/3") },
     { title: "Calculate B’s conditional distribution", render: () => machineCalculationLesson("B", "10/3", "4/3") },
   ],
   4: [{ title: "Calculate the shared line’s conditional distribution", render: lineCalculationLesson }],
+  6: [{ title: "A full conditional for each machine offset", render: machineFormulaLesson }],
 };
 const gibbsStages = [
   { draws: 0 },
+  ...explanations[0].map((lesson) => ({ draws: 0, lesson })),
   ...steps.flatMap((_, index) => {
     const draws = index + 1;
     return [{ draws }, ...(explanations[draws] || []).map((lesson) => ({ draws, lesson }))];
   }),
-  { draws: steps.length, longRun: true },
+  ...[
+    { title: "The entire Gibbs sampler", button: "See the Gibbs loop", render: samplerLesson },
+    { title: "Warm-up and trace of the Gibbs chain", button: "Show a longer run", render: warmupLesson },
+    { title: "What do many saved draws show?", render: savedDrawsLesson },
+    { title: "What Gibbs learned about all four machines", render: posteriorLesson },
+    { title: "Back to the 250 g target", render: targetLesson },
+  ].map((lesson) => ({ draws: steps.length, lesson, results: true })),
 ];
 
 function gibbsView(index) {
-  const { draws, lesson, longRun } = gibbsStages[index];
+  const { draws, lesson, results } = gibbsStages[index];
   const step = steps[draws - 1];
   const nextStep = steps[draws];
-  const nextLesson = gibbsStages[index + 1]?.lesson;
+  const nextStage = gibbsStages[index + 1];
   const saved = steps.slice(0, draws).filter((entry) => entry.coordinate === "Line");
   const complete = saved.length === sweepCount;
   const progress = step ? `Sweep ${step.sweep} of ${sweepCount} · Update ${(draws - 1) % coordinates.length + 1} of ${coordinates.length}`
     : `${sweepCount} sweeps · Ready to start`;
   let title = `The ${bagTotal} weighed bags`;
-  let cue = "Keep these observations fixed and start all five offsets at 0 g. A draws first, using the current line offset and its two bags.";
+  let cue = "Keep these observations fixed. A and B both have a sample mean of 255 g. We use these bags to learn the unknown offsets of the line and its machines.";
   let plot = `<h3>One dot per weighed bag</h3>${weighedBagsPlot()}`;
+  const trace = saved.length
+    ? `<div class="saved"><h3>Saved line draws</h3>${tracePlot(saved)}</div>`
+    : "";
+  let side = stateTable(step) + trace;
   if (lesson) {
     title = lesson.title;
-    ({ cue, plot } = lesson.render());
-  } else if (step && !longRun) {
+    const content = lesson.render();
+    cue = content.cue;
+    plot = content.plot;
+    side = content.side ?? side;
+  } else if (step) {
     const lineUpdate = step.coordinate === "Line";
     title = lineUpdate ? "Draw the line offset" : `Draw machine ${step.coordinate}’s offset`;
     if (lineUpdate) {
@@ -566,34 +821,32 @@ function gibbsView(index) {
       if (draws === 1) {
         cue = `With the line at 0 g and A’s bags weighing ${data.A.map((value) => target + value).join(" and ")} g, draw A’s offset from N(5/3, 8/3). This draw is ${grams(step.draw)}. Keep it for the line update.`;
       }
+      if (draws === 2) {
+        cue = "B’s full conditional uses its eight bags and the current line offset of 0 g. A’s draw is saved for the line update.";
+      }
+      if (step.sweep === 2 && step.coordinate === "A") {
+        cue = `Reuse A’s two bags and carry forward the new line offset of ${grams(step.before.Line)}. The conditional mean is now ${grams(step.mean)}, with the same conditional variance of 8/3 g².`;
+      }
     }
+    const currentInput = lineUpdate ? "Line hyperprior center" : `Current line (${grams(step.before.Line)})`;
+    const dataInput = lineUpdate ? "Four sampled machine offsets"
+      : `${step.coordinate} bag average (${grams(fits.at(-1).machines[step.coordinate].observed)})`;
     plot = `<h3>Full conditional for ${lineUpdate ? "the line" : `machine ${step.coordinate}`}</h3>
-      ${legend([["center", "Conditional center"], ["draw", "Random draw"]])}
+      ${legend([["center", "Conditional center"], ["draw-diamond", "Random draw"], ["guide", currentInput], ["data-guide", dataInput]])}
       ${gibbsDensity(step)}
       <p class="chart-note">Center ${grams(step.mean)} · SD ${step.sd.toFixed(2)} g · Draw ${grams(step.draw)}</p>`;
   }
-  if (longRun) {
-    const exact = fits.at(-1).line;
-    const mean = chain.reduce((sum, value) => sum + value, 0) / chain.length;
-    const sd = Math.sqrt(chain.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (chain.length - 1));
-    const count = chain.length.toLocaleString("en-US");
-    title = "Many sweeps approximate the posterior";
-    cue = `Compare ${count} sampled line offsets after ${warmup} warm-up sweeps with the exact posterior for the same ${bagTotal} bags.`;
-    plot = `<h3>Marginal posterior for the line</h3>
-      ${legend([["hist", "Saved draws"], ["exact", "Exact posterior"]])}
-      ${gibbsDensity({ ...exact, samples: chain })}
-      <p class="chart-note">Sample mean ${grams(mean)} · Sample SD ${sd.toFixed(2)} g<br>Exact mean ${grams(exact.mean)} · Exact SD ${exact.sd.toFixed(2)} g</p>`;
+  let next = "Walkthrough complete";
+  if (nextStage?.lesson) {
+    next = nextStage.lesson.button ?? nextStage.lesson.title;
+  } else if (nextStep) {
+    next = nextStep.coordinate === "Line" ? "Draw the line offset" : `Draw machine ${nextStep.coordinate}`;
   }
-  const trace = saved.length
-    ? `<div class="saved"><h3>Saved line draws</h3>${tracePlot(saved)}</div>`
-    : "";
-  let next = "Show a longer run";
-  if (nextStep) next = nextStep.coordinate === "Line" ? "Draw the line offset" : `Draw machine ${nextStep.coordinate}`;
-  if (nextLesson) next = nextLesson.title;
-  if (longRun) next = "Walkthrough complete";
-  const side = longRun ? `<h3>Hand-stepped sweeps</h3>${trace}` : stateTable(step) + trace;
+  let caption = progress;
+  if (results) caption = "Gibbs results";
+  else if (lesson) caption = draws ? `Sweep ${step.sweep} · Conditional distribution` : "Before the first sweep";
   return {
-    progress: longRun ? "Longer Gibbs run" : lesson ? "Sweep 1 · Conditional distribution" : progress, title, cue, next,
+    progress: caption, title, cue, next,
     html: scene(plot, side, observedRecords(names)),
   };
 }

@@ -100,6 +100,10 @@ button:disabled { opacity: .58; cursor: default }
 .side-card > p, .chart-note { color: var(--muted) }
 .chart-note { margin-top: 6px; font-size: .9rem }
 .equation { margin: 10px 0; padding: 7px 10px; border-left: 3px solid var(--green); background: var(--green-soft) }
+.lesson-list { margin: 2px 0 0; padding-left: 1.3em }
+.lesson-list li + li { margin-top: 8px }
+.r-code { margin: 8px 0 0; padding: 10px; font-size: .9rem; white-space: pre-wrap; overflow-wrap: anywhere; background: #eef3f6 }
+.trace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px }
 .data-card { margin-top: 14px }
 .readout { display: grid; gap: 8px; margin: 12px 0 0 }
 .readout > div { padding: 8px 9px; border-left: 3px solid var(--green); background: var(--green-soft) }
@@ -131,6 +135,15 @@ thead th { color: var(--muted) }
 .symbol.posterior { border-radius: 50%; background: var(--green) }
 .symbol.bag-tick { background: linear-gradient(90deg, transparent 40%, var(--rust) 40% 60%, transparent 60%) }
 .symbol.posterior-diamond { background: var(--green); transform: rotate(45deg) scale(.78) }
+.symbol.line-diamond { background: var(--blue); transform: rotate(45deg) scale(.78) }
+.symbol.draw-diamond { background: var(--rust); transform: rotate(45deg) scale(.78) }
+.symbol.guide { border-left: 2px dotted #657782; margin-left: 4px; flex-basis: 8px }
+.symbol.data-guide { border-left: 2px dotted var(--rust); margin-left: 4px; flex-basis: 8px }
+.symbol.average { border: 2px solid var(--rust); border-radius: 50%; background: white }
+.symbol.truth { font-weight: 750; line-height: 1; color: var(--ink) }
+.symbol.trace { border-top: 2px solid var(--blue); height: 0 }
+.symbol.warmup { background: #dce5ea }
+.symbol.reference { border-top: 2px dashed var(--rust); height: 0 }
 .symbol.previous { font-weight: 750; color: var(--muted) }
 .symbol.center { border-left: 2px dashed var(--green); margin-left: 4px; flex-basis: 8px }
 .symbol.hist { background: #bdd8cd; border: 1px solid var(--green) }
@@ -146,6 +159,20 @@ thead th { color: var(--muted) }
 .chart .target { stroke: #89948b; stroke-width: 1.2; stroke-dasharray: 3 4 }
 .chart .curve { fill: none; stroke: var(--green); stroke-width: 2.5 }
 .chart .machine-curve { fill: none; stroke: var(--green); stroke-width: 1.8 }
+.chart .line-curve, .chart .trace-line { fill: none; stroke: var(--blue); stroke-width: 1.75; stroke-linejoin: round }
+.chart .full-trace { stroke-width: .65; opacity: .7 }
+.chart .warmup-shade { fill: #dce5ea }
+.chart .posterior-reference { stroke: var(--rust); stroke-width: 1.5; stroke-dasharray: 5 4 }
+.chart .line-mark { fill: var(--blue) }
+.chart .line-interval { stroke: var(--blue); stroke-width: 2 }
+.chart .truth-mark { stroke: var(--ink); stroke-width: 1.5 }
+.chart .average-mark { fill: white; stroke: var(--rust); stroke-width: 1.5 }
+.chart .prior-guide { stroke: #657782; stroke-width: 1.5; stroke-dasharray: 3 4 }
+.chart .data-guide { stroke: var(--rust); stroke-width: 1.5; stroke-dasharray: 3 4 }
+.chart .dependency-arrow { stroke: #829187; stroke-width: 1.3; marker-end: url(#dependency-head) }
+.chart .line-node { fill: #e8f0f6; stroke: var(--blue) }
+.chart .machine-node { fill: var(--green-soft); stroke: var(--green) }
+.chart .observed-node { fill: var(--rust-soft); stroke: var(--rust) }
 .chart .bayes-prior, .chart .bayes-likelihood, .chart .bayes-posterior { fill: none; stroke-width: 2.4 }
 .chart .bayes-prior { stroke: var(--blue); stroke-dasharray: 7 4 }
 .chart .bayes-likelihood { stroke: var(--rust); stroke-dasharray: 2 3 }
@@ -170,4 +197,6 @@ thead th { color: var(--muted) }
   nav a { padding-block: 6px }
   .activity-head { grid-template-columns: minmax(0, 1fr); padding-top: 14px }
   .controls { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap }
+  .trace-grid { grid-template-columns: minmax(0, 1fr) }
+  .side-card th, .side-card td { padding-inline: 3px; white-space: normal }
 }
