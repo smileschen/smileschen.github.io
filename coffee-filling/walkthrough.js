@@ -4,7 +4,8 @@ const { target, data, generation, fits, steps, chain, warmup } = coffeeData;
 const names = Object.keys(data);
 const coordinates = [...names, "Line"];
 const chosenMachine = "B";
-const simulatedBags = generation.bags[chosenMachine];
+const simulatedBags = generation.bags[chosenMachine].slice(0, 4);
+const bagTotal = names.reduce((total, name) => total + data[name].length, 0);
 const generationEnd = 1 + names.length + simulatedBags.length;
 const sweepCount = steps.at(-1).sweep;
 const chapterOrder = ["generate", "learn", "gibbs"];
@@ -35,6 +36,26 @@ function scale(min, max, left = 48, right = width() - 16) {
   const x = (value) => left + (right - left) * (value - min) / (max - min);
   return { min, max, left, right, x };
 }
+
+function offsetAxis(values, step) {
+  const min = step * Math.floor(Math.min(0, ...values) / step);
+  const max = Math.max(min + step, step * Math.ceil(Math.max(0, ...values) / step));
+  const ticks = Array.from({ length: 1 + (max - min) / step }, (_, i) => min + i * step);
+  return { min, max, ticks };
+}
+
+const credibleZ = 1.95996398454;
+const inferenceAxis = offsetAxis(fits.flatMap((fit) => [
+  ...Object.values(fit.machines).map((record) => record.observed),
+  ...[fit.line, ...Object.values(fit.machines)].flatMap(({ mean, sd }) =>
+    [mean - credibleZ * sd, mean + credibleZ * sd]),
+]), 4);
+const conditionalAxis = offsetAxis([
+  ...chain,
+  ...steps.map((step) => step.draw),
+  ...[fits.at(-1).line, ...steps].flatMap(({ mean, sd }) => [mean - 3.5 * sd, mean + 3.5 * sd]),
+], 4);
+const traceAxis = offsetAxis(steps.filter((step) => step.coordinate === "Line").map((step) => step.draw), 2);
 
 function horizontalAxis(sc, y, ticks) {
   const tickMarks = ticks.map((value) => {
@@ -127,7 +148,7 @@ function generationView(index) {
     next = complete ? "Continue to weighed bags" : "Draw the next bag";
   }
   if (complete) {
-    cue = `The example bags fall on both sides of machine ${chosenMachine}’s average of ${fillWeight(generation.machines[chosenMachine])}. Notice that even the lighter ones are above the ${target} g label. Next we use a separate set of weighed bags to estimate the unknown averages.`;
+    cue = `Two of these bags fall on each side of machine ${chosenMachine}’s ${fillWeight(generation.machines[chosenMachine])} average. Next we’ll use these same four weights, four more from B, and bags drawn from the curves for A, C, and D to estimate the machine averages.`;
   }
   const waiting = '<span class="waiting">awaiting draw</span>';
   const bagItems = simulatedBags.slice(0, bagCount).map((v, i) =>
@@ -155,14 +176,19 @@ function observedRecords(available) {
     if (!available.includes(name)) {
       return `<div><h4>Machine ${name}</h4><p class="line-record">Awaiting bags</p></div>`;
     }
-    const bags = data[name].map((v) => `<li>${target + v} g</li>`).join("");
-    return `<div><h4>Machine ${name} · ${data[name].length} bags</h4><ul class="record-list">${bags}</ul></div>`;
+    const bags = data[name].map((v) => `<li>${fillWeight(v)}</li>`).join("");
+    const observed = fits.at(-1).machines[name].observed;
+    return `<div><h4>Machine ${name} · ${data[name].length} bags</h4>
+      <p class="line-record">Observed average ${fillWeight(observed)}</p>
+      <ul class="record-list">${bags}</ul></div>`;
   }).join("");
-  return `<section class="data-card"><h3>Classroom bag weights</h3><div class="record-grid">${records}</div></section>`;
+  return `<section class="data-card"><h3>Weighed bags from this simulated line</h3>
+    <div class="record-grid">${records}</div></section>`;
 }
 
 function inferencePlot(fit, previous) {
-  const sc = scale(-8, 9, 49);
+  const { min, max, ticks } = inferenceAxis;
+  const sc = scale(min, max, 49);
   let body = line(sc.x(0), 17, sc.x(0), 230, "target");
   coordinates.forEach((name, i) => {
     const row = 29 + i * 45;
@@ -174,8 +200,8 @@ function inferencePlot(fit, previous) {
       return;
     }
     const midpoint = sc.x(record.mean);
-    const left = sc.x(record.mean - 1.95996398454 * record.sd);
-    const right = sc.x(record.mean + 1.95996398454 * record.sd);
+    const left = sc.x(record.mean - credibleZ * record.sd);
+    const right = sc.x(record.mean + credibleZ * record.sd);
     const postY = row + 7;
     body += line(left, postY, right, postY, "interval") + line(left, postY - 4, left, postY + 4, "interval")
       + line(right, postY - 4, right, postY + 4, "interval") + mark(midpoint, postY, "posterior-mark");
@@ -187,7 +213,7 @@ function inferencePlot(fit, previous) {
         + line(old + 3, previousY - 3, old - 3, previousY + 3, "compare-mark");
     }
   });
-  body += horizontalAxis(sc, 238, [-8, -4, 0, 4, 8]);
+  body += horizontalAxis(sc, 238, ticks);
   return svg(body, 287, `Observed means and posterior means with 95 percent credible intervals. Machine A’s posterior mean offset is ${grams(fit.machines.A.mean)}. Machine B’s is ${grams(fit.machines.B.mean)}. The line’s is ${grams(fit.line.mean)}.`);
 }
 
@@ -196,12 +222,12 @@ function inferenceView(index) {
   const previous = fits[index - 1];
   const complete = index === fits.length - 1;
   const introduced = names[1 + index];
-  const title = previous ? `Records from ${introduced} update A’s estimate` : "Two machines average 254 g";
-  let cue = "A’s average comes from two bags, and B’s comes from eight. Look for the open circles at the same raw average. Which estimate will move more as we learn about the line?";
+  const title = previous ? `Records from ${introduced} update A’s estimate` : "Start with bags from A and B";
+  let cue = `Set aside the machine means used to simulate these bags. The open circles show the observed averages of ${fillWeight(fit.machines.A.observed)} from A’s two bags and ${fillWeight(fit.machines.B.observed)} from B’s eight. B’s record includes the four bags shown earlier.`;
   if (previous) {
     cue = `A’s two bags weigh the same as before. Adding ${introduced} changes the estimate for the shared line. Follow the filled dot for A from ${grams(previous.machines.A.mean)} to ${grams(fit.machines.A.mean)}.`;
   }
-  if (complete) cue += " Compare A with B. A moves farther from the raw average and has a wider interval.";
+  if (complete) cue += " Compare the intervals for A and B. A’s two bags give less information about its long-run average than B’s eight do.";
   const legendItems = [["open", "Observed average"], ["posterior", "Posterior mean and 95% interval"]];
   if (previous) legendItems.push(["previous", "Previous estimate for A"]);
   const plot = `<h3>Machine and line estimates</h3>${legend(legendItems)}
@@ -221,13 +247,14 @@ function inferenceView(index) {
 }
 
 function gibbsDensity({ mean, sd, draw, samples }) {
-  const sc = scale(-8, 10);
+  const { min, max, ticks } = conditionalAxis;
+  const sc = scale(min, max);
   const baseline = 177;
   const y = (density) => baseline - 350 * density;
   let body = [0, 0.2, 0.4].map((density) => line(sc.left, y(density), sc.right, y(density), "gridline")
     + label(sc.left - 8, y(density) + 5, density.toFixed(1), "end")).join("");
   body += label(2, 18, "Density", "start", "chart-label");
-  body += horizontalAxis(sc, baseline, [-8, -4, 0, 4, 8]);
+  body += horizontalAxis(sc, baseline, ticks);
   const path = densityPath(sc, y, mean, sd);
   if (samples) {
     const binWidth = .5;
@@ -260,10 +287,11 @@ function tracePlot(saved) {
   const plotWidth = 340;
   const sc = scale(1, sweepCount, 48, plotWidth - 16);
   const bottom = 86;
-  const y = (value) => bottom - (value + 3) * 10.7;
+  const { min, max, ticks } = traceAxis;
+  const y = (value) => bottom - 68 * (value - min) / (max - min);
   const sweeps = Array.from({ length: sweepCount }, (_, i) => i + 1);
   let body = line(sc.left, bottom, sc.right, bottom, "axis");
-  body += [-2, 0, 2].map((tick) => line(sc.left, y(tick), sc.right, y(tick), tick ? "gridline" : "target")
+  body += ticks.map((tick) => line(sc.left, y(tick), sc.right, y(tick), tick ? "gridline" : "target")
     + label(sc.left - 8, y(tick) + 5, `${offset(tick, 0)} g`, "end")).join("");
   body += sweeps.map((i) => line(sc.x(i), bottom, sc.x(i), bottom + 5, "axis")
     + label(sc.x(i), bottom + 21, i, "middle")).join("");
@@ -305,7 +333,7 @@ function gibbsView(index) {
   const complete = saved.length === sweepCount;
   const progress = step ? `Sweep ${step.sweep} of ${sweepCount} · Update ${(index - 1) % coordinates.length + 1} of ${coordinates.length}`
     : `${sweepCount} sweeps · Ready to start`;
-  let title = "Keep the 18 observed bags fixed";
+  let title = `Keep the ${bagTotal} observed bags fixed`;
   let cue = "Adding records changed the posterior in the previous activity. Here the evidence stays fixed. Start with all five offsets at 0 g, then draw A using the current line offset and A’s two bags.";
   let plot = `<h3>Update order</h3><p>Draw A, B, C, and D at the current line offset. Then draw the line offset using the four fresh machine values. Save each completed sweep.</p>`;
   if (step && !longRun) {
@@ -330,7 +358,7 @@ function gibbsView(index) {
     const sd = Math.sqrt(chain.reduce((sum, value) => sum + (value - mean) ** 2, 0) / (chain.length - 1));
     const count = chain.length.toLocaleString("en-US");
     title = "Many sweeps approximate the posterior";
-    cue = `Compare ${count} sampled line offsets after ${warmup} warm-up sweeps with the exact posterior for the same 18 bags.`;
+    cue = `Compare ${count} sampled line offsets after ${warmup} warm-up sweeps with the exact posterior for the same ${bagTotal} bags.`;
     plot = `<h3>Marginal posterior for the line</h3>
       ${legend([["hist", "Saved draws"], ["exact", "Exact posterior"]])}
       ${gibbsDensity({ ...exact, samples: chain })}

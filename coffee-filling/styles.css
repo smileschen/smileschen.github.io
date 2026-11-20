@@ -108,7 +108,7 @@ button:disabled { opacity: .58; cursor: default }
 .tree li { margin: .28rem 0 }
 .tree strong { font-weight: 700 }
 .tree .waiting { color: var(--muted); font-style: italic }
-.record-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.record-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 7px }
 .record-list { display: flex; flex-wrap: wrap; gap: 3px 7px; margin: 3px 0 0; padding: 0; list-style: none }
 .record-list li { min-width: 2ch }
 .line-record { font-size: .9rem; color: var(--muted) }
