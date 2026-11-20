@@ -1,0 +1,158 @@
+:root {
+  color-scheme: light;
+  --ink: #242622;
+  --muted: #555f58;
+  --rule: #d5dcd4;
+  --sheet: #fbfaf7;
+  --paper: #fff;
+  --green: #17574b;
+  --green-dark: #104438;
+  --green-soft: #eaf3ee;
+  --rust: #933e23;
+  --rust-soft: #faeee7;
+  --outline: #1c70ab;
+  font: 16px/1.48 "Source Sans 3", "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--sheet);
+  font-variant-numeric: tabular-nums;
+}
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+body { margin: 0 }
+main { max-width: 1220px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 52px) 48px }
+.chapter-anchor { position: absolute; top: 0 }
+h1, h2, h3, h4, p { margin: 0 }
+header { padding-bottom: 20px }
+.course, .progress {
+  color: var(--green);
+  font-size: .875rem;
+  font-weight: 700;
+  letter-spacing: .035em;
+}
+h1 {
+  margin-top: 5px;
+  color: #242a25;
+  font: 500 clamp(1.9rem, 4vw, 3.3rem)/1.1 "Instrument Serif", Georgia, serif;
+  letter-spacing: -.025em;
+}
+.lede { margin-top: 9px; color: var(--muted); max-width: 70ch }
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+nav a {
+  display: inline-block;
+  padding: 9px 2px 8px;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  font-weight: 650;
+  text-decoration: none;
+}
+nav a:hover { color: var(--green); text-decoration: underline; text-underline-offset: .23em }
+nav a[aria-current="location"] { border-bottom-color: var(--green); color: var(--green) }
+:focus-visible { outline: 3px solid var(--outline); outline-offset: 3px }
+.activity-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
+  padding: 18px 0 16px;
+}
+h2, h3 { line-height: 1.2 }
+h2 { margin: 3px 0 5px; font-size: clamp(1.25rem, 2.8vw, 1.7rem) }
+h3 { margin-bottom: 7px; font-size: 1.125rem }
+h4 { font-size: .94rem }
+#cue { color: var(--muted); max-width: 72ch }
+.controls { display: grid; justify-items: end; gap: 7px; padding-top: 2px }
+.secondary-controls { display: flex; gap: 6px }
+button {
+  min-height: 42px;
+  padding: 7px 13px;
+  border: 1px solid #a9b8ac;
+  border-radius: 6px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+button:hover:enabled { background: var(--green-soft) }
+button:disabled { opacity: .58; cursor: default }
+.primary { border-color: var(--green); background: var(--green); color: white }
+.primary:hover:enabled { background: var(--green-dark) }
+.lesson-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.72fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+.chart-card, .side-card, .data-card {
+  min-width: 0;
+  padding: clamp(12px, 2vw, 18px);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.side-card > p, .chart-note { color: var(--muted) }
+.chart-note { margin-top: 6px; font-size: .9rem }
+.data-card { margin-top: 14px }
+.readout { display: grid; gap: 8px; margin: 12px 0 0 }
+.readout > div { padding: 8px 9px; border-left: 3px solid var(--green); background: var(--green-soft) }
+.readout dt { font-weight: 700 }
+.readout dd { margin: 2px 0 0 }
+.tree { margin-top: 10px; padding-left: 1.25rem }
+.tree ul { margin: .2rem 0 .5rem; padding-left: 1.25rem }
+.tree li { margin: .28rem 0 }
+.tree strong { font-weight: 700 }
+.tree .waiting { color: var(--muted); font-style: italic }
+.record-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px }
+.record-list { display: flex; flex-wrap: wrap; gap: 3px 7px; margin: 3px 0 0; padding: 0; list-style: none }
+.record-list li { min-width: 2ch }
+.line-record { font-size: .9rem; color: var(--muted) }
+table { width: 100%; border-collapse: collapse; font-size: .91rem }
+caption { margin-bottom: 5px; text-align: left; font-weight: 650 }
+th, td { padding: 5px 6px; border-bottom: 1px solid #e4e8e3; text-align: right; white-space: nowrap }
+th:first-child, td:first-child { text-align: left }
+thead th { color: var(--muted) }
+.state-input { background: var(--green-soft); color: var(--green-dark); font-weight: 700 }
+.state-drawn { background: var(--rust-soft); color: var(--rust); font-weight: 750 }
+.saved { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 9px }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 8px; color: var(--muted); font-size: .875rem }
+.legend span { display: inline-flex; align-items: center; gap: 5px }
+.symbol { display: inline-block; flex: 0 0 11px; width: 11px; height: 11px }
+.symbol.open { border: 1.8px solid var(--ink); border-radius: 50%; background: white }
+.symbol.draw { border-radius: 50%; background: var(--rust) }
+.symbol.posterior { border-radius: 50%; background: var(--green) }
+.symbol.previous { font-weight: 750; color: var(--muted) }
+.symbol.center { border-left: 2px dashed var(--green); margin-left: 4px; flex-basis: 8px }
+.symbol.hist { background: #bdd8cd; border: 1px solid var(--green) }
+.symbol.exact { border-bottom: 2px solid var(--green); height: 6px }
+.chart { display: block; width: 100%; height: auto; overflow: visible }
+.chart text { fill: var(--muted); font-family: "Source Sans 3", "Segoe UI", sans-serif; font-size: 14px }
+.chart .chart-label { font-size: 14px; font-weight: 650 }
+.chart .axis { stroke: #829187; stroke-width: 1 }
+.chart .gridline { stroke: #e2e8e2; stroke-width: 1 }
+.chart .target { stroke: #89948b; stroke-width: 1.2; stroke-dasharray: 3 4 }
+.chart .curve { fill: none; stroke: var(--green); stroke-width: 2.5 }
+.chart .shade { fill: #e3f0ea }
+.chart .draw-mark { fill: var(--rust); stroke: white; stroke-width: 1.3 }
+.chart .mean-mark { stroke: var(--green); stroke-dasharray: 4 4; stroke-width: 1.7 }
+.chart .interval { stroke: var(--green); stroke-width: 2 }
+.chart .posterior-mark { fill: var(--green) }
+.chart .observed-mark { fill: white; stroke: var(--ink); stroke-width: 1.5 }
+.chart .compare-mark { stroke: #667069; stroke-width: 1.4 }
+.chart .histogram { fill: #bdd8cd; stroke: white; stroke-width: .7 }
+@media (max-width: 860px) {
+  .lesson-grid { grid-template-columns: minmax(0, 1fr) }
+  .record-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+}
+@media (max-width: 600px) {
+  main { padding-top: 18px }
+  nav { gap: 0 12px }
+  nav a { padding-block: 6px }
+  .activity-head { grid-template-columns: minmax(0, 1fr); padding-top: 14px }
+  .controls { display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap }
+}

@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Generate coffee-bag weights, estimate machine offsets, and step through Gibbs sampling for a Normal hierarchical model.">
+  <title>Coffee-bag filling machines | Stats 102C</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="coffee-data.js"></script>
+  <script defer src="walkthrough.js"></script>
+</head>
+<body>
+  <span class="chapter-anchor" id="generate" aria-hidden="true"></span>
+  <span class="chapter-anchor" id="learn" aria-hidden="true"></span>
+  <span class="chapter-anchor" id="gibbs" aria-hidden="true"></span>
+  <main>
+    <header>
+      <p class="course">Stats 102C · Lecture 21</p>
+      <h1>Learning from coffee-bag filling machines</h1>
+      <p class="lede">Follow a Normal hierarchy from a production line to individual bags. Then use weighed bags to learn about the line and its machines.</p>
+    </header>
+    <nav aria-label="Walkthrough sections">
+      <a href="#generate">Generate a production line</a>
+      <a href="#learn">Learn from weighed bags</a>
+      <a href="#gibbs">Step through Gibbs sampling</a>
+    </nav>
+    <noscript><p>Enable JavaScript to step through the walkthrough.</p></noscript>
+    <section id="activity" aria-labelledby="chapter" hidden>
+      <div class="activity-head">
+        <div class="instruction" aria-live="polite" aria-atomic="true">
+          <p id="progress" class="progress"></p>
+          <h2 id="chapter" tabindex="-1"></h2>
+          <p id="cue"></p>
+        </div>
+        <div class="controls" aria-label="Step controls">
+          <button type="button" class="primary" id="next">Next</button>
+          <div class="secondary-controls">
+            <button type="button" id="back">Back</button>
+            <button type="button" id="restart">Restart</button>
+          </div>
+        </div>
+      </div>
+      <div id="workspace"></div>
+    </section>
+  </main>
+</body>
+</html>

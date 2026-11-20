@@ -28,6 +28,12 @@ Generate player abilities and hit counts, then use observed hits and at-bats to 
 - [Infer player abilities from observed hits and at-bats](https://smileschen.github.io/baseball/baseball_hierarchical_inference.html)
 - [Walk through four sweeps of Metropolis within Gibbs](https://smileschen.github.io/baseball/baseball_metropolis_within_gibbs.html)
 
+# Coffee-bag filling machines
+
+Generate bag weights from a Normal hierarchy, estimate the machine means from weighed bags, and step through four sweeps of Gibbs sampling.
+
+- [Coffee-bag filling walkthrough](https://smileschen.github.io/coffee-filling/)
+
 # Additional Links
 
 - [Youtube Channel](https://www.youtube.com/@smileschen)
