@@ -20,6 +20,7 @@ function offset(value, digits = 2) {
 }
 
 const grams = (value) => `${offset(value)} g`;
+const fillWeight = (deviation) => `${(target + deviation).toFixed(2)} g`;
 const normal = (x, mean, sd) => Math.exp(-0.5 * ((x - mean) / sd) ** 2) / (sd * Math.sqrt(2 * Math.PI));
 const svg = (body, height, description, plotWidth = width()) =>
   `<svg class="chart" viewBox="0 0 ${plotWidth} ${height}" role="img" aria-label="${description}">${body}</svg>`;
@@ -70,20 +71,31 @@ function generationPlot(hasLine, machineCount, bagCount) {
   body += label(sc.left, 17, "Hyperprior for the line offset", "start", "chart-label");
   body += line(sc.left, baseline, sc.right, baseline, "axis");
   if (hasLine) body += mark(sc.x(generation.line), y(normal(generation.line, 0, 4)), "draw-mark", 7);
-  ["Line", ...names, "Bags"].forEach((name, i) => {
-    const row = 124 + 26 * i;
-    body += label(2, row + 5, name, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
+  const bagRow = `${chosenMachine} bags`;
+  ["Line", ...names, bagRow].forEach((name, i) => {
+    const row = 121 + 43 * i;
+    body += label(2, row - 1, name, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
     if (i === 0 && hasLine) body += mark(sc.x(generation.line), row, "draw-mark");
-    if (i >= 1 && i <= machineCount) body += mark(sc.x(generation.machines[name]), row, "posterior-mark");
-    if (name === "Bags") {
+    if (i >= 1 && i <= machineCount) {
+      const mean = generation.machines[name];
+      const bagSd = 4;
+      const machineY = (density) => row - 295 * density;
+      const machinePath = densityPath(sc, machineY, mean, bagSd);
+      body += `<path d="${machinePath} L ${sc.right} ${row} L ${sc.left} ${row} Z" class="shade"/>`;
+      body += `<path d="${machinePath}" class="machine-curve"/>`;
+      body += mark(sc.x(mean), machineY(normal(mean, mean, bagSd)), "posterior-mark", 5);
+    }
+    if (name === bagRow && bagCount) {
+      const bMean = sc.x(generation.machines[chosenMachine]);
+      body += line(bMean, row - 15, bMean, row + 10, "mean-mark");
       body += simulatedBags.slice(0, bagCount).map((v) => mark(sc.x(v), row, "observed-mark", 4.5)).join("");
     }
   });
-  body += horizontalAxis(sc, 266, [-10, -5, 0, 5, 10, 15]);
+  body += horizontalAxis(sc, 355, [-10, -5, 0, 5, 10, 15]);
   const description = hasLine ?
-    `Simulated line offset ${grams(generation.line)}. ${machineCount} machine draws and ${bagCount} bag draws are visible.` :
+    `Simulated line offset ${grams(generation.line)}. ${machineCount} machine means with Normal curves for that machine’s bag weights and ${bagCount} simulated bag weights from machine ${chosenMachine} are visible.` :
     "Normal hyperprior for the line offset, centered at zero with standard deviation four grams.";
-  return svg(body, 315, description);
+  return svg(body, 405, description);
 }
 
 function generationView(index) {
@@ -92,39 +104,45 @@ function generationView(index) {
   const bagCount = Math.max(0, index - 1 - names.length);
   const complete = index === generationEnd;
   let title = "Start with the hyperprior";
-  let cue = `The bags are labeled ${target} g. Before we weigh any, the hyperprior centers the line’s average offset at 0 g, with a standard deviation of 4 g.`;
+  let cue = `The hyperprior describes plausible values of the whole line’s average offset before we have weighed any bags. It’s centered at 0 g, which corresponds to the ${target} g label, with a standard deviation of 4 g.`;
   let next = "Draw the line offset";
   if (hasLine) {
     title = "One draw sets the line’s center";
-    cue = `This line’s draw is ${grams(generation.line)}. Center the machine distribution on that draw, with a standard deviation of 2 g across machines.`;
+    cue = `This simulated line’s offset is ${grams(generation.line)}. Its population of machine means is centered at ${fillWeight(generation.line)}. Draw the four machine means around that shared center with a standard deviation of 2 g.`;
     next = machineCount < names.length ? `Draw machine ${names[machineCount]}’s offset` :
       `Draw the first bag from ${chosenMachine}`;
   }
   if (machineCount > 0) {
     const last = names[machineCount - 1];
     title = `Machine ${last} gets its own center`;
-    cue = `Machine ${last} draws ${grams(generation.machines[last])} from the Normal distribution centered on the shared line offset. All machines on this simulated line use the same line draw.`;
+    const mean = generation.machines[last];
+    cue = `Machine ${last}’s long-run average fill is ${fillWeight(mean)}, or ${grams(mean)} relative to the label. Its green dot marks that average. The small Normal curve shows how bags from this machine vary around it, with a standard deviation of 4 g.`;
   }
   if (bagCount > 0) {
     title = `Bag ${bagCount} from machine ${chosenMachine}`;
-    cue = `This bag lands at ${grams(simulatedBags[bagCount - 1])}. Every bag from ${chosenMachine} uses the same machine offset and has 4 g of within-machine standard deviation.`;
+    const deviation = simulatedBags[bagCount - 1];
+    const mean = generation.machines[chosenMachine];
+    const comparison = deviation < mean ? "below" : "above";
+    cue = `This bag weighs ${fillWeight(deviation)}, ${Math.abs(deviation - mean).toFixed(2)} g ${comparison} machine ${chosenMachine}’s average of ${fillWeight(mean)}. Every bag from ${chosenMachine} is drawn from the same Normal curve.`;
     next = complete ? "Continue to weighed bags" : "Draw the next bag";
   }
   if (complete) {
-    cue = `Compare the four bag marks to machine ${chosenMachine}’s center. If we filled another bag on ${chosenMachine}, which mark would stay put? The next activity uses a separate classroom dataset.`;
+    cue = `The example bags fall on both sides of machine ${chosenMachine}’s average of ${fillWeight(generation.machines[chosenMachine])}. Notice that even the lighter ones are above the ${target} g label. Next we use a separate set of weighed bags to estimate the unknown averages.`;
   }
   const waiting = '<span class="waiting">awaiting draw</span>';
   const bagItems = simulatedBags.slice(0, bagCount).map((v, i) =>
-    `<li>Bag ${i + 1} <strong>${(target + v).toFixed(2)} g</strong> (${grams(v)} from target)</li>`
+    `<li>Bag ${i + 1} <strong>${fillWeight(v)}</strong> (${grams(v)} from target)</li>`
   ).join("");
   const machineItems = names.map((name, i) => `<li><strong>Machine ${name}</strong>
-    ${i < machineCount ? grams(generation.machines[name]) : waiting}
+    ${i < machineCount ? `${fillWeight(generation.machines[name])} average (${grams(generation.machines[name])} from target)` : waiting}
     ${name === chosenMachine && bagItems ? `<ul>${bagItems}</ul>` : ""}</li>`).join("");
-  const tree = `<ul class="tree"><li><strong>Line offset</strong> ${hasLine ? grams(generation.line) : waiting}
+  const tree = `<ul class="tree"><li><strong>Line offset</strong> ${hasLine ? `${grams(generation.line)}, shared center ${fillWeight(generation.line)}` : waiting}
     <ul>${machineItems}</ul></li></ul>`;
   const plot = `<h3>From the line to the bags</h3>
-    ${legend([["draw", "Line draw"], ["posterior", "Machine draw"], ["open", "Bag draw"]])}
-    ${generationPlot(hasLine, machineCount, bagCount)}`;
+    ${legend([["draw", "Line mean"], ["posterior", "Machine mean"], ["open", "Bag weight"]])}
+    ${generationPlot(hasLine, machineCount, bagCount)}
+    ${machineCount ? '<p class="chart-note">Each small curve shows how bag weights vary around that machine’s mean. The standard deviation is 4 g for each machine.</p>' : ""}
+    ${bagCount ? `<p class="chart-note">The dashed mark on the bag row shows machine ${chosenMachine}’s mean.</p>` : ""}`;
   return {
     progress: `Simulated production line · Step ${index + 1} of ${generationEnd + 1}`,
     title, cue, next,
