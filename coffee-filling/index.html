@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Generate coffee-bag weights, estimate machine offsets, and step through Gibbs sampling for a Normal hierarchical model.">
   <title>Coffee-bag filling machines | Stats 102C</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=gibbs-order">
   <script defer src="coffee-data.js"></script>
-  <script defer src="walkthrough.js"></script>
+  <script defer src="walkthrough.js?v=gibbs-order"></script>
 </head>
 <body>
   <span class="chapter-anchor" id="generate" aria-hidden="true"></span>
@@ -21,8 +21,8 @@
     </header>
     <nav aria-label="Walkthrough sections">
       <a href="#generate">Generate a production line</a>
-      <a href="#learn">Learn from weighed bags</a>
       <a href="#gibbs">Step through Gibbs sampling</a>
+      <a href="#learn">Exact inference (appendix)</a>
     </nav>
     <noscript><p>Enable JavaScript to step through the walkthrough.</p></noscript>
     <section id="activity" aria-labelledby="chapter" hidden>

@@ -99,6 +99,7 @@ button:disabled { opacity: .58; cursor: default }
 }
 .side-card > p, .chart-note { color: var(--muted) }
 .chart-note { margin-top: 6px; font-size: .9rem }
+.equation { margin: 10px 0; padding: 7px 10px; border-left: 3px solid var(--green); background: var(--green-soft) }
 .data-card { margin-top: 14px }
 .readout { display: grid; gap: 8px; margin: 12px 0 0 }
 .readout > div { padding: 8px 9px; border-left: 3px solid var(--green); background: var(--green-soft) }

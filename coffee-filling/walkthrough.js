@@ -8,7 +8,6 @@ const simulatedBags = generation.bags[chosenMachine].slice(0, 4);
 const bagTotal = names.reduce((total, name) => total + data[name].length, 0);
 const generationEnd = 1 + names.length + simulatedBags.length;
 const sweepCount = steps.at(-1).sweep;
-const chapterOrder = ["generate", "learn", "gibbs"];
 const indices = { generate: 0, learn: 0, gibbs: 0 };
 const compact = window.matchMedia("(max-width: 600px)");
 const get = (id) => document.getElementById(id);
@@ -154,7 +153,7 @@ function generationView(index) {
     const mean = generation.machines[chosenMachine];
     const comparison = deviation < mean ? "below" : "above";
     cue = `This bag weighs ${fillWeight(deviation)}, ${Math.abs(deviation - mean).toFixed(2)} g ${comparison} machine ${chosenMachine}’s average of ${fillWeight(mean)}. Every bag from ${chosenMachine} is drawn from the same Normal curve.`;
-    next = complete ? "Continue to weighed bags" : "Draw the next bag";
+    next = complete ? `Review all ${bagTotal} weighed bags` : "Draw the next bag";
   }
   if (complete) {
     cue = "We’ll keep these four weights in the data we analyze. Both of A’s weights and the last of B’s weights were chosen so the two machines share a sample mean of 255 g.";
@@ -467,18 +466,94 @@ function stateTable(step) {
     <tbody>${rows}</tbody></table>`;
 }
 
+function weighedBagsPlot() {
+  const { min, max, ticks } = offsetAxis(Object.values(data).flat(), 4);
+  const sc = scale(min, max, 42);
+  const axisY = 167;
+  let body = line(sc.x(0), 12, sc.x(0), axisY, "target");
+  names.forEach((name, i) => {
+    const row = 24 + 38 * i;
+    body += label(2, row + 5, name, "start", "chart-label") + line(sc.left, row, sc.right, row, "gridline");
+    body += data[name].map((value) =>
+      `<g><title>Machine ${name}, ${fillWeight(value)}</title>${mark(sc.x(value), row, "observed-mark", 4)}</g>`).join("");
+  });
+  body += horizontalAxis(sc, axisY, ticks);
+  return svg(body, axisY + 49, `Dot plot of ${bagTotal} observed bag weights by machine. Each dot is one bag.`);
+}
+
+function aDistributionLesson() {
+  return {
+    cue: "At the current line offset of 0 g, A’s starting distribution has mean 0 and variance 4. A’s two-bag likelihood is centered at +5 g with variance 8.",
+    plot: `<h3>Multiply the two Normal terms</h3>
+      <p>Precision is reciprocal variance. Multiplying the prior by the likelihood adds two squared terms in the exponent. After factoring out −½, those terms are</p>
+      <p class="equation">(θ<sub>A</sub> − 0)²/4 + (θ<sub>A</sub> − 5)²/8.</p>
+      <p>Expand this sum and match the coefficients with those of (θ<sub>A</sub> − M<sub>A</sub>)²/V<sub>A</sub>. The coefficient of θ<sub>A</sub>² gives the conditional precision. Divide the coefficient of θ<sub>A</sub> by −2 to get the conditional mean times that precision.</p>
+      <p class="equation">1/V<sub>A</sub> = 1/4 + 1/8<br>M<sub>A</sub>/V<sub>A</sub> = 0/4 + 5/8.</p>`,
+  };
+}
+
+function machineCalculationLesson(name, meanFraction, varianceFraction) {
+  const priorVariance = 4;
+  const bagVariance = 16;
+  const count = data[name].length;
+  const { mean } = learning.likelihoods[name];
+  const samplingVariance = bagVariance / count;
+  return {
+    cue: `The line offset is still 0 g. Machine ${name}’s ${count} bags average ${fillWeight(mean)}, or ${grams(mean)} relative to target.`,
+    plot: `<h3>Weight by precision</h3>
+      <p>The variance around the line is ${priorVariance} g², giving prior precision 1/${priorVariance}. The bag average has sampling variance ${bagVariance}/${count} = ${samplingVariance} g², giving precision 1/${samplingVariance}.</p>
+      <p class="equation">V<sub>${name}</sub> = (1/${priorVariance} + 1/${samplingVariance})<sup>−1</sup> = ${varianceFraction}<br>
+      M<sub>${name}</sub> = V<sub>${name}</sub>(0/${priorVariance} + ${mean}/${samplingVariance}) = ${meanFraction}</p>
+      <p>The conditional distribution is <strong>N(${meanFraction}, ${varianceFraction})</strong>, with mean first and variance second.</p>`,
+  };
+}
+
+function lineCalculationLesson() {
+  const update = steps[4];
+  const inputs = names.map((name) => offset(update.before[name])).join(", ");
+  return {
+    cue: `Hold the four machine draws fixed at ${inputs} g. Each tells us something about the line offset they share.`,
+    plot: `<h3>Combine the line prior and the machine draws</h3>
+      <p>The line prior N(0, 16) contributes precision 1/16. Each machine offset has variance 4 g² around the line, so each of the four contributes precision 1/4.</p>
+      <p class="equation">V = (1/16 + 4 × 1/4)<sup>−1</sup> = 16/17<br>
+      M = (4/17)(θ<sub>A</sub> + θ<sub>B</sub> + θ<sub>C</sub> + θ<sub>D</sub>) ≈ ${grams(update.mean)}</p>
+      <p>Draw the line offset from N(M, 16/17). This draw supplies the current line offset for the next sweep.</p>`,
+  };
+}
+
+const explanations = {
+  1: [
+    { title: "Where did A’s distribution come from?", render: aDistributionLesson },
+    { title: "Calculate A’s conditional distribution", render: () => machineCalculationLesson("A", "5/3", "8/3") },
+    { title: "Calculate B’s conditional distribution", render: () => machineCalculationLesson("B", "10/3", "4/3") },
+  ],
+  4: [{ title: "Calculate the shared line’s conditional distribution", render: lineCalculationLesson }],
+};
+const gibbsStages = [
+  { draws: 0 },
+  ...steps.flatMap((_, index) => {
+    const draws = index + 1;
+    return [{ draws }, ...(explanations[draws] || []).map((lesson) => ({ draws, lesson }))];
+  }),
+  { draws: steps.length, longRun: true },
+];
+
 function gibbsView(index) {
-  const longRun = index > steps.length;
-  const step = steps[Math.min(index, steps.length) - 1];
-  const nextStep = steps[index];
-  const saved = steps.slice(0, index).filter((entry) => entry.coordinate === "Line");
+  const { draws, lesson, longRun } = gibbsStages[index];
+  const step = steps[draws - 1];
+  const nextStep = steps[draws];
+  const nextLesson = gibbsStages[index + 1]?.lesson;
+  const saved = steps.slice(0, draws).filter((entry) => entry.coordinate === "Line");
   const complete = saved.length === sweepCount;
-  const progress = step ? `Sweep ${step.sweep} of ${sweepCount} · Update ${(index - 1) % coordinates.length + 1} of ${coordinates.length}`
+  const progress = step ? `Sweep ${step.sweep} of ${sweepCount} · Update ${(draws - 1) % coordinates.length + 1} of ${coordinates.length}`
     : `${sweepCount} sweeps · Ready to start`;
-  let title = `Keep the ${bagTotal} observed bags fixed`;
-  let cue = "Adding records changed the posterior in the previous activity. Here the evidence stays fixed. Start with all five offsets at 0 g, then draw A using the current line offset and A’s two bags.";
-  let plot = `<h3>Update order</h3><p>Draw A, B, C, and D at the current line offset. Then draw the line offset using the four fresh machine values. Save each completed sweep.</p>`;
-  if (step && !longRun) {
+  let title = `The ${bagTotal} weighed bags`;
+  let cue = "Keep these observations fixed and start all five offsets at 0 g. A draws first, using the current line offset and its two bags.";
+  let plot = `<h3>One dot per weighed bag</h3>${weighedBagsPlot()}`;
+  if (lesson) {
+    title = lesson.title;
+    ({ cue, plot } = lesson.render());
+  } else if (step && !longRun) {
     const lineUpdate = step.coordinate === "Line";
     title = lineUpdate ? "Draw the line offset" : `Draw machine ${step.coordinate}’s offset`;
     if (lineUpdate) {
@@ -488,6 +563,9 @@ function gibbsView(index) {
     } else {
       const fromPrevious = step.sweep > 1 && step.coordinate === "A" ? " from the previous sweep" : "";
       cue = `Use ${grams(step.before.Line)} for the line${fromPrevious} and machine ${step.coordinate}’s ${data[step.coordinate].length} observed bags to center this Normal distribution.`;
+      if (draws === 1) {
+        cue = `With the line at 0 g and A’s bags weighing ${data.A.map((value) => target + value).join(" and ")} g, draw A’s offset from N(5/3, 8/3). This draw is ${grams(step.draw)}. Keep it for the line update.`;
+      }
     }
     plot = `<h3>Full conditional for ${lineUpdate ? "the line" : `machine ${step.coordinate}`}</h3>
       ${legend([["center", "Conditional center"], ["draw", "Random draw"]])}
@@ -511,10 +589,11 @@ function gibbsView(index) {
     : "";
   let next = "Show a longer run";
   if (nextStep) next = nextStep.coordinate === "Line" ? "Draw the line offset" : `Draw machine ${nextStep.coordinate}`;
+  if (nextLesson) next = nextLesson.title;
   if (longRun) next = "Walkthrough complete";
   const side = longRun ? `<h3>Hand-stepped sweeps</h3>${trace}` : stateTable(step) + trace;
   return {
-    progress: longRun ? "Longer Gibbs run" : progress, title, cue, next,
+    progress: longRun ? "Longer Gibbs run" : lesson ? "Sweep 1 · Conditional distribution" : progress, title, cue, next,
     html: scene(plot, side, observedRecords(names)),
   };
 }
@@ -522,7 +601,7 @@ function gibbsView(index) {
 const views = {
   generate: { render: generationView, max: generationEnd },
   learn: { render: inferenceView, max: learningStages.length - 1 },
-  gibbs: { render: gibbsView, max: steps.length + 1 },
+  gibbs: { render: gibbsView, max: gibbsStages.length - 1 },
 };
 
 function activeChapter() {
@@ -556,7 +635,7 @@ get("next").addEventListener("click", () => {
     render();
     if (get("next").disabled) get("chapter").focus({ preventScroll: true });
   } else if (chapter !== "gibbs") {
-    window.location.hash = chapterOrder[chapterOrder.indexOf(chapter) + 1];
+    window.location.hash = "gibbs";
   }
 });
 
