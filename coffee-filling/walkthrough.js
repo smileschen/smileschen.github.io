@@ -157,7 +157,7 @@ function generationView(index) {
     next = complete ? "Continue to weighed bags" : "Draw the next bag";
   }
   if (complete) {
-    cue = "We’ll keep these four weights in the data we analyze. In the larger teaching dataset, two weights were chosen so A and B share a sample average.";
+    cue = "We’ll keep these four weights in the data we analyze. Both of A’s weights and the last of B’s weights were chosen so the two machines share a sample mean of 255 g.";
   }
   const waiting = '<span class="waiting">awaiting draw</span>';
   const bagItems = simulatedBags.slice(0, bagCount).map((v, i) =>
@@ -192,7 +192,7 @@ function observedRecords(available) {
       <ul class="record-list">${bags}</ul></div>`;
   }).join("");
   return `<section class="data-card"><h3>Weighed bags from this teaching example</h3>
-    <p class="chart-note">Two weights were chosen so A and B have the same sample average.</p>
+    <p class="chart-note">Both of A’s weights and the last of B’s weights were chosen so A and B share a sample mean of 255 g.</p>
     <div class="record-grid">${records}</div></section>`;
 }
 
