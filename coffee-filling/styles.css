@@ -10,6 +10,7 @@
   --green-soft: #eaf3ee;
   --rust: #933e23;
   --rust-soft: #faeee7;
+  --blue: #24567e;
   --outline: #1c70ab;
   font: 16px/1.48 "Source Sans 3", "Segoe UI", sans-serif;
   color: var(--ink);
@@ -112,6 +113,7 @@ button:disabled { opacity: .58; cursor: default }
 .record-list { display: flex; flex-wrap: wrap; gap: 3px 7px; margin: 3px 0 0; padding: 0; list-style: none }
 .record-list li { min-width: 2ch }
 .line-record { font-size: .9rem; color: var(--muted) }
+.record-weight { white-space: nowrap }
 table { width: 100%; border-collapse: collapse; font-size: .91rem }
 caption { margin-bottom: 5px; text-align: left; font-weight: 650 }
 th, td { padding: 5px 6px; border-bottom: 1px solid #e4e8e3; text-align: right; white-space: nowrap }
@@ -132,6 +134,9 @@ thead th { color: var(--muted) }
 .symbol.center { border-left: 2px dashed var(--green); margin-left: 4px; flex-basis: 8px }
 .symbol.hist { background: #bdd8cd; border: 1px solid var(--green) }
 .symbol.exact { border-bottom: 2px solid var(--green); height: 6px }
+.symbol.dashed, .symbol.solid { flex-basis: 18px; height: 0 }
+.symbol.dashed { border-top: 2px dashed var(--blue) }
+.symbol.solid { border-top: 2px solid var(--green) }
 .chart { display: block; width: 100%; height: auto; overflow: visible }
 .chart text { fill: var(--muted); font-family: "Source Sans 3", "Segoe UI", sans-serif; font-size: 14px }
 .chart .chart-label { font-size: 14px; font-weight: 650 }
@@ -140,6 +145,11 @@ thead th { color: var(--muted) }
 .chart .target { stroke: #89948b; stroke-width: 1.2; stroke-dasharray: 3 4 }
 .chart .curve { fill: none; stroke: var(--green); stroke-width: 2.5 }
 .chart .machine-curve { fill: none; stroke: var(--green); stroke-width: 1.8 }
+.chart .bayes-prior, .chart .bayes-likelihood, .chart .bayes-posterior { fill: none; stroke-width: 2.4 }
+.chart .bayes-prior { stroke: var(--blue); stroke-dasharray: 7 4 }
+.chart .bayes-likelihood { stroke: var(--rust); stroke-dasharray: 2 3 }
+.chart .bayes-posterior { stroke: var(--green) }
+.chart .prior-mean { fill: var(--blue) }
 .chart .shade { fill: #e3f0ea }
 .chart .draw-mark { fill: var(--rust); stroke: white; stroke-width: 1.3 }
 .chart .mean-mark { stroke: var(--green); stroke-dasharray: 4 4; stroke-width: 1.7 }
