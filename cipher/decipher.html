@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Inspect substitution-key proposals and watch the Metropolis algorithm decipher a message from Stats 102C Lecture 18.">
+  <title>Metropolis decoder · Cipher lab · Stats 102C</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="cipher-model.js"></script>
+  <script defer src="cipher-engine.js"></script>
+  <script defer src="decipher.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="shell nav-inner">
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">C</span><strong>Stats 102C</strong><span class="brand-divider"></span><span>Cipher lab</span></a>
+      <nav aria-label="Cipher tools"><a href="index.html">Scrambler</a><a href="decipher.html" aria-current="page">Metropolis decoder</a></nav>
+    </div>
+  </header>
+  <main class="shell">
+    <section class="hero decoder-hero" aria-labelledby="page-title">
+      <div class="hero-copy"><p class="eyebrow">Lecture 18 <span>/</span> Metropolis sampling</p>
+        <h1 id="page-title">Decipher a message</h1>
+        <p>Start with a random key and watch the sampler search for English. Pause at any proposal to inspect the swap and the draw.</p>
+      </div>
+      <div class="equation"><span>Acceptance probability</span><div>α = min(1, e<sup>Δ</sup>)</div><small>Δ = proposed score − current score</small></div>
+    </section>
+    <noscript><p class="panel">Enable JavaScript to run the Metropolis decoder.</p></noscript>
+    <div class="writing-desk decoder-top">
+      <section class="panel" aria-labelledby="input-title">
+        <div class="panel-top"><h2 id="input-title"><label for="cipher-input">Ciphertext</label></h2></div>
+        <textarea id="cipher-input" class="cipher-input" rows="4" spellcheck="false" placeholder="Paste a substitution-cipher message.">ZTRZY EKXHZR EKX RB NZ BY TBR RB NZ REKR IW REZ FAZWRIBT MEZREZY RIW TBNHZY IT REZ XITV RB WACCZY REZ WHITPW KTV KYYBMW BC BARYKPZBAW CBYRATZ BY RB RKJZ KYXW KPKITWR K WZK BC RYBANHZW KTV NO BSSBWITP ZTV REZX</textarea>
+        <div class="actions run-controls">
+          <button class="button primary" type="button" id="decipher">Decipher</button>
+          <button class="button secondary" type="button" id="play-pause" disabled>Pause</button>
+          <button class="button secondary" type="button" id="step">Step once</button>
+          <label class="speed-control">Speed <select id="speed"><option value="2">2 steps/s</option><option value="100" selected>100 steps/s</option><option value="2500">2,500 steps/s</option></select></label>
+        </div>
+        <p class="run-status" id="run-status" role="status">Ready to decipher.</p>
+      </section>
+      <section class="panel output-panel" aria-labelledby="chain-title">
+        <div class="panel-top"><h2 id="chain-title">Live translation</h2></div>
+        <p id="chain-text" class="live-text">Start the sampler to see its translation.</p>
+        <dl class="chain-stats"><div><dt>Proposal</dt><dd id="iteration">0</dd></div><div><dt>Accepted</dt><dd id="accepted-count">0</dd></div><div><dt>Log score</dt><dd id="chain-score">—</dd></div></dl>
+      </section>
+    </div>
+
+    <section class="panel inspector" aria-labelledby="inspect-title">
+      <div class="panel-top inspect-controls"><h2 id="inspect-title">Inside one proposal</h2><div class="actions"><button class="button secondary" type="button" id="inspect-play" disabled>Pause</button><button class="button secondary" type="button" id="inspect-step">Step once</button></div></div>
+      <p class="subline">Each key lists the cipher letter beneath its plaintext partner. Read the key in reverse to decipher the message.</p>
+      <div class="comparison">
+        <section class="snapshot" aria-labelledby="current-title">
+          <div class="snapshot-heading"><h3 id="current-title">Current key</h3><span>Before the swap</span></div>
+          <div id="current-key" class="decode-key" aria-label="Current key, plaintext above ciphertext"></div>
+          <h4>Current translation</h4><div id="current-text" class="translation"></div>
+          <div class="score-line">Log score <strong id="current-score">—</strong></div>
+        </section>
+        <section class="snapshot proposed" aria-labelledby="proposed-title">
+          <div class="snapshot-heading"><h3 id="proposed-title">Proposed key</h3><span>Swap columns <b id="swapped-letters">—</b></span></div>
+          <div id="proposed-key" class="decode-key" aria-label="Proposed key, plaintext above ciphertext"></div>
+          <h4>Proposed translation</h4><div id="proposed-text" class="translation"></div>
+          <div class="score-line">Log score <strong id="proposed-score">—</strong></div>
+        </section>
+      </div>
+      <dl class="decision-row"><div><dt>Score change (Δ)</dt><dd id="score-change">—</dd></div><div><dt>Acceptance probability (α)</dt><dd id="acceptance">—</dd></div><div><dt>Uniform draw (u)</dt><dd id="random-u">—</dd></div><div><dt>Decision</dt><dd id="decision" data-decision="neutral">—</dd></div></dl>
+      <p class="subline decision-note">Accept when u &lt; α. After a rejection, the next proposal starts from the same key.</p>
+    </section>
+    <div class="decoder-bottom">
+      <section class="panel" aria-labelledby="log-title"><div class="panel-top"><h2 id="log-title">Noisy output</h2></div>
+        <p class="subline">The latest 40 accepted swaps, newest first. Each entry shows the proposal number, log score, and resulting translation.</p>
+        <ol class="noisy-log" id="noisy-log"></ol>
+      </section>
+      <div class="details-column">
+        <section class="panel" aria-labelledby="best-title"><h2 id="best-title">Best translation so far</h2>
+          <p id="best-text" class="translation"></p>
+          <div class="score-line">Best log score <strong id="best-score">—</strong></div>
+        </section>
+        <details class="panel model-details"><summary>How the log score works</summary>
+          <p>The sampler adds the log weights of neighboring letters and spaces from <em>War and Peace</em>. It then adds 0.07 times the sum of the word log weights from the lecture lexicon. An unknown word has weight 10<sup>−10</sup>.</p>
+          <p>With a uniform key prior, this score is the log posterior up to a constant. Each proposal swaps two uniformly chosen entries. An improved score is always accepted, and a lower score can be accepted with probability e<sup>Δ</sup>.</p>
+          <p>Decipher starts a fresh random key. Short passages can admit several plausible translations, and separate runs can find different readings.</p>
+        </details>
+      </div>
+    </div>
+  </main>
+  <footer class="shell foot"><span>Stats 102C</span><span>Computational Statistics</span></footer>
+</body>
+</html>

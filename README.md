@@ -17,6 +17,13 @@ Step through multivariate MCMC with the same two-dimensional normal target. Each
 - [Metropolis-Hastings with a normal proposal](https://smileschen.github.io/mcmc/mh_2d_normal.html)
 - [Gibbs sampling with coordinate updates](https://smileschen.github.io/mcmc/gibbs_2d.html)
 
+# Substitution ciphers
+
+Use the Hamlet passage from Lectures 17 and 18 or bring your own message.
+
+- [Scramble a message](https://smileschen.github.io/cipher/)
+- [Step through the Metropolis decoder](https://smileschen.github.io/cipher/decipher.html)
+
 # Baseball models
 
 Generate player abilities and hit counts, then use observed hits and at-bats to estimate individual abilities and the shared population mode.
