@@ -83,6 +83,7 @@ var { font-style: italic; }
 }
 
 .intro p { max-width: 47rem; color: var(--muted); }
+.intro .class-question { margin: 0.55rem 0 0.18rem; color: var(--ink); font-size: 1.12rem; font-weight: 650; }
 
 .model-stats {
   display: grid;
@@ -355,6 +356,11 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
 .matrix .matrix-cell.is-removed { color: #8a303c; background: #fce7e9; font-weight: 750; }
 .matrix .matrix-cell.is-added { color: #086254; background: #d3f1e9; font-weight: 750; }
 
+.matrix .egg-column {
+  box-shadow: inset 0 -2px #a46910;
+  font-weight: 750;
+}
+
 .sampler-header { padding-bottom: 0.55rem; }
 
 .sweep-tag {
@@ -396,6 +402,8 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
 .sampler-actions { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 0.6rem; margin-top: 0.85rem; }
 .sampler-actions .button { min-height: 2.8rem; }
 .setup-controls { display: flex; justify-content: space-between; align-items: center; gap: 0.45rem 0.7rem; padding-top: 0.7rem; }
+.run-options { display: grid; gap: 0.38rem; }
+.setup-controls { align-items: end; }
 .setup-controls .button { min-height: 2.2rem; padding: 0.35rem 0.65rem; font-size: 0.875rem; }
 
 .stage-list {
@@ -407,8 +415,10 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   list-style: none;
 }
 
-.stage-list li {
+.stage-list li { min-width: 0; }
+.stage-list button {
   display: flex;
+  width: 100%;
   justify-content: center;
   align-items: center;
   gap: 0.27rem;
@@ -423,6 +433,8 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   line-height: 1.2;
 }
 
+.stage-list button:enabled:hover { border-color: #8796e0; background: var(--blue-tint); }
+.stage-list button:disabled { cursor: default; }
 .stage-list li span {
   display: grid;
   place-items: center;
@@ -435,9 +447,9 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   font-variant-numeric: tabular-nums;
 }
 
-.stage-list li.is-done { border-color: #d9dffa; color: var(--blue-dark); background: #f2f4ff; }
+.stage-list li.is-done button { border-color: #d9dffa; color: var(--blue-dark); background: #f2f4ff; }
 .stage-list li.is-done span { color: var(--blue-dark); background: #e1e5fb; }
-.stage-list li.is-active { border-color: #a1a9e3; color: var(--blue-dark); background: #e8ecff; }
+.stage-list li.is-active button { border-color: #a1a9e3; color: var(--blue-dark); background: #e8ecff; }
 .stage-list li.is-active span { color: white; background: var(--blue); }
 
 .empty-update, .step-message, .decision {
@@ -532,6 +544,56 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
 .formula-group h3, .formula-group h4 { margin-bottom: 0.35rem; color: var(--ink); font-size: 0.9375rem; font-weight: 720; }
 .term-table { margin-block: 0.55rem; color: var(--ink); }
 
+.word-lesson {
+  margin-block: 0.85rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #dfce99;
+  border-radius: 0.65rem;
+  background: #fffcf2;
+}
+.word-lesson h3, .sweep-history h3 { margin: 0; font-size: 1rem; line-height: 1.4; }
+.word-lesson p, .sweep-history p { margin-block: 0.4rem; font-size: 0.9375rem; line-height: 1.45; }
+.word-lesson-table, .sweep-history table {
+  width: 100%;
+  margin-block: 0.55rem;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+:is(.word-lesson-table, .sweep-history table) :is(th, td) {
+  text-align: right;
+  padding: 0.25rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+}
+:is(.word-lesson-table, .sweep-history table) tr > :first-child { text-align: left; }
+.word-lesson-table .is-current-snapshot { background: #ffedb6; font-weight: 760; }
+.word-lesson-table .future-count { color: var(--muted); }
+.document-card.is-egg-lesson mark[data-stem="egg"] {
+  background: #ffcf60;
+  color: #39270b;
+  font-weight: 750;
+  box-shadow: inset 0 -2px #a46910;
+}
+.sweep-history { padding: 0.85rem 1.2rem; }
+.sweep-history thead { background: var(--surface); }
+.sweep-history table { margin-bottom: 0; }
+.draw-intervals, .prediction-controls { display: flex; flex-wrap: wrap; gap: 0.4rem 0.65rem; margin-block: 0.65rem; }
+.prediction-controls { flex-direction: column; align-items: flex-start; }
+.prediction-choices { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.prediction-choices .button { min-height: 2.4rem; padding: 0.4rem 0.6rem; font-size: 0.875rem; }
+.draw-example summary { color: var(--blue-dark); font-weight: 650; }
+.draw-example[open] .prediction-choices { margin-top: 0.6rem; }
+.prediction-feedback:empty { display: none; }
+.interval-label { font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+.prediction-feedback, .draw-example {
+  margin-block: 0.7rem;
+  padding: 0.65rem 0.8rem;
+  border-inline-start: 3px solid var(--blue);
+  background: var(--surface);
+  line-height: 1.5;
+}
+.draw-example p + p { margin-top: 0.4rem; }
+
 .site-footer { padding: 1.3rem 0; color: var(--muted); font-size: 0.875rem; }
 
 @media (min-width: 761px) {
@@ -543,7 +605,7 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   .shell { width: min(100% - 2rem, 1440px); }
   .workspace { column-gap: 0.75rem; }
   .panel-header, .corpus-tools, .matrix-tools, .matrix-caption, .panel-foot, .sampler-body, .update-body { padding-inline: 0.8rem; }
-  .stage-list li { flex-direction: column; }
+  .stage-list button { flex-direction: column; }
 }
 
 @media (max-width: 760px) {
@@ -555,7 +617,7 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   .right-column { grid-area: 1 / 1; }
   .left-column { grid-area: 2 / 1; }
   .matrix-scroll { max-height: 26rem; }
-  .stage-list li { flex-direction: row; }
+  .stage-list button { flex-direction: row; }
 }
 
 @media (max-width: 420px) {
@@ -563,7 +625,7 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
   .model-stats { width: 100%; grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .model-stats div { padding-inline: 0.2rem; }
   .model-stats dt { text-align: center; white-space: normal; }
-  .stage-list li { flex-direction: column; }
+  .stage-list button { flex-direction: column; }
   .score-table :is(th, td), .term-table :is(th, td) { padding-inline: 0.38rem; }
 }
 

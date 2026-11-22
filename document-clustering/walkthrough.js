@@ -7,13 +7,15 @@
   const snapshotNames = ["before", "excluded", "after"];
   const stageNames = ["remove", "score", "sample", "restore"];
   const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
-  const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+  const stageTitles = { before: "Before removal", remove: "Remove", score: "Score", sample: "Draw", restore: "Restore" };
+  const stageSnapshots = { before: "before", remove: "excluded", score: "excluded", sample: "excluded", restore: "after" };
 
   let sampler;
   let last = null;
   let stage = null;
-  let busy = false;
-  let snapshot = "after";
+  let animationTimer = null;
+  let awaitingPrediction = false;
+  let prediction = null;
   let stemmed = false;
   let finishMessage = "";
   const documentCards = [];
@@ -45,10 +47,10 @@
     return (Math.abs(value) < 0.5 * 10 ** -digits ? 0 : value).toFixed(digits).replace("-", "−");
   }
 
-  function probability(value) {
+  function probability(value, other) {
     const percent = value * 100;
     if (percent > 0 && percent < 0.0001) return `${percent.toExponential(3)}%`;
-    if (percent < 100 && percent > 99.9999) return ">99.9999%";
+    if (other > 0 && percent > 99.9999) return ">99.9999%";
     return `${fixed(percent)}%`;
   }
 
@@ -83,24 +85,46 @@
         ? entry.tokens.flatMap((token, position) => position === 0 ? [[token, true]] : [[" ", false], [token, true]])
         : entry.originalParts;
       const fragment = document.createDocumentFragment();
+      let tokenIndex = 0;
       for (const [text, retained] of parts) {
-        fragment.append(retained ? element("mark", "", text) : document.createTextNode(text));
+        if (retained) {
+          const mark = element("mark", "", text);
+          mark.dataset.stem = entry.tokens[tokenIndex++];
+          fragment.append(mark);
+        } else {
+          fragment.append(document.createTextNode(text));
+        }
       }
       body.replaceChildren(fragment);
     });
   }
 
+  function selectedSnapshot() {
+    return stageSnapshots[stage] || "after";
+  }
+
+  function visibleAssignment(index) {
+    if (last && index === last.index) {
+      const snapshot = selectedSnapshot();
+      if (snapshot === "before") return last.previousCluster;
+      if (snapshot === "excluded") return null;
+    }
+    return sampler.assignments[index];
+  }
+
   function renderCorpus() {
-    const visibleClusters = busy ? last.excluded : sampler.clusters;
+    const visibleClusters = last ? last[selectedSnapshot()] : sampler.clusters;
     get("cluster-summary").replaceChildren(...visibleClusters.map((cluster, index) =>
       clusterBadge(index, `${clusterName(index)} · ${cluster.documents} docs`)));
 
     documentCards.forEach(({ item, label }, index) => {
       const active = last?.index === index;
       item.classList.toggle("is-current", active);
+      item.classList.toggle("is-egg-lesson", active && last.sweep === 1 && index === 0);
       if (active) item.setAttribute("aria-current", "true");
       else item.removeAttribute("aria-current");
-      label.replaceChildren(active && busy ? clusterBadge(null, "Held out") : clusterBadge(sampler.assignments[index]));
+      const cluster = visibleAssignment(index);
+      label.replaceChildren(cluster === null ? clusterBadge(null, "Held out") : clusterBadge(cluster));
     });
   }
 
@@ -111,14 +135,19 @@
     region.scrollTop += distance - 8;
   }
 
+  function isLessonEgg(column) {
+    return last?.sweep === 1 && last.index === 0 && vocabulary[column] === "egg";
+  }
+
   function matrixRow(title, counts, columns, options = {}) {
     const row = element("tr", options.className || "matrix-row");
     const label = element("th", "matrix-row-label", title);
     label.scope = "row";
     row.append(label);
-    const addCell = (value, active = false, delta = 0) => {
+    const addCell = (value, active = false, delta = 0, column) => {
       const cell = element("td", "matrix-cell", value);
       cell.classList.toggle("is-zero", value === 0);
+      if (options.illustrateEgg && isLessonEgg(column)) cell.classList.add("egg-column");
       cell.classList.toggle("is-current-term", active);
       cell.classList.toggle("is-removed", delta < 0);
       cell.classList.toggle("is-added", delta > 0);
@@ -127,7 +156,7 @@
     };
     addCell(counts.reduce((total, count) => total + count, 0), false, options.deltaTokens);
     columns.forEach(column => {
-      addCell(counts[column], options.activeCounts?.[column] > 0, options.deltaCounts?.[column]);
+      addCell(counts[column], options.activeCounts?.[column] > 0, options.deltaCounts?.[column], column);
     });
     return row;
   }
@@ -137,23 +166,19 @@
     const name = clusterName(cluster);
     const count = counts.documents;
     const totalLabel = `${name} total · ${count} ${count === 1 ? "doc" : "docs"}`;
-    const compare = last && { excluded: last.before, after: last.excluded }[snapshot];
+    const compare = last && { excluded: last.before, after: last.excluded }[selectedSnapshot()];
     const previous = compare && compare[cluster];
     const deltaCounts = previous && counts.counts.map((value, i) => value - previous.counts[i]);
     group.append(matrixRow(totalLabel, counts.counts, columns, {
       className: `matrix-total c${cluster + 1}`,
+      illustrateEgg: true,
       activeCounts,
       deltaCounts,
       deltaTokens: previous ? counts.tokens - previous.tokens : 0,
     }));
 
     for (const [index, entry] of documents.entries()) {
-      let assignedCluster = sampler.assignments[index];
-      if (index === last?.index) {
-        if (snapshot === "excluded") continue;
-        if (snapshot === "before") assignedCluster = last.previousCluster;
-      }
-      if (assignedCluster === cluster) {
+      if (visibleAssignment(index) === cluster) {
         const active = index === currentIndex && last !== null;
         group.append(matrixRow(documentName(index), entry.counts, columns, {
           className: active ? "matrix-row is-current" : "matrix-row",
@@ -165,6 +190,7 @@
   }
 
   function renderMatrix() {
+    const snapshot = selectedSnapshot();
     const currentIndex = last?.index ?? sampler.nextIndex;
     const currentCounts = documents[currentIndex].counts;
     const isFiltered = get("word-filter").checked;
@@ -179,7 +205,7 @@
     const totals = counts.map((cluster, index) => `C${index + 1} has ${cluster.tokens} tokens`).join(" · ");
     get("matrix-caption").textContent = `${caption} ${totals}.`;
     for (const name of snapshotNames) {
-      get(name).disabled = !last || busy;
+      get(name).disabled = !last;
       get(name).setAttribute("aria-pressed", String(name === snapshot));
     }
 
@@ -189,6 +215,7 @@
       const th = element("th", index === 0 ? "matrix-row-label" : "", name);
       th.scope = "col";
       if (index > 1 && currentCounts[columns[index - 2]] > 0) th.classList.add("is-current-term");
+      if (index > 1 && isLessonEgg(columns[index - 2])) th.classList.add("egg-column");
       headings.append(th);
     }
     header.append(headings);
@@ -196,6 +223,7 @@
     const reference = element("tfoot", "matrix-group held");
     reference.append(matrixRow(`${last ? "Current" : "Next"} · ${documentName(currentIndex)}`, currentCounts, columns, {
       className: "matrix-row is-current",
+      illustrateEgg: true,
       activeCounts: currentCounts,
     }));
     const table = get("matrix");
@@ -203,21 +231,26 @@
   }
 
   function renderProgress() {
-    const sweep = busy ? last.sweep : sampler.sweep;
-    const completed = busy ? last.sweep - 1 : sampler.completedSweeps;
-    const processed = busy ? last.index : sampler.nextIndex;
-    get("sweep-tag").textContent = `Sweep ${sweep}`;
-    get("next-document").textContent = `${busy ? "Updating" : "Next"} · ${documentName(processed)}`;
+    const sweep = last?.sweep ?? sampler.sweep;
+    const restored = stage === "restore";
+    const processed = last ? last.index + Number(restored) : 0;
+    const completed = processed === documents.length ? sweep : sweep - 1;
+    const nextName = documentName(sampler.nextIndex);
+    get("sweep-tag").textContent = `Sweep ${sweep}${processed === documents.length ? " complete" : ""}`;
+    get("next-document").textContent = last && !restored
+      ? `${documentName(last.index)} · ${stageTitles[stage]}`
+      : `Next · ${nextName}${processed === documents.length ? ` · Sweep ${sampler.sweep}` : ""}`;
     get("sweep-progress").textContent = `${processed} of ${documents.length} updated`;
     get("completed-sweeps").textContent = `${completed} ${completed === 1 ? "sweep" : "sweeps"} complete`;
     progressSegments.forEach((segment, index) => {
       segment.classList.toggle("is-done", index < processed);
       segment.classList.toggle("is-next", index === processed);
     });
-    for (const id of ["step", "finish", "randomize", "reset"]) {
-      get(id).setAttribute("aria-disabled", String(busy));
-    }
-    get("lecture-draw").disabled = busy;
+    const primary = get("step");
+    primary.textContent = awaitingPrediction
+      ? (stage === "sample" ? "Reveal assignment" : "Show draw")
+      : "Step one document";
+    primary.title = awaitingPrediction ? primary.textContent : `Update ${nextName} in sweep ${sampler.sweep}`;
   }
 
   function scoreRow(label, values, className = "") {
@@ -249,7 +282,7 @@
       scoreRow("+ Word prediction", logs("logWords")),
       scoreRow("= Log score", logs("logWeight"), "score-total"),
       scoreRow("Shifted weight", last.scores.map(score => score.shiftedWeight.toPrecision(6))),
-      scoreRow("Cluster probability", last.scores.map(score => probability(score.probability)), "score-probability"),
+      scoreRow("Cluster probability", last.scores.map((score, index) => probability(score.probability, last.scores[1 - index].probability)), "score-probability"),
     );
     table.append(header, body);
     return table;
@@ -295,8 +328,15 @@
     return details;
   }
 
+  function thresholdLabel() {
+    const [first, second] = last.scores;
+    if (first.probability > 0.999999 && second.probability > 0) {
+      return `1 − ${Number(second.probability.toPrecision(6))}`;
+    }
+    return String(Number(first.probability.toPrecision(7)));
+  }
+
   function probabilityScale(showDraw) {
-    const p1 = last.scores[0].probability;
     const scale = element("div", "probability-scale");
     scale.setAttribute("aria-hidden", "true");
     last.scores.forEach((score, index) => {
@@ -312,15 +352,72 @@
     const labels = element("div", "probability-labels");
     labels.setAttribute("aria-hidden", "true");
     labels.append(element("span", "", "0"), element("span", "", "1"));
+
     const scaleGroup = element("div", "draw-scale");
-    scaleGroup.append(scale, labels);
+    scaleGroup.append(element("p", "draw-description", `In a random run, U is a uniform draw from 0 to 1. Cluster 1’s interval ends at p₁ ≈ ${thresholdLabel()}.`));
+    const intervals = element("div", "draw-intervals");
+    ["0 ≤ U ≤ p₁", "p₁ < U ≤ 1"].forEach((range, k) => {
+      const label = element("span", `interval-label c${k + 1}`);
+      label.append(clusterBadge(k), document.createTextNode(` ${range}`));
+      intervals.append(label);
+    });
+    scaleGroup.append(scale, labels, intervals);
     if (showDraw) {
-      const relation = last.newCluster === 0 ? "≤" : ">";
-      const drawDescription = element("p", "draw-description", `U = ${fixed(last.draw, 6)} ${relation} P(Cluster 1) = ${p1.toPrecision(7)}`);
-      drawDescription.title = `U = ${last.draw}, P(Cluster 1) = ${p1}`;
-      scaleGroup.prepend(drawDescription);
+      // Keep close calls distinguishable when rounding the displayed draw.
+      const threshold = last.scores[0].probability;
+      const rounded = Number(last.draw.toPrecision(6));
+      const showExact = Math.abs(last.draw - threshold) < 0.000001 || rounded === last.draw;
+      const display = showExact ? `= ${last.draw}` : `≈ ${rounded}`;
+      const drawDescription = element("p", "draw-description", `Draw U ${display}`);
+      drawDescription.title = `U = ${last.draw}`;
+      scaleGroup.append(drawDescription);
     }
     return scaleGroup;
+  }
+
+  function predictionControls() {
+    const controls = element("div", "prediction-controls");
+    controls.append(element("strong", "", "Which interval contains this draw?"));
+    const choices = element("div", "prediction-choices");
+    for (const k of [0, 1]) {
+      const button = element("button", "button secondary", `Predict ${clusterName(k)}`);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        prediction = k;
+        selectStage("restore");
+        get("update-details").querySelector(".decision").focus({ preventScroll: true });
+      });
+      choices.append(button);
+    }
+    const reveal = element("button", "button subtle", "Show answer");
+    reveal.type = "button";
+    reveal.addEventListener("click", () => {
+      selectStage("restore");
+      get("update-details").querySelector(".decision").focus({ preventScroll: true });
+    });
+    choices.append(reveal);
+    controls.append(choices);
+    return controls;
+  }
+
+  function drawExample() {
+    const example = element("details", "draw-example");
+    example.append(element("summary", "", "Try a different U for Document 07"));
+    example.append(element("p", "", "Keep these two probabilities and test where a different draw would fall. The recorded assignment is shown above."));
+    const choices = element("div", "prediction-choices");
+    const result = element("p", "prediction-feedback");
+    result.setAttribute("aria-live", "polite");
+    for (const u of [0.02, 0.60]) {
+      const button = element("button", "button secondary", `Test U = ${u.toFixed(2)}`);
+      button.type = "button";
+      button.addEventListener("click", () => {
+        const k = u <= last.scores[0].probability ? 0 : 1;
+        result.textContent = `U = ${u.toFixed(2)} falls in the ${clusterName(k)} interval and would select ${clusterName(k)}.`;
+      });
+      choices.append(button);
+    }
+    example.append(choices, result);
+    return example;
   }
 
   function renderUpdate() {
@@ -328,59 +425,80 @@
     const container = get("update-details");
     const position = stageNames.indexOf(stage);
     for (const [index, item] of [...get("stages").children].entries()) {
+      const active = index === position;
+      const button = item.querySelector("button");
+      button.disabled = !last;
+      button.setAttribute("aria-pressed", String(active));
       item.classList.toggle("is-done", index < position || stage === "restore");
-      item.classList.toggle("is-active", index === position);
-      if (index === position) item.setAttribute("aria-current", "step");
-      else item.removeAttribute("aria-current");
+      item.classList.toggle("is-active", active);
+      if (active) button.setAttribute("aria-current", "step");
+      else button.removeAttribute("aria-current");
     }
     if (!last) {
-      subtitle.textContent = "Step through Document 01 to see the calculation.";
-      const intro = element("div", "empty-update");
-      intro.append(element("strong", "", "How one document moves"), element("p", "",
-        "Temporarily hold out its word counts. Compare how well the other documents in each cluster predict it, then sample where it goes."));
+      subtitle.textContent = "Start with Document 01.";
+      const intro = element("p", "empty-update", "Read the first passage, then select Step one document. Select a stage to inspect its passage, counts, and calculation together.");
       container.replaceChildren(intro);
       return;
     }
 
     const name = documentName(last.index);
-    subtitle.textContent = `Sweep ${last.sweep} · ${name}`;
-    const existingDetails = container.querySelector(".formula-details");
-    const removed = last.before[last.previousCluster].tokens - last.excluded[last.previousCluster].tokens;
-    const removal = element("p", "step-message", `Held out ${removed} tokens from ${clusterName(last.previousCluster)}. Both clusters are scored using the other ${documents.length - 1} documents.`);
-    container.replaceChildren(removal);
-    if (stage === "remove") return;
+    subtitle.textContent = `Sweep ${last.sweep} · ${name} · ${stageTitles[stage]}`;
+    const detailsOpen = container.querySelector(".formula-details")?.open ?? false;
+    const removed = documents[last.index].tokens.length;
+    const message = stage === "before"
+      ? `${name} contributes ${removed} tokens to ${clusterName(last.previousCluster)}. Select Remove to set them aside.`
+      : `Held out ${removed} tokens from ${clusterName(last.previousCluster)}. Using only the other ${documents.length - 1} documents keeps this passage from predicting itself.`;
+    container.replaceChildren(element("p", "step-message", message));
+    const lesson = renderWordLesson({ transaction: last, stage, documents, vocabulary });
+    if (lesson) container.append(lesson);
+    if (stage === "before" || stage === "remove") return;
 
     const weights = element("p", "normalization", `Subtract the largest log score (${fixed(last.maxLogWeight)}), exponentiate, then divide by the sum of the shifted weights (${last.weightTotal.toPrecision(6)}).`);
     container.append(scoreTable(), weights, probabilityScale(stage !== "score"));
 
-    if (stage === "sample" || stage === "restore") {
+    if (stage === "sample") container.append(predictionControls());
+    if (stage === "restore") {
       const decision = element("div", `decision c${last.newCluster + 1}`);
+      decision.tabIndex = -1;
       const title = last.newCluster === last.previousCluster
         ? `${name} stays in ${clusterName(last.newCluster)}`
         : `${name} moves to ${clusterName(last.newCluster)}`;
-      const explanation = stage === "restore" ? `Added its ${removed} tokens to the sampled cluster.` : "The draw selects the cluster for restoration.";
+      if (prediction !== null) {
+        const feedback = prediction === last.newCluster ? "Your prediction matches the draw." : `You predicted ${clusterName(prediction)}.`;
+        decision.append(element("p", "prediction-feedback", feedback));
+      }
+      const rule = last.newCluster === 0 ? "at or below" : "above";
+      const explanation = `U falls ${rule} p₁, selecting ${clusterName(last.newCluster)}. Its ${removed} tokens are now included in that cluster’s totals.`;
       decision.append(element("strong", "", title), element("p", "", explanation));
       container.append(decision);
+      if (last.index === 6) container.append(drawExample());
+      if (finishMessage) container.append(element("p", "step-message finish-message", finishMessage));
     }
-    if (finishMessage) container.append(element("p", "step-message finish-message", finishMessage));
-    container.append(formulaDetails(existingDetails?.open ?? false));
+    container.append(formulaDetails(detailsOpen));
   }
 
   function render() {
     renderCorpus();
     renderMatrix();
     renderProgress();
+    renderSweepHistory(get("sweep-history"), sampler, last, stage);
     renderUpdate();
   }
 
+  function stopAnimation() {
+    clearTimeout(animationTimer);
+    animationTimer = null;
+  }
+
   function reset(randomize = false) {
-    if (busy) return;
+    stopAnimation();
     const assignments = randomize ? randomAssignments(documents.length) : initialAssignments.map(label => label - 1);
     sampler = initialize(assignments, documents, vocabulary.length);
     last = null;
     stage = null;
     finishMessage = "";
-    snapshot = "after";
+    awaitingPrediction = false;
+    prediction = null;
     get("corpus-scroll").scrollTop = 0;
     get("matrix-scroll").scrollTop = 0;
     get("matrix-scroll").scrollLeft = 0;
@@ -392,41 +510,61 @@
     return get("lecture-draw").checked ? () => 0.60 : Math.random;
   }
 
-  function finishUpdate() {
-    stage = "restore";
-    snapshot = "after";
-    busy = false;
+  function selectStage(nextStage) {
+    stopAnimation();
+    stage = nextStage;
+    if (stage === "restore") awaitingPrediction = false;
+    if (stage === "sample") prediction = null;
     render();
-    const message = last.previousCluster === last.newCluster ? "stays in" : "moves to";
-    get("announcement").textContent = `${finishMessage ? `${finishMessage} ` : ""}${documentName(last.index)} ${message} ${clusterName(last.newCluster)}. ${sampler.completedSweeps} sweeps complete.`;
+    const name = documentName(last.index);
+    const action = stage === "restore" ? `${name} is assigned to ${clusterName(last.newCluster)}.`
+      : `${name} · ${stageTitles[stage]}.`;
+    get("announcement").textContent = `${finishMessage && stage === "restore" ? `${finishMessage} ` : ""}${action}`;
   }
 
-  async function step() {
-    if (busy) return;
-    last = update(sampler, drawFunction());
-    finishMessage = "";
-    if (!motion.matches) {
-      busy = true;
-      snapshot = "excluded";
-      for (const phase of ["remove", "score", "sample"]) {
-        stage = phase;
-        render();
-        if (phase === "remove") revealDocument(last.index);
-        await wait(phase === "remove" ? 300 : 220);
+  function playUpdate() {
+    const pauses = get("predict-draw").checked;
+    awaitingPrediction = pauses;
+    if (motion.matches) {
+      selectStage(pauses ? "sample" : "restore");
+      return;
+    }
+    const phases = pauses ? ["remove", "score", "sample"] : stageNames;
+    function playPhase(index) {
+      selectStage(phases[index]);
+      if (index + 1 < phases.length) {
+        animationTimer = setTimeout(() => playPhase(index + 1), index === 0 ? 420 : 350);
       }
     }
-    finishUpdate();
+    playPhase(0);
+  }
+
+  function step() {
+    stopAnimation();
+    if (awaitingPrediction) {
+      selectStage(stage === "sample" ? "restore" : "sample");
+      return;
+    }
+    last = update(sampler, drawFunction());
+    finishMessage = "";
+    prediction = null;
+    playUpdate();
     revealDocument(last.index);
   }
 
   function finishSweep() {
-    if (busy) return;
+    stopAnimation();
+    if (last && stage !== "restore" && last.index === documents.length - 1) {
+      selectStage("restore");
+      return;
+    }
     const sweep = sampler.sweep;
     const remaining = documents.length - sampler.nextIndex;
     const random = drawFunction();
     for (let index = 0; index < remaining; index++) last = update(sampler, random);
-    finishMessage = `Finished sweep ${sweep} by running ${remaining} ${remaining === 1 ? "update" : "updates"}. The calculation above shows its last document.`;
-    finishUpdate();
+    prediction = null;
+    finishMessage = `Finished sweep ${sweep}. This calculation shows its final document.`;
+    selectStage("restore");
     revealDocument(last.index);
   }
 
@@ -448,12 +586,18 @@
   get("reset").addEventListener("click", () => reset());
   get("original").addEventListener("click", () => setTextMode(false));
   get("stemmed").addEventListener("click", () => setTextMode(true));
-  for (const name of snapshotNames) {
-    get(name).addEventListener("click", () => {
-      snapshot = name;
-      renderMatrix();
-    });
+  for (const item of get("stages").children) {
+    item.querySelector("button").addEventListener("click", () => selectStage(item.dataset.stage));
   }
+  const snapshotStages = { before: "before", excluded: "score", after: "restore" };
+  for (const name of snapshotNames) {
+    get(name).addEventListener("click", () => selectStage(snapshotStages[name]));
+  }
+  get("predict-draw").addEventListener("change", () => {
+    if (!last) return;
+    awaitingPrediction = get("predict-draw").checked;
+    selectStage(awaitingPrediction ? "sample" : "restore");
+  });
   get("word-filter").addEventListener("change", () => {
     get("matrix-scroll").scrollLeft = 0;
     renderMatrix();

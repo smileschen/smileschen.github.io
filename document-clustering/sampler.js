@@ -72,6 +72,8 @@ const gibbsSampler = (() => {
       nextIndex: 0,
       sweep: 1,
       completedSweeps: 0,
+      changedThisSweep: 0,
+      sweepHistory: [],
     };
   }
 
@@ -93,8 +95,18 @@ const gibbsSampler = (() => {
 
     state.assignments[index] = newCluster;
     state.clusters = copyClusters(after);
+    if (newCluster !== previousCluster) state.changedThisSweep++;
     state.nextIndex = index + 1;
     if (state.nextIndex === state.documents.length) {
+      state.sweepHistory.push({
+        sweep,
+        sampled: state.nextIndex,
+        changed: state.changedThisSweep,
+        clusterSizes: after.map(cluster => cluster.documents),
+      });
+      // Three visible sweeps plus one extra when revisiting the last update before restoration.
+      if (state.sweepHistory.length > 4) state.sweepHistory.shift();
+      state.changedThisSweep = 0;
       state.nextIndex = 0;
       state.completedSweeps = sweep;
       state.sweep += 1;

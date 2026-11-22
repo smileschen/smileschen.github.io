@@ -5,10 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Step through the collapsed Gibbs sampler for the 19-document bag-of-words example in Stats 102C Lecture 22.">
   <title>Document clustering | Stats 102C</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
   <script defer src="corpus.js"></script>
-  <script defer src="sampler.js"></script>
-  <script defer src="walkthrough.js"></script>
+  <script defer src="sampler.js?v=2"></script>
+  <script defer src="word-lesson.js"></script>
+  <script defer src="sweep-summary.js"></script>
+  <script defer src="walkthrough.js?v=2"></script>
 </head>
 <body>
   <header class="site-header">
@@ -22,7 +24,8 @@
     <header class="intro">
       <div>
         <h1>Document clustering</h1>
-        <p>Follow a collapsed Gibbs sampler as it removes each document, scores both clusters, and draws a new assignment from the resulting probabilities.</p>
+        <p class="class-question">Can word counts group passages from the same book?</p>
+        <p>The first run starts with alternating cluster assignments. You can see the book titles, but the Gibbs sampler uses only word counts to update each label.</p>
       </div>
       <dl class="model-stats" aria-label="Model dimensions">
         <div><dt>Documents</dt><dd>19</dd></div>
@@ -52,12 +55,17 @@
               <button type="button" class="button secondary" id="finish">Finish sweep</button>
             </div>
             <div class="setup-controls">
-              <label class="lecture-mode"><input type="checkbox" id="lecture-draw"> Use lecture draw (U = 0.60)</label>
+              <div class="run-options">
+                <label class="lecture-mode"><input type="checkbox" id="lecture-draw"> Use U = 0.60 for every draw (lecture example)</label>
+                <label class="lecture-mode"><input type="checkbox" id="predict-draw"> Pause at the draw to predict the cluster</label>
+              </div>
               <button type="button" class="button subtle" id="reset">Reset</button>
             </div>
             <p class="sr-only" id="announcement" role="status"></p>
           </div>
         </div>
+
+        <section class="panel sweep-history" id="sweep-history" aria-label="Completed sweeps" hidden></section>
 
         <div class="panel update-panel" aria-labelledby="update-title">
           <div class="panel-header update-header">
@@ -68,17 +76,12 @@
           </div>
           <div class="update-body">
             <ol class="stage-list" id="stages" aria-label="Gibbs update stages">
-              <li data-stage="remove"><span>1</span> Remove</li>
-              <li data-stage="score"><span>2</span> Score</li>
-              <li data-stage="sample"><span>3</span> Draw</li>
-              <li data-stage="restore"><span>4</span> Restore</li>
+              <li data-stage="remove"><button type="button" aria-pressed="false" disabled><span aria-hidden="true">1</span> Remove</button></li>
+              <li data-stage="score"><button type="button" aria-pressed="false" disabled><span aria-hidden="true">2</span> Score</button></li>
+              <li data-stage="sample"><button type="button" aria-pressed="false" disabled><span aria-hidden="true">3</span> Draw</button></li>
+              <li data-stage="restore"><button type="button" aria-pressed="false" disabled><span aria-hidden="true">4</span> Restore</button></li>
             </ol>
-            <div id="update-details">
-              <div class="empty-update">
-                <strong>How one document moves</strong>
-                <p>Temporarily hold out its word counts. Compare how well the other documents in each cluster predict it, then sample where it goes.</p>
-              </div>
-            </div>
+            <div id="update-details"></div>
             <details class="model-details">
               <summary>Model and notation</summary>
               <p>The two cluster proportions and each cluster’s 59 word probabilities have symmetric Dirichlet priors with all entries equal to one. Collapsing integrates out both sets of probabilities, so the sampler updates only the labels.</p>
