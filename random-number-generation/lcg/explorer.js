@@ -96,6 +96,9 @@ function renderSequence() {
     ? `The final <b>${repeated}</b> returns to the seed. ${period === settings.m ? `All ${period}` : `${period} of the ${settings.m}`} possible values appear before the sequence starts over.`
     : `The first ${repeatIndex === 1 ? "value occurs" : `${repeatIndex} values occur`} before the cycle begins at <b>${repeated}</b>. ${period === 1 ? `Every subsequent update returns ${repeated}.` : `From there, the same ${period} values repeat in order.`}`;
   byId("cycle-note").innerHTML = `<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 6h8a4 4 0 0 1 0 8H5m3 3-3-3 3-3"/></svg><span>${cycleText}</span>`;
+  if (picker.value === example.id && example.observation) {
+    byId("cycle-note").lastElementChild.append(" " + example.observation);
+  }
 }
 
 function renderView() {
