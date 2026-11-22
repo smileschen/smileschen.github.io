@@ -147,8 +147,9 @@ footer.shell { display: flex; justify-content: space-between; color: var(--muted
 }
 @media (max-width: 640px) {
   .linked-views { display: block; }
-  .dial-view { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 16px; margin: 0 12px; border: 0; border-top: 1px solid var(--line); text-align: left; }
-  #dial { width: clamp(128px, 31vw, 160px); margin: 0; }
+  .dial-view { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 6px 4px; margin: 0 12px; border: 0; border-top: 1px solid var(--line); text-align: left; }
+  #dial { width: clamp(150px, 44vw, 190px); flex: none; margin: 0; }
+  #dial g text { font-size: 16px; }
   .dial-view h3 { margin-top: 0; }
   .dial-view p { max-width: 20ch; }
 }
