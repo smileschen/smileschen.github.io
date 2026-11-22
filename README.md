@@ -9,6 +9,10 @@ Here are a couple vibe-coded streamlit apps illustrating statistical concepts.
 - [Hypothesis Testing for Proportions Game - Detect the cheating booth](https://boardwalk-ht.streamlit.app/)
 - [Least Squares Regression](https://least-squares.streamlit.app/)
 
+# Random number generation
+
+- [Explore a linear congruential generator](https://smileschen.github.io/random-number-generation/lcg/) and see how the multiplier, increment, modulus, and seed affect the sequence and its period.
+
 # MCMC Animations
 
 Step through multivariate MCMC with the same two-dimensional normal target. Each animation starts paused. Use **Next** to reveal each stage or **Play** for continuous playback.
