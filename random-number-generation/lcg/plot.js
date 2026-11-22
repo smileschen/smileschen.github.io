@@ -45,7 +45,7 @@ function crossings(a, b, m) {
   return result;
 }
 
-export function drawPlot(svg, { a, b, m, current, next, mode }) {
+export function drawPlot(svg, { a, b, m, current, next, mode, progress = 1 }) {
   const wrapped = mode === "wrapped";
   const width = Math.max(240, Math.round(svg.getBoundingClientRect().width || 720));
   const compact = width < 490;
@@ -180,32 +180,59 @@ export function drawPlot(svg, { a, b, m, current, next, mode }) {
   const activeY = Y(wrapped ? next : raw);
   const baseY = wrapped ? bottom : Y(base);
   const marker = add(svg, "g", { "font-family": "inherit", "pointer-events": "none" });
+  const moving = add(marker, "g", {});
+  const trace = add(moving, "path", {
+    class: "plot-trace", fill: "none", stroke: orange, "stroke-width": 2.6,
+  });
+  add(moving, "circle", { cx: activeX, cy: Y(current), r: 3.7, fill: "#fff", stroke: orange, "stroke-width": 1.5 });
+  const landed = add(marker, "g", {});
   if (baseY < bottom) {
-    line(marker, activeX, bottom, activeX, baseY, { stroke: orange, opacity: 0.64, "stroke-dasharray": "3 4" });
+    line(landed, activeX, bottom, activeX, baseY, { stroke: orange, opacity: 0.64, "stroke-dasharray": "3 4" });
   }
-  line(marker, activeX, baseY, activeX, activeY, {
+  line(landed, activeX, baseY, activeX, activeY, {
     stroke: orange, "stroke-width": wrapped ? 1.8 : 3,
     "stroke-dasharray": wrapped ? "4 4" : "none",
   });
   if (!wrapped && next > 0) {
-    line(marker, activeX - 4, baseY, activeX + 4, baseY, { stroke: orange, "stroke-width": 2 });
+    line(landed, activeX - 4, baseY, activeX + 4, baseY, { stroke: orange, "stroke-width": 2 });
   }
-  add(marker, "circle", { cx: activeX, cy: activeY, r: 7.5, fill: "#fff", stroke: orange, "stroke-width": 1.6 });
-  add(marker, "circle", { cx: activeX, cy: activeY, r: 4.4, fill: orange });
+  const cursor = add(marker, "g", { class: "plot-cursor" });
+  const ring = add(cursor, "circle", { r: 7.5, fill: "#fff", stroke: orange, "stroke-width": 1.6 });
+  add(cursor, "circle", { r: 4.4, fill: orange });
 
+  const annotation = add(landed, "g", {});
   const caption = wrapped ? `(${current}, ${next})` : `(${current}, ${raw}) · remainder ${next}`;
-  const note = label(marker, 0, 0, caption, { fill: "#93401f", "font-weight": 600, "font-size": 13 });
+  const note = label(annotation, 0, 0, caption, { fill: "#93401f", "font-weight": 600, "font-size": 13 });
   const noteWidth = Math.ceil(note.getComputedTextLength()) + 16;
   const noteHeight = 24;
   const putLeft = activeX - left >= noteWidth + 13;
   const noteX = Math.max(left + 2, Math.min(right - noteWidth, putLeft ? activeX - 12 - noteWidth : activeX + 12));
   const fitsAbove = activeY - noteHeight - 8 >= top;
   const noteY = fitsAbove ? activeY - noteHeight - 8 : activeY + 10;
-  const box = add(marker, "rect", {
+  const box = add(annotation, "rect", {
     x: noteX, y: noteY, width: noteWidth, height: noteHeight, rx: 5,
     fill: "#fff6ef", stroke: "#e7b99f",
   });
-  marker.insertBefore(box, note);
+  annotation.insertBefore(box, note);
   note.setAttribute("x", noteX + 8);
   note.setAttribute("y", noteY + 16.5);
+
+  // Each turn after the first retraces the same vertical interval. Move the
+  // pen at the modular boundary so the jump never adds a connecting stroke.
+  const startPath = `M ${activeX} ${Y(current)}`;
+  const wrapPath = ` V ${Y(m)} M ${activeX} ${bottom}`;
+  function setProgress(value) {
+    const t = Math.max(0, Math.min(1, value));
+    const output = current + (raw - current) * t;
+    const band = Math.floor(output / m);
+    const y = Y(wrapped ? output % m : output);
+    const turns = wrapped ? Math.min(2, band) : 0;
+    trace.setAttribute("d", `${startPath}${wrapPath.repeat(turns)} V ${y}`);
+    moving.setAttribute("visibility", t < 1 ? "visible" : "hidden");
+    landed.setAttribute("visibility", t === 1 ? "visible" : "hidden");
+    cursor.setAttribute("transform", `translate(${activeX} ${y})`);
+    if (raw === current) ring.setAttribute("r", 7.5 + 3 * Math.sin(Math.PI * t));
+  }
+  setProgress(progress);
+  return setProgress;
 }

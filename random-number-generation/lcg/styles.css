@@ -59,6 +59,12 @@ h2 { font-size: clamp(1.5rem, 2.15vw, 1.95rem); line-height: 1.2; letter-spacing
 .view-switch button:hover { color: var(--deep); }
 .plot-caption, .subline { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
 .plot-caption { margin: 8px 24px 0; }
+.linked-views { display: grid; grid-template-columns: minmax(0, 1fr) clamp(170px, 18vw, 248px); align-items: center; margin-block: auto; }
+.graph-view { min-width: 0; }
+.dial-view { margin: 14px 14px 16px 0; padding: 8px 4px 8px 12px; border-left: 1px solid var(--line); text-align: center; }
+#dial { display: block; width: 100%; max-width: 232px; height: auto; margin: 0 auto; }
+.dial-view h3 { font: 400 1.25rem/1.25 var(--serif); color: var(--ink); margin: 7px 0 4px; }
+.dial-view p { font-size: .875rem; line-height: 1.45; margin: 0 auto; max-width: 24ch; color: var(--muted); }
 .plot-area { min-width: 0; margin: auto 16px; padding-top: 8px; }
 #plot { display: block; width: 100%; height: auto; }
 .legend { color: var(--muted); font-size: .8125rem; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 2px 16px 14px; }
@@ -123,11 +129,28 @@ button.seq-value:hover { box-shadow: 0 0 0 2px #98b9af; }
 footer.shell { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; margin-block: 25px 20px; }
 .sr-only, .skip:not(:focus) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip:focus { position: absolute; top: 6px; left: 6px; background: white; color: var(--deep); padding: 12px; z-index: 2; }
+@media (min-width: 781px) and (max-width: 1170px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .parameters { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 14px; }
+  .params-head { grid-column: 1 / -1; }
+  .example-label, .select-wrap { margin: 0; }
+  #parameters { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .parameter { align-items: flex-start; flex-direction: column; justify-content: center; gap: 8px; padding-top: 10px; }
+  .parameter:first-child { border-top: 1px solid #e4e9e5; }
+  .linked-views { grid-template-columns: minmax(0, 1fr) 28%; }
+}
 @media (max-width: 1000px) {
   .rule { padding-left: 16px; margin-right: 0; }
   .equation { font-size: 1.4rem; }
-  .workspace { gap: 14px; grid-template-columns: minmax(0, 1.85fr) minmax(250px, 1fr); }
+  .workspace { gap: 14px; }
   .parameters { padding-inline: 17px; }
+}
+@media (max-width: 640px) {
+  .linked-views { display: block; }
+  .dial-view { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 6px 16px; margin: 0 12px; border: 0; border-top: 1px solid var(--line); text-align: left; }
+  #dial { width: clamp(128px, 31vw, 160px); margin: 0; }
+  .dial-view h3 { margin-top: 0; }
+  .dial-view p { max-width: 20ch; }
 }
 @media (max-width: 780px) {
   .intro { grid-template-columns: 1fr; gap: 17px; }

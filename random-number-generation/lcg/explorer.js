@@ -1,5 +1,6 @@
 import { getOrbit, presets } from "./generator.js";
-import { drawPlot } from "./plot.js";
+import { drawPlot } from "./plot.js?v=dial";
+import { createDial } from "./dial.js";
 
 const byId = id => document.getElementById(id);
 const parameters = [
@@ -10,13 +11,20 @@ const parameters = [
 ];
 const picker = byId("preset");
 const svg = byId("plot");
+const dial = createDial(byId("dial"));
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const valueList = byId("values");
 let example = presets[0];
 let settings = { ...example };
 let orbit = getOrbit(settings);
 let step = 0;
 let mode = "line";
-let timer = null;
+let progress = 1;
+let playback = "idle";
+let continuous = false;
+let frame;
+let hold;
+let moveGraph;
 
 function maxFor(parameter) {
   return parameter.max ?? settings.m - 1;
@@ -27,7 +35,29 @@ function lastStep() {
 }
 
 function draw() {
-  drawPlot(svg, { ...settings, current: orbit.values[step], next: orbit.values[step + 1], mode });
+  moveGraph = drawPlot(svg, { ...settings, current: orbit.values[step], next: orbit.values[step + 1], mode, progress });
+  drawDial();
+}
+
+function drawDial() {
+  const from = orbit.values[step];
+  const to = orbit.values[step + 1];
+  const raw = settings.a * from + settings.b;
+  const position = from + (raw - from) * progress;
+  dial.update({ m: settings.m, from, to, position, progress });
+}
+
+function setProgress(value) {
+  progress = value;
+  moveGraph(progress);
+  drawDial();
+}
+
+function renderPlayback() {
+  const running = playback === "running";
+  const label = running ? "Pause" : playback === "paused" ? "Resume" : step === lastStep() ? "Replay" : "Play";
+  byId("play-label").textContent = label;
+  byId("play-icon").setAttribute("d", running ? "M4 3h3v12H4ZM11 3h3v12h-3Z" : "M5 3.5 14 9l-9 5.5Z");
 }
 
 function renderStep(announce = false) {
@@ -39,10 +69,12 @@ function renderStep(announce = false) {
   byId("calculation").innerHTML = `<span class="raw">${a} × ${current} + ${b} = ${raw}</span><span class="remainder">${raw} mod ${m} = <strong>${next}</strong></span>`;
   byId("previous").disabled = step === 0;
   byId("next").disabled = step === lastStep();
-  const playing = timer !== null;
-  byId("play").disabled = lastStep() === 0;
-  byId("play-label").textContent = playing ? "Pause" : step > 0 && step === lastStep() ? "Replay" : "Play";
-  byId("play-icon").setAttribute("d", playing ? "M4 3h3v12H4ZM11 3h3v12h-3Z" : "M5 3.5 14 9l-9 5.5Z");
+  const wraps = Math.floor(raw / m);
+  let dialCaption = `Move from ${current} to ${next} ${raw < current ? "counterclockwise" : "clockwise"}.`;
+  if (wraps > 0) dialCaption = `Start at ${current}, pass zero ${wraps === 1 ? "once" : `${wraps} times`}, and land on ${next}.`;
+  if (raw === current) dialCaption = `The hand stays on ${current} for this update.`;
+  byId("dial-caption").textContent = dialCaption;
+  renderPlayback();
   for (const [index, tile] of [...valueList.querySelectorAll(".seq-value")].entries()) {
     tile.classList.toggle("current", index === step);
     tile.classList.toggle("output", index === step + 1);
@@ -54,15 +86,54 @@ function renderStep(announce = false) {
   }
 }
 
-function stop() {
-  window.clearInterval(timer);
-  timer = null;
+function clearClock() {
+  cancelAnimationFrame(frame);
+  clearTimeout(hold);
 }
 
-function selectStep(index) {
-  stop();
+function pause() {
+  clearClock();
+  playback = "paused";
+  renderPlayback();
+}
+
+function land() {
+  if (continuous && step < lastStep()) {
+    hold = setTimeout(() => selectStep(step + 1, true), reducedMotion.matches ? 1050 : 520);
+  } else {
+    playback = "idle";
+    renderPlayback();
+  }
+}
+
+function animate() {
+  if (progress === 1 || reducedMotion.matches) {
+    setProgress(1);
+    land();
+    return;
+  }
+  const { a, b, m } = settings;
+  const from = orbit.values[step];
+  const turns = Math.abs(a * from + b - from) / m;
+  const turnsPerSecond = Math.max(1, a / 2);
+  const duration = Math.min(1350, 460 + 1000 * turns / turnsPerSecond);
+  const started = performance.now() - progress * duration;
+  function tick(now) {
+    setProgress(Math.min(1, Math.max(0, (now - started) / duration)));
+    if (progress < 1) frame = requestAnimationFrame(tick);
+    else land();
+  }
+  frame = requestAnimationFrame(tick);
+}
+
+function selectStep(index, playContinuously = false) {
+  clearClock();
   step = index;
+  progress = reducedMotion.matches ? 1 : 0;
+  playback = "running";
+  continuous = playContinuously;
   renderStep(true);
+  animate();
 }
 
 function renderSequence() {
@@ -84,7 +155,10 @@ function renderSequence() {
       tile.type = "button";
       tile.setAttribute("aria-label", `Show update ${index + 1}, from ${value} to ${values[index + 1]}`);
       tile.title = `Show update ${index + 1}`;
-      tile.addEventListener("click", () => selectStep(index));
+      tile.addEventListener("click", () => {
+        document.querySelector(".linked-views").scrollIntoView({ block: "nearest", behavior: "instant" });
+        selectStep(index);
+      });
     }
     li.append(tile);
     valueList.append(li);
@@ -106,11 +180,15 @@ function renderView() {
   byId("line-label").textContent = mode === "line" ? "Linear rule" : "Wrapped rule";
   byId("crossing-legend").hidden = mode === "wrapped";
   byId("plot-caption").textContent = mode === "line"
-    ? `Each band is ${settings.m} units tall. The height above its lower edge is the remainder.`
-    : `Each time the line reaches ${settings.m}, it wraps to zero. Read the next value at each integer input.`;
+    ? `Follow the orange point from the input height to the line. Each ${settings.m}-unit band is one turn of the dial.`
+    : `The orange point and dial hand track the same remainder. At ${settings.m}, both wrap to zero.`;
 }
 
 function renderSettings() {
+  clearClock();
+  playback = "idle";
+  progress = 1;
+  step = 0;
   picker.value = parameters.every(({ key }) => example[key] === settings[key]) ? example.id : "custom";
   for (const parameter of parameters) {
     const field = byId(parameter.key);
@@ -130,10 +208,8 @@ function renderSettings() {
 function changeParameter(parameter, value, seed = settings.seed) {
   const key = parameter.key;
   if (value === settings[key]) return;
-  stop();
   settings[key] = value;
   if (key === "m") settings.seed = seed % value;
-  step = 0;
   orbit = getOrbit(settings);
   renderSettings();
   byId("status").textContent = `${parameter.name} ${value}. ${orbit.values.length - 1} distinct ${orbit.values.length === 2 ? "value" : "values"}. Cycle length ${orbit.period}.`;
@@ -173,10 +249,8 @@ function addParameter(parameter) {
 }
 
 function loadExample(preset) {
-  stop();
   example = preset;
   settings = { ...example };
-  step = 0;
   orbit = getOrbit(settings);
   renderSettings();
   byId("status").textContent = `${example.name}. ${orbit.values.length - 1} distinct values. Cycle length ${orbit.period}.`;
@@ -192,19 +266,15 @@ byId("reset").addEventListener("click", () => loadExample(example));
 byId("previous").addEventListener("click", () => selectStep(step - 1));
 byId("next").addEventListener("click", () => selectStep(step + 1));
 byId("play").addEventListener("click", () => {
-  if (timer !== null) {
-    stop();
+  if (playback === "running") {
+    pause();
+  } else if (playback === "paused") {
+    playback = "running";
+    renderPlayback();
+    animate();
   } else {
-    if (step === lastStep()) step = 0;
-    if (step < lastStep()) {
-      timer = window.setInterval(() => {
-        step++;
-        if (step === lastStep()) stop();
-        renderStep(true);
-      }, 1100);
-    }
+    selectStep(step === lastStep() ? 0 : step, true);
   }
-  renderStep(true);
 });
 document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
   mode = button.dataset.mode;
@@ -212,9 +282,13 @@ document.querySelectorAll("[data-mode]").forEach(button => button.addEventListen
   draw();
 }));
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && timer !== null) {
-    stop();
-    renderStep();
+  if (document.hidden && playback === "running") pause();
+});
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches && progress < 1) {
+    clearClock();
+    setProgress(1);
+    if (playback === "running") land();
   }
 });
 
