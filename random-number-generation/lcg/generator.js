@@ -33,3 +33,13 @@ export function getOrbit({ a, b, m, seed }) {
   values.push(state);
   return { values, repeatIndex, period };
 }
+
+export function pointOnRule(a, b, startInput, current, progress) {
+  const x = progress === 1 ? current : startInput + (current - startInput) * progress;
+  const height = a * x + b;
+  // An exact wrap belongs at zero, including when a fractional starting x
+  // puts the computed height a few floating-point bits below the boundary.
+  const nearest = Math.round(height);
+  const raw = Math.abs(height - nearest) <= 4 * Number.EPSILON * Math.max(1, height) ? nearest : height;
+  return { x, raw };
+}

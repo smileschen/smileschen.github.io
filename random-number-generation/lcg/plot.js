@@ -1,3 +1,5 @@
+import { pointOnRule } from "./generator.js?v=line-motion";
+
 const NS = "http://www.w3.org/2000/svg";
 const ink = "#425466";
 const teal = "#147d78";
@@ -45,7 +47,7 @@ function crossings(a, b, m) {
   return result;
 }
 
-export function drawPlot(svg, { a, b, m, current, next, mode, progress = 1 }) {
+export function drawPlot(svg, { a, b, m, current, next, mode, startInput = current, progress = 1 }) {
   const wrapped = mode === "wrapped";
   const width = Math.max(240, Math.round(svg.getBoundingClientRect().width || 720));
   const compact = width < 490;
@@ -136,20 +138,29 @@ export function drawPlot(svg, { a, b, m, current, next, mode, progress = 1 }) {
   });
 
   const curve = add(svg, "g", { "stroke-linecap": "round" });
-  const rule = { stroke: teal, "stroke-width": 2.6 };
+  // Each modular boundary begins a new subpath. The base rule and the
+  // highlighted portion share this path so their geometry always agrees.
+  const pieces = [`M ${left} ${Y(wrapped ? b % m : b)}`];
   if (wrapped) {
-    let start = 0;
-    let startValue = b % m;
     for (const point of breaks) {
-      line(curve, X(start), Y(startValue), X(point.x), Y(m), rule);
+      pieces.push(`L ${X(point.x)} ${Y(m)} M ${X(point.x)} ${Y(0)}`);
+    }
+  }
+  pieces.push(`L ${right} ${Y(wrapped ? rawEnd % m : rawEnd)}`);
+  const rulePath = pieces.join(" ");
+  add(curve, "path", { d: rulePath, fill: "none", stroke: teal, "stroke-width": 2.6 });
+  const clipId = `${svg.id || "generator-map"}-trace-clip`;
+  const clip = add(curve, "clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
+  const windowRect = add(clip, "rect", { y: top - 3, height: bottom - top + 6 });
+  const trace = add(curve, "path", {
+    class: "plot-trace", d: rulePath, fill: "none", stroke: orange, "stroke-width": 2.6,
+    "clip-path": `url(#${clipId})`, "pointer-events": "none",
+  });
+  if (wrapped) {
+    for (const point of breaks) {
       add(curve, "circle", { cx: X(point.x), cy: Y(m), r: 3, stroke: teal, "stroke-width": 1.4, fill: "white" });
       add(curve, "circle", { cx: X(point.x), cy: Y(0), r: 2.6, fill: teal });
-      start = point.x;
-      startValue = 0;
     }
-    line(curve, X(start), Y(startValue), right, Y(rawEnd % m), rule);
-  } else {
-    line(curve, left, Y(b), right, Y(rawEnd), rule);
   }
 
   const pointRadius = (right - left) / lastState >= 14 ? 3.5 : 2.1;
@@ -180,11 +191,12 @@ export function drawPlot(svg, { a, b, m, current, next, mode, progress = 1 }) {
   const activeY = Y(wrapped ? next : raw);
   const baseY = wrapped ? bottom : Y(base);
   const marker = add(svg, "g", { "font-family": "inherit", "pointer-events": "none" });
-  const moving = add(marker, "g", {});
-  const trace = add(moving, "path", {
-    class: "plot-trace", fill: "none", stroke: orange, "stroke-width": 2.6,
+  const startX = X(startInput);
+  const startRaw = pointOnRule(a, b, startInput, current, 0).raw;
+  const startDot = add(marker, "circle", {
+    cx: startX, cy: Y(wrapped ? startRaw % m : startRaw), r: 3.7,
+    fill: "#fff", stroke: orange, "stroke-width": 1.5,
   });
-  add(moving, "circle", { cx: activeX, cy: Y(current), r: 3.7, fill: "#fff", stroke: orange, "stroke-width": 1.5 });
   const landed = add(marker, "g", {});
   if (baseY < bottom) {
     line(landed, activeX, bottom, activeX, baseY, { stroke: orange, opacity: 0.64, "stroke-dasharray": "3 4" });
@@ -217,21 +229,18 @@ export function drawPlot(svg, { a, b, m, current, next, mode, progress = 1 }) {
   note.setAttribute("x", noteX + 8);
   note.setAttribute("y", noteY + 16.5);
 
-  // Each turn after the first retraces the same vertical interval. Move the
-  // pen at the modular boundary so the jump never adds a connecting stroke.
-  const startPath = `M ${activeX} ${Y(current)}`;
-  const wrapPath = ` V ${Y(m)} M ${activeX} ${bottom}`;
   function setProgress(value) {
     const t = Math.max(0, Math.min(1, value));
-    const output = current + (raw - current) * t;
-    const band = Math.floor(output / m);
-    const y = Y(wrapped ? output % m : output);
-    const turns = wrapped ? Math.min(2, band) : 0;
-    trace.setAttribute("d", `${startPath}${wrapPath.repeat(turns)} V ${y}`);
-    moving.setAttribute("visibility", t < 1 ? "visible" : "hidden");
+    const point = pointOnRule(a, b, startInput, current, t);
+    const x = X(point.x);
+    const y = Y(wrapped ? point.raw % m : point.raw);
+    windowRect.setAttribute("x", Math.min(startX, x));
+    windowRect.setAttribute("width", Math.abs(x - startX));
+    trace.setAttribute("visibility", t < 1 ? "visible" : "hidden");
+    startDot.setAttribute("visibility", t < 1 ? "visible" : "hidden");
     landed.setAttribute("visibility", t === 1 ? "visible" : "hidden");
-    cursor.setAttribute("transform", `translate(${activeX} ${y})`);
-    if (raw === current) ring.setAttribute("r", 7.5 + 3 * Math.sin(Math.PI * t));
+    cursor.setAttribute("transform", `translate(${x} ${y})`);
+    if (startInput === current) ring.setAttribute("r", 7.5 + 3 * Math.sin(Math.PI * t));
   }
   setProgress(progress);
   return setProgress;

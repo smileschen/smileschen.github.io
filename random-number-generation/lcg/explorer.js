@@ -1,6 +1,6 @@
-import { getOrbit, presets } from "./generator.js";
-import { drawPlot } from "./plot.js?v=dial";
-import { createDial } from "./dial.js";
+import { getOrbit, pointOnRule, presets } from "./generator.js?v=line-motion";
+import { drawPlot } from "./plot.js?v=line-motion";
+import { createDial } from "./dial.js?v=line-motion";
 
 const byId = id => document.getElementById(id);
 const parameters = [
@@ -25,6 +25,8 @@ let continuous = false;
 let frame;
 let hold;
 let moveGraph;
+let startInput;
+let startHeight;
 
 function maxFor(parameter) {
   return parameter.max ?? settings.m - 1;
@@ -34,17 +36,26 @@ function lastStep() {
   return orbit.values.length - 2;
 }
 
+function startOfTrace() {
+  if (step > 0) return orbit.values[step - 1];
+  const { a, b, m, seed } = settings;
+  if (seed === orbit.values[1]) return seed;
+  if (a === 0) return 0;
+  // On the first update there is no previous plotted input. Start where the
+  // line's height first matches the seed modulo m, possibly between ticks.
+  return ((seed - b) % m + m) % m / a;
+}
+
 function draw() {
-  moveGraph = drawPlot(svg, { ...settings, current: orbit.values[step], next: orbit.values[step + 1], mode, progress });
+  moveGraph = drawPlot(svg, { ...settings, startInput, current: orbit.values[step], next: orbit.values[step + 1], mode, progress });
   drawDial();
 }
 
 function drawDial() {
-  const from = orbit.values[step];
-  const to = orbit.values[step + 1];
-  const raw = settings.a * from + settings.b;
-  const position = from + (raw - from) * progress;
-  dial.update({ m: settings.m, from, to, position, progress });
+  const { a, b, m } = settings;
+  const current = orbit.values[step];
+  const { raw } = pointOnRule(a, b, startInput, current, progress);
+  dial.update({ m, from: startHeight % m, input: current, to: orbit.values[step + 1], position: raw, progress });
 }
 
 function setProgress(value) {
@@ -65,15 +76,17 @@ function renderStep(announce = false) {
   const current = orbit.values[step];
   const next = orbit.values[step + 1];
   const raw = a * current + b;
+  startInput = startOfTrace();
+  startHeight = pointOnRule(a, b, startInput, current, 0).raw;
   byId("update-label").textContent = `Update ${step + 1} of ${lastStep() + 1}`;
   byId("calculation").innerHTML = `<span class="raw">${a} × ${current} + ${b} = ${raw}</span><span class="remainder">${raw} mod ${m} = <strong>${next}</strong></span>`;
   byId("previous").disabled = step === 0;
   byId("next").disabled = step === lastStep();
-  const wraps = Math.floor(raw / m);
-  let dialCaption = `Move from ${current} to ${next} ${raw < current ? "counterclockwise" : "clockwise"}.`;
-  if (wraps > 0) dialCaption = `Start at ${current}, pass zero ${wraps === 1 ? "once" : `${wraps} times`}, and land on ${next}.`;
-  if (raw === current) dialCaption = `The hand stays on ${current} for this update.`;
-  byId("dial-caption").textContent = dialCaption;
+  const distance = Math.abs(raw - startHeight);
+  const direction = raw > startHeight ? "clockwise" : "counterclockwise";
+  byId("dial-caption").textContent = distance
+    ? `From ${startHeight % m}, move ${distance} ${distance === 1 ? "tick" : "ticks"} ${direction} to ${next}.`
+    : `The hand stays on ${next}${a === 0 ? " because the rule is constant" : " for this update"}.`;
   renderPlayback();
   for (const [index, tile] of [...valueList.querySelectorAll(".seq-value")].entries()) {
     tile.classList.toggle("current", index === step);
@@ -114,7 +127,7 @@ function animate() {
   }
   const { a, b, m } = settings;
   const from = orbit.values[step];
-  const turns = Math.abs(a * from + b - from) / m;
+  const turns = Math.abs(a * from + b - startHeight) / m;
   const turnsPerSecond = Math.max(1, a / 2);
   const duration = Math.min(1350, 460 + 1000 * turns / turnsPerSecond);
   const started = performance.now() - progress * duration;
@@ -180,8 +193,8 @@ function renderView() {
   byId("line-label").textContent = mode === "line" ? "Linear rule" : "Wrapped rule";
   byId("crossing-legend").hidden = mode === "wrapped";
   byId("plot-caption").textContent = mode === "line"
-    ? `Follow the orange point from the input height to the line. Each ${settings.m}-unit band is one turn of the dial.`
-    : `The orange point and dial hand track the same remainder. At ${settings.m}, both wrap to zero.`;
+    ? `The marker follows the line to each input. At each stop, its height modulo ${settings.m} gives the next value.`
+    : `The marker follows the wrapped line. Its height matches the dial, including at the jumps between 0 and ${settings.m}.`;
 }
 
 function renderSettings() {
