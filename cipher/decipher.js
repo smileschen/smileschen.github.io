@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const { alphabet, createChain, decode } = window.CipherEngine;
+  const { alphabet, createChain, decode, scoreWord } = window.CipherEngine;
   const byId = id => document.getElementById(id);
   const input = byId("cipher-input");
   const startButton = byId("decipher");
@@ -10,6 +10,11 @@
   const inspectPlayButton = byId("inspect-play");
   const inspectStepButton = byId("inspect-step");
   const speedSelect = byId("speed");
+  const lambdaInput = byId("lambda");
+  const wordDetail = byId("word-detail");
+  const detailPrompt = wordDetail.textContent;
+  const wordPairs = new WeakMap();
+  let inspectedPair = [];
   const status = byId("run-status");
   const countFormat = new Intl.NumberFormat("en-US");
   const scoreFormat = new Intl.NumberFormat("en-US", {
@@ -20,6 +25,8 @@
   const empty = "—";
   const initialTranslation = byId("chain-text").textContent || empty;
   let chain = null;
+  let lastProposal = null;
+  let lambda = Number(lambdaInput.value);
   let running = false;
   let timer = null;
   let lastTick = 0;
@@ -73,24 +80,66 @@
   }
 
   function drawDifferences(before, proposed) {
-    const container = byId("proposed-text");
-    const fragment = document.createDocumentFragment();
-    // Compare at equal character offsets so a repeated word is marked only
-    // where this particular substitution changed it.
+    const currentFragment = document.createDocumentFragment();
+    const proposedFragment = document.createDocumentFragment();
+    const scores = new Map();
+    // Keep contractions together on screen. The lecture model scores each
+    // uninterrupted A–Z run separately, with a space boundary on each side.
+    function contribution(word) {
+      if (!scores.has(word)) {
+        let total = 0;
+        for (const token of word.match(/[A-Za-z]+/g) || []) total += scoreWord(token, lambda).total;
+        scores.set(word, total);
+      }
+      return scores.get(word);
+    }
     const words = /[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*/gu;
     let lastEnd = 0;
     for (const match of proposed.matchAll(words)) {
       const word = match[0];
       const end = match.index + word.length;
-      if (word === before.slice(match.index, end)) continue;
-      fragment.append(proposed.slice(lastEnd, match.index));
-      const mark = document.createElement("mark");
-      mark.textContent = word;
-      fragment.append(mark);
+      const oldWord = before.slice(match.index, end);
+      if (word === oldWord) continue;
+      const fromScore = contribution(oldWord);
+      const toScore = contribution(word);
+      // Ignore rounding noise from summing exactly the same weights in a
+      // different order when a pair changes places inside a word.
+      const tolerance = 8 * Number.EPSILON * Math.max(1, Math.abs(fromScore), Math.abs(toScore));
+      const rawDelta = toScore - fromScore;
+      const delta = Math.abs(rawDelta) <= tolerance ? 0 : rawDelta;
+      const size = Math.abs(delta);
+      const direction = delta > 0 ? "gain" : delta < 0 ? "loss" : "tie";
+      const sign = delta > 0 ? "+" : delta < 0 ? "−" : "";
+      const magnitude = size > 0 && size < 0.0005 ? size.toPrecision(2) : scoreFormat.format(size);
+      const change = {gain: "Higher", loss: "Lower", tie: "Equal"}[direction];
+      const detail = `“${oldWord}” → “${word}” · ${change} score · ${scoreFormat.format(fromScore)} → ${scoreFormat.format(toScore)} (Δ ${sign}${magnitude})`;
+
+      const oldMark = document.createElement("mark");
+      oldMark.className = "word-before";
+      oldMark.textContent = oldWord;
+      oldMark.title = detail;
+      currentFragment.append(before.slice(lastEnd, match.index), oldMark);
+
+      const newMark = document.createElement("mark");
+      newMark.className = "word-proposed";
+      newMark.dataset.direction = direction;
+      newMark.dataset.strength = delta === 0 ? "0" : size < 1 ? "1" : size < 3 ? "2" : "3";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "word-inspect";
+      button.textContent = word;
+      button.title = detail;
+      button.setAttribute("aria-label", detail);
+      newMark.append(button);
+      wordPairs.set(button, [oldMark, newMark]);
+      proposedFragment.append(proposed.slice(lastEnd, match.index), newMark);
       lastEnd = end;
     }
-    fragment.append(proposed.slice(lastEnd));
-    container.replaceChildren(fragment);
+    currentFragment.append(before.slice(lastEnd));
+    proposedFragment.append(proposed.slice(lastEnd));
+    byId("current-text").replaceChildren(currentFragment);
+    byId("proposed-text").replaceChildren(proposedFragment);
+    if (lastEnd === 0) wordDetail.textContent = "This swap leaves every word unchanged.";
   }
 
   function formatAlpha(logAlpha) {
@@ -127,17 +176,20 @@
   }
 
   function render(proposal = null) {
+    lastProposal = proposal;
+    inspectedPair = [];
+    wordDetail.textContent = detailPrompt;
     const currentKey = proposal ? proposal.currentKey : chain?.key;
     const before = currentKey ? decode(input.value, currentKey) : empty;
     drawKey(beforeCells, currentKey);
     drawKey(proposedCells, proposal?.proposedKey, proposal?.swapped);
-    write("current-text", before);
     write("current-score", chain ? scoreFormat.format(proposal?.currentScore ?? chain.score) : empty);
     if (proposal) {
       const proposed = decode(input.value, proposal.proposedKey);
       drawDifferences(before, proposed);
       write("chain-text", proposal.accepted ? proposed : before);
     } else {
+      write("current-text", before);
       write("proposed-text", empty);
       write("chain-text", chain ? before : initialTranslation);
     }
@@ -178,8 +230,8 @@
     while (log.children.length > logLimit) log.lastElementChild.remove();
   }
 
-  function oneStep() {
-    const proposal = chain.step();
+  function oneStep(replay) {
+    const proposal = chain.step(replay);
     if (proposal.accepted) {
       prependAccepted([{ key: chain.key, score: chain.score, iteration: chain.iteration }]);
     }
@@ -252,7 +304,7 @@
   startButton.addEventListener("click", () => {
     if (!hasLetters()) return;
     halt();
-    chain = createChain(input.value);
+    chain = createChain(input.value, {lambda});
     clearLog();
     oneStep();
     beginPlayback();
@@ -272,7 +324,7 @@
   stepButton.addEventListener("click", () => {
     if (!hasLetters()) return;
     halt();
-    if (!chain) chain = createChain(input.value);
+    if (!chain) chain = createChain(input.value, {lambda});
     const proposal = oneStep();
     syncControls();
     setStatus(`Paused · Step ${countFormat.format(proposal.iteration)} ${proposal.accepted ? "accepted" : "rejected"}`, "paused");
@@ -286,6 +338,43 @@
       scheduleBatch();
     }
   });
+
+  function updateLambda() {
+    const newLambda = Number(lambdaInput.value);
+    write("lambda-value", newLambda.toFixed(2));
+    if (newLambda === lambda) return;
+    lambda = newLambda;
+    if (!lastProposal) return;
+    halt();
+    const {currentKey, swapped, u} = lastProposal;
+    chain = createChain(input.value, {key: currentKey, lambda});
+    clearLog();
+    oneStep({swapped, u});
+    syncControls();
+    setStatus("Paused · Same swap and draw at the new word weight", "paused");
+  }
+
+  // Native buttons support both keyboard and touch. Activating or tabbing to
+  // a word freezes the live proposal so the displayed scores stay readable.
+  function inspectWord(event) {
+    const button = event.target.closest(".word-inspect");
+    if (!button) return;
+    if (running && event.type !== "pointerover") {
+      halt();
+      syncControls();
+      setStatus("Paused", "paused");
+    }
+    for (const mark of inspectedPair) mark.classList.remove("is-inspected");
+    inspectedPair = wordPairs.get(button);
+    for (const mark of inspectedPair) mark.classList.add("is-inspected");
+    wordDetail.textContent = button.title;
+  }
+  const proposedText = byId("proposed-text");
+  proposedText.addEventListener("pointerover", inspectWord);
+  proposedText.addEventListener("focusin", inspectWord);
+  proposedText.addEventListener("click", inspectWord);
+  lambdaInput.addEventListener("input", updateLambda);
+  lambdaInput.addEventListener("change", updateLambda);
 
   function reset() {
     halt();
@@ -328,5 +417,6 @@
     }
   }
   if (transferred !== null) input.value = transferred;
+  updateLambda();
   reset();
 })();

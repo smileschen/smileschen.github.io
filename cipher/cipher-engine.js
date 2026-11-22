@@ -6,7 +6,20 @@
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   const space = 26;
   const width = 27;
-  const wordWeight = 0.07;
+  const defaultLambda = 0.07;
+
+  function languageModel() {
+    const model = root.CipherModel ||
+      (typeof module !== "undefined" && module.exports && require("./cipher-model.js"));
+    if (!model) throw new Error("Load the lecture language model before deciphering.");
+    return model;
+  }
+
+  function validateLambda(lambda) {
+    if (!Number.isFinite(lambda) || lambda < 0) {
+      throw new RangeError("The word weight must be a finite nonnegative number.");
+    }
+  }
 
   function validateKey(key) {
     if (typeof key !== "string" || !/^[A-Za-z]{26}$/.test(key) ||
@@ -70,54 +83,83 @@
     return {pairs, words};
   }
 
-  function scoreText(prepared, inverse, model) {
+  function logWordWeight(decoded, model) {
+    return model.logWords.get(decoded) ?? model.unknownWord;
+  }
+
+  // Each ASCII word contributes its two space boundaries, its internal pairs,
+  // and one lexicon lookup. Token totals therefore sum to the message score.
+  function scoreWord(word, lambda = defaultLambda) {
+    validateLambda(lambda);
+    if (typeof word !== "string" || !/^[A-Za-z]+$/.test(word)) {
+      throw new TypeError("Score one decoded A–Z word at a time.");
+    }
+    const model = languageModel();
+    const decoded = word.toUpperCase();
+    let previous = space;
+    let pairScore = 0;
+    for (let i = 0; i < decoded.length; i++) {
+      const next = decoded.charCodeAt(i) - 65;
+      pairScore += model.logPairs[previous * width + next];
+      previous = next;
+    }
+    pairScore += model.logPairs[previous * width + space];
+    const wordScore = logWordWeight(decoded, model);
+    return {pairScore, wordScore, total: pairScore + lambda * wordScore};
+  }
+
+  function scoreText(prepared, inverse, model, lambda) {
     let pairScore = 0;
     for (const {from, to, count} of prepared.pairs) {
       const pair = inverse[from] * width + inverse[to];
       pairScore += count * model.logPairs[pair];
     }
+    if (lambda === 0) return pairScore;
     let wordScore = 0;
     for (const {symbols, count} of prepared.words) {
       let decoded = "";
       for (let i = 0; i < symbols.length; i++) decoded += alphabet[inverse[symbols[i]]];
-      const logWeight = model.logWords.get(decoded) ?? model.unknownWord;
-      wordScore += count * logWeight;
+      wordScore += count * logWordWeight(decoded, model);
     }
-    return pairScore + wordWeight * wordScore;
+    return pairScore + lambda * wordScore;
   }
 
-  function createChain(text, {rng = Math.random, key: initialKey} = {}) {
-    const model = root.CipherModel ||
-      (typeof module !== "undefined" && module.exports && require("./cipher-model.js"));
-    if (!model) throw new Error("Load the lecture language model before deciphering.");
+  function createChain(text, {rng = Math.random, key: initialKey, lambda = defaultLambda} = {}) {
+    validateLambda(lambda);
+    const model = languageModel();
     const prepared = prepareText(text);
     const key = validateKey(initialKey ?? randomKey(rng)).split("");
     const inverse = new Uint8Array(width);
     inverse[space] = space;
     key.forEach((letter, i) => { inverse[letter.charCodeAt(0) - 65] = i; });
-    let score = scoreText(prepared, inverse, model);
+    let score = scoreText(prepared, inverse, model, lambda);
     let bestScore = score;
     let bestKey = key.join("");
     let iteration = 0;
     let accepted = 0;
 
-    function advance(count, onAccepted) {
+    function runProposals(count, onAccepted, replay) {
       if (!Number.isSafeInteger(count) || count < 1) {
         throw new RangeError("Advance by a positive whole number of proposals.");
       }
       let last;
       for (let step = 1; step <= count; step++) {
-        const first = Math.floor(rng() * 26);
-        let second = Math.floor(rng() * 25);
-        if (second >= first) second++;
+        let first, second;
+        if (replay) {
+          [first, second] = replay.swapped;
+        } else {
+          first = Math.floor(rng() * 26);
+          second = Math.floor(rng() * 25);
+          if (second >= first) second++;
+        }
         const cipherA = key[first].charCodeAt(0) - 65;
         const cipherB = key[second].charCodeAt(0) - 65;
         inverse[cipherA] = second;
         inverse[cipherB] = first;
 
-        const proposedScore = scoreText(prepared, inverse, model);
+        const proposedScore = scoreText(prepared, inverse, model, lambda);
         const logAlpha = Math.min(0, proposedScore - score);
-        const u = rng();
+        const u = replay ? replay.u : rng();
         const accept = Math.log(u) < logAlpha;
         iteration++;
         if (step === count) {
@@ -146,9 +188,26 @@
       return last;
     }
 
+    // Replaying a displayed swap and uniform draw lets the inspector vary
+    // lambda while holding both the candidate and the random draw fixed.
+    function step(replay) {
+      if (replay !== undefined) {
+        const swap = replay?.swapped;
+        if (!Array.isArray(swap) || swap.length !== 2 || swap[0] === swap[1] ||
+            ![...swap].every(i => Number.isInteger(i) && i >= 0 && i < alphabet.length)) {
+          throw new RangeError("Replay requires two distinct key column indices.");
+        }
+        if (!Number.isFinite(replay.u) || replay.u < 0 || replay.u >= 1) {
+          throw new RangeError("A replay draw must be in [0, 1).");
+        }
+      }
+      return runProposals(1, undefined, replay);
+    }
+
     return {
-      step: () => advance(1),
-      advance,
+      step,
+      advance: (count, onAccepted) => runProposals(count, onAccepted),
+      get lambda() { return lambda; },
       get iteration() { return iteration; },
       get accepted() { return accepted; },
       get key() { return key.join(""); },
@@ -158,7 +217,7 @@
     };
   }
 
-  const api = {alphabet, randomKey, translate, decode, createChain};
+  const api = {alphabet, defaultLambda, randomKey, translate, decode, scoreWord, createChain};
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.CipherEngine = api;
 })(globalThis);

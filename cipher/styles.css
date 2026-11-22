@@ -102,6 +102,14 @@ select { appearance: none; color: var(--ink); border: 1px solid #b9c8ba; border-
 .chain-stats { margin-top: auto; border-top: 1px solid #c5d5c5; padding-top: 10px; }
 dt { color: var(--muted); font-size: .82rem; }
 dd { margin: 3px 0 0; font: 600 1.13rem/1.5 var(--mono); font-variant-numeric: tabular-nums; }
+.weight-setting { display: grid; grid-template-columns: minmax(185px, .75fr) 2fr; align-items: center; gap: 22px; margin: 15px 0; padding: 14px 17px; border: 1px solid #cedace; border-radius: 7px; background: #f3f6ef; }
+.slider-control { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 8px; }
+.slider-control label { font-size: .94rem; font-weight: 650; }
+.slider-control output { padding: 1px 6px; background: #fff; border: 1px solid #cbd8c9; border-radius: 4px; color: var(--pine); font: 600 .92rem/1.5 var(--mono); }
+.slider-control input { grid-column: 1 / -1; width: 100%; height: 24px; margin: 0; cursor: pointer; accent-color: var(--pine); }
+.slider-control input:focus-visible, .word-inspect:focus-visible { outline: 3px solid #a0671b; outline-offset: 3px; }
+#weight-help { color: var(--muted); font-size: .86rem; line-height: 1.5; }
+#weight-help p:first-child { margin-bottom: 2px; color: var(--ink); font-weight: 600; }
 .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .snapshot { min-width: 0; padding: 16px 18px; border: 1px solid var(--line); border-radius: 7px; background: #fbfcf9; }
 .snapshot.proposed { border-color: #daceaf; background: #fffdf6; }
@@ -111,9 +119,21 @@ dd { margin: 3px 0 0; font: 600 1.13rem/1.5 var(--mono); font-variant-numeric: t
 .key-cell:nth-child(13n) { border-right: 1px solid #d8e0d6; }
 .key-source { color: #526459; background: #f6f8f2; }
 .key-target { color: #244936; font-weight: 650; background: #e9f0e6; }
-.is-swapped .key-source, .is-swapped .key-target, mark { background: var(--mark); color: #513a0e; }
+.is-swapped .key-source, .is-swapped .key-target, .word-before { background: var(--mark); color: #513a0e; }
 .is-swapped .key-target { box-shadow: inset 0 -2px #926b1f; }
-mark { border-radius: 2px; }
+.translation mark { border-radius: 2px; }
+.translation mark.is-inspected { outline: 2px solid #183e36; outline-offset: 1px; }
+.word-proposed[data-direction="gain"] { background-color: #e0f1df; color: #18442a; text-decoration: underline solid; text-underline-offset: 2px; }
+.word-proposed[data-direction="gain"][data-strength="2"] { background-color: #a0d2a4; color: #143f28; }
+.word-proposed[data-direction="gain"][data-strength="3"] { background-color: #246440; color: #fff; }
+.word-proposed[data-direction="loss"] { background-color: #fce6e4; color: #6e2527; text-decoration: underline dashed; text-underline-offset: 2px; }
+.word-proposed[data-direction="loss"][data-strength="2"] { background-color: #f0afa9; color: #602324; }
+.word-proposed[data-direction="loss"][data-strength="3"] { background-color: #9a393b; color: #fff; }
+.word-proposed[data-direction="tie"] { background-color: #e3e8e3; color: #33463a; }
+.word-inspect { display: inline; margin: 0; padding: 0; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; line-height: inherit; text-decoration: inherit; cursor: pointer; }
+.word-guide { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 9px; margin-top: 13px; color: var(--muted); font-size: .81rem; }
+.word-example { padding: 2px 6px; border-radius: 3px; }
+.word-detail { margin: 8px 0 0; color: #374e43; font-size: .89rem; overflow-wrap: anywhere; }
 .translation { margin: 0 0 14px; max-height: 210px; overflow: auto; line-height: 1.65; font-size: .92rem; }
 .score-line { border-top: 1px solid var(--line); padding-top: 8px; color: var(--muted); font-size: .86rem; }
 .score-line strong { font: 600 .94rem/1.55 var(--mono); color: var(--ink); }
@@ -159,6 +179,7 @@ mark { border-radius: 2px; }
   .decoder-hero .hero-copy { max-width: 100%; }
   .equation { display: none; }
   .comparison { grid-template-columns: 1fr; }
+  .weight-setting { grid-template-columns: 1fr; gap: 5px; }
   .cipher-output { min-height: 0; max-height: 230px; margin-top: 12px; }
   .writing-area { height: 128px; }
   .foot { margin-top: 18px; }

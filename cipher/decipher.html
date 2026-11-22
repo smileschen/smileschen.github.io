@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Inspect substitution-key proposals and watch the Metropolis algorithm decipher a message from Stats 102C Lecture 18.">
   <title>Metropolis decoder · Cipher lab · Stats 102C</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
   <script defer src="cipher-model.js"></script>
-  <script defer src="cipher-engine.js"></script>
-  <script defer src="decipher.js"></script>
+  <script defer src="cipher-engine.js?v=2"></script>
+  <script defer src="decipher.js?v=2"></script>
 </head>
 <body>
   <header class="topbar">
@@ -29,7 +29,11 @@
     <div class="writing-desk decoder-top">
       <section class="panel" aria-labelledby="input-title">
         <div class="panel-top"><h2 id="input-title"><label for="cipher-input">Ciphertext</label></h2></div>
-        <textarea id="cipher-input" class="cipher-input" rows="4" spellcheck="false" placeholder="Paste a substitution-cipher message.">ZTRZY EKXHZR EKX RB NZ BY TBR RB NZ REKR IW REZ FAZWRIBT MEZREZY RIW TBNHZY IT REZ XITV RB WACCZY REZ WHITPW KTV KYYBMW BC BARYKPZBAW CBYRATZ BY RB RKJZ KYXW KPKITWR K WZK BC RYBANHZW KTV NO BSSBWITP ZTV REZX</textarea>
+        <textarea id="cipher-input" class="cipher-input" rows="4" spellcheck="false" placeholder="Paste a substitution-cipher message.">Rb nz, by tbr rb nz, rekr iw rez fazwribt,
+Mezrezy ’riw tbnhzy it rez xitv rb wacczy
+Rez whitpw ktv kyybmw bc barykpzbaw cbyratz,
+By rb rkjz kyxw kpkitwr k wzk bc rybanhzw,
+Ktv no bssbwitp ztv rezx?</textarea>
         <div class="actions run-controls">
           <button class="button primary" type="button" id="decipher">Decipher</button>
           <button class="button secondary" type="button" id="play-pause" disabled>Pause</button>
@@ -47,6 +51,16 @@
 
     <section class="panel inspector" aria-labelledby="inspect-title">
       <div class="panel-top inspect-controls"><h2 id="inspect-title">Inside one proposal</h2><div class="actions"><button class="button secondary" type="button" id="inspect-play" disabled>Pause</button><button class="button secondary" type="button" id="inspect-step">Step once</button></div></div>
+      <div class="weight-setting">
+        <div class="slider-control">
+          <label for="lambda">Word weight (λ)</label>
+          <output for="lambda" id="lambda-value">0.07</output>
+          <input id="lambda" type="range" min="0" max="1" step="0.01" value="0.07" aria-describedby="weight-help">
+        </div>
+        <div id="weight-help"><p>Log score = letter-pair score + λ × word score.</p>
+          <p>λ = 0 uses only letter pairs. The lecture default is 0.07. Moving the slider pauses the run and compares the same swap and draw under the new weight.</p>
+        </div>
+      </div>
       <p class="subline">Each key lists the cipher letter beneath its plaintext partner. Read the key in reverse to decipher the message.</p>
       <div class="comparison">
         <section class="snapshot" aria-labelledby="current-title">
@@ -62,6 +76,14 @@
           <div class="score-line">Log score <strong id="proposed-score">—</strong></div>
         </section>
       </div>
+      <div class="word-guide" aria-label="Word highlight guide">
+        <span class="word-example word-before">Before swap</span>
+        <span class="word-example word-proposed" data-direction="gain" data-strength="2">Higher score</span>
+        <span class="word-example word-proposed" data-direction="loss" data-strength="2">Lower score</span>
+        <span class="word-example word-proposed" data-direction="tie">Equal score</span>
+        <span>Darker shades show larger changes.</span>
+      </div>
+      <p class="word-detail" id="word-detail">Select a highlighted word in the proposed translation to see its score change.</p>
       <dl class="decision-row"><div><dt>Score change (Δ)</dt><dd id="score-change">—</dd></div><div><dt>Acceptance probability (α)</dt><dd id="acceptance">—</dd></div><div><dt>Uniform draw (u)</dt><dd id="random-u">—</dd></div><div><dt>Decision</dt><dd id="decision" data-decision="neutral">—</dd></div></dl>
       <p class="subline decision-note">Accept when u &lt; α. After a rejection, the next proposal starts from the same key.</p>
     </section>
@@ -76,7 +98,8 @@
           <div class="score-line">Best log score <strong id="best-score">—</strong></div>
         </section>
         <details class="panel model-details"><summary>How the log score works</summary>
-          <p>The sampler adds the log weights of neighboring letters and spaces from <em>War and Peace</em>. It then adds 0.07 times the sum of the word log weights from the lecture lexicon. An unknown word has weight 10<sup>−10</sup>.</p>
+          <p>Each word contributes the log weights of neighboring letters, including a space at each end, plus λ times its log weight in the lecture lexicon. The pair weights come from <em>War and Peace</em>. An unknown word has weight 10<sup>−10</sup>.</p>
+          <p>The word-by-word changes add up to the proposal’s score change, Δ. Moving λ starts a new score history with the displayed proposal as step 1.</p>
           <p>With a uniform key prior, this score is the log posterior up to a constant. Each proposal swaps two uniformly chosen entries. An improved score is always accepted, and a lower score can be accepted with probability e<sup>Δ</sup>.</p>
           <p>Decipher starts a fresh random key. Short passages can admit several plausible translations, and separate runs can find different readings.</p>
         </details>

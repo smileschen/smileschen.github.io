@@ -4,7 +4,7 @@
   const passages = {
     hamlet: {
       source: "William Shakespeare · Hamlet, Act III, scene i · lecture excerpt",
-      text: "ENTER HAMLET HAM TO BE OR NOT TO BE THAT IS THE QUESTION WHETHER TIS NOBLER IN THE MIND TO SUFFER THE SLINGS AND ARROWS OF OUTRAGEOUS FORTUNE OR TO TAKE ARMS AGAINST A SEA OF TROUBLES AND BY OPPOSING END THEM"
+      text: "To be, or not to be, that is the question,\nWhether ’tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune,\nOr to take arms against a sea of troubles,\nAnd by opposing end them?"
     },
     austen: {
       source: "Jane Austen · Pride and Prejudice, chapter I",
