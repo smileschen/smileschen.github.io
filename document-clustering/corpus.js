@@ -1,0 +1,559 @@
+// Lecture 22: read_book_corpus() from document_clustering_functions.R.
+// Each count row follows the exact vocabulary order of the R matrix.
+const corpusData = {
+  vocabulary: [
+    "anywher", "around", "away", "big", "black", "blue", "boat", "box", "car", "dark", "day", "dog",
+    "eat", "egg", "fast", "fox", "get", "goat", "good", "goodby", "green", "ham", "hat", "hello",
+    "hot", "hous", "let", "light", "like", "littl", "look", "may", "mous", "night", "now", "one",
+    "parti", "play", "rain", "red", "sam", "say", "see", "sleep", "stop", "sun", "thank", "three",
+    "time", "top", "train", "tree", "tri", "two", "water", "white", "will", "work", "yellow"
+  ],
+  documents: [
+    {
+      id: 1,
+      book: "Green Eggs and Ham",
+      bookLine: 1,
+      text: "I AM SAM. I AM SAM. SAM I AM. THAT SAM I AM! THAT SAM I AM! I DO NOT LIKE THAT SAM I AM! DO WOULD YOU LIKE GREEN EGGS AND HAM? I DO NOT LIKE THEM, SAM I AM. I DO NOT LIKE GREEN EGGS AND HAM. WOULD YOU LIKE THEM HERE OR THERE? I WOULD NOT LIKE THEM HERE OR THERE. I WOULD NOT LIKE THEM ANYWHERE. I DO NOT LIKE GREEN EGGS AND HAM. I DO NOT LIKE THEM, SAM I AM.",
+      originalParts: [
+        ["I AM ", false], ["SAM", true], [". I AM ", false], ["SAM", true], [". ", false],
+        ["SAM", true], [" I AM. THAT ", false], ["SAM", true], [" I AM! THAT ", false],
+        ["SAM", true], [" I AM! I DO NOT ", false], ["LIKE", true], [" THAT ", false],
+        ["SAM", true], [" I AM! DO WOULD YOU ", false], ["LIKE", true], [" ", false],
+        ["GREEN", true], [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true],
+        ["? I DO NOT ", false], ["LIKE", true], [" THEM, ", false], ["SAM", true],
+        [" I AM. I DO NOT ", false], ["LIKE", true], [" ", false], ["GREEN", true], [" ", false],
+        ["EGGS", true], [" AND ", false], ["HAM", true], [". WOULD YOU ", false], ["LIKE", true],
+        [" THEM HERE OR THERE? I WOULD NOT ", false], ["LIKE", true],
+        [" THEM HERE OR THERE. I WOULD NOT ", false], ["LIKE", true], [" THEM ", false],
+        ["ANYWHERE", true], [". I DO NOT ", false], ["LIKE", true], [" ", false], ["GREEN", true],
+        [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true], [". I DO NOT ", false],
+        ["LIKE", true], [" THEM, ", false], ["SAM", true], [" I AM.", false],
+      ],
+      tokens: [
+        "sam", "sam", "sam", "sam", "sam", "like", "sam", "like", "green", "egg", "ham", "like",
+        "sam", "like", "green", "egg", "ham", "like", "like", "like", "anywher", "like", "green",
+        "egg", "ham", "like", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 3, 3, 0, 0, 0, 0, 0, 0, 9, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      ],
+    },
+    {
+      id: 2,
+      book: "Green Eggs and Ham",
+      bookLine: 2,
+      text: "WOULD YOU LIKE THEM IN A HOUSE? WOULD YOU LIKE THEM WITH A MOUSE? I DO NOT LIKE THEM IN A HOUSE. I DO NOT LIKE THEM WITH A MOUSE. I DO NOT LIKE THEM HERE OR THERE. I DO NOT LIKE THEM ANYWHERE. I DO NOT LIKE GREEN EGGS AND HAM. I DO NOT LIKE THEM, SAM I AM.",
+      originalParts: [
+        ["WOULD YOU ", false], ["LIKE", true], [" THEM IN A ", false], ["HOUSE", true],
+        ["? WOULD YOU ", false], ["LIKE", true], [" THEM WITH A ", false], ["MOUSE", true],
+        ["? I DO NOT ", false], ["LIKE", true], [" THEM IN A ", false], ["HOUSE", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM WITH A ", false], ["MOUSE", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM HERE OR THERE. I DO NOT ", false],
+        ["LIKE", true], [" THEM ", false], ["ANYWHERE", true], [". I DO NOT ", false],
+        ["LIKE", true], [" ", false], ["GREEN", true], [" ", false], ["EGGS", true],
+        [" AND ", false], ["HAM", true], [". I DO NOT ", false], ["LIKE", true],
+        [" THEM, ", false], ["SAM", true], [" I AM.", false],
+      ],
+      tokens: [
+        "like", "hous", "like", "mous", "like", "hous", "like", "mous", "like", "like", "anywher",
+        "like", "green", "egg", "ham", "like", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 2, 0, 0, 8, 0, 0,
+        0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      ],
+    },
+    {
+      id: 3,
+      book: "Green Eggs and Ham",
+      bookLine: 3,
+      text: "WOULD YOU EAT THEM IN A BOX? WOULD YOU EAT THEM WITH A FOX? NOT IN A BOX. NOT WITH A FOX. NOT IN A HOUSE. NOT WITH A MOUSE. I WOULD NOT EAT THEM HERE OR THERE. I WOULD NOT EAT THEM ANYWHERE. I WOULD NOT EAT GREEN EGGS AND HAM. I DO NOT LIKE THEM, SAM I AM. WOULD YOU? COULD YOU? IN A CAR? EAT THEM! EAT THEM! HERE THEY ARE. I WOULD NOT, COULD NOT, IN A CAR. YOU MAY LIKE THEM. YOU WILL SEE. YOU MAY LIKE THEM IN A TREE! I WOULD NOT, COULD NOT IN A TREE. NOT IN A CAR! YOU LET ME BE. ",
+      originalParts: [
+        ["WOULD YOU ", false], ["EAT", true], [" THEM IN A ", false], ["BOX", true],
+        ["? WOULD YOU ", false], ["EAT", true], [" THEM WITH A ", false], ["FOX", true],
+        ["? NOT IN A ", false], ["BOX", true], [". NOT WITH A ", false], ["FOX", true],
+        [". NOT IN A ", false], ["HOUSE", true], [". NOT WITH A ", false], ["MOUSE", true],
+        [". I WOULD NOT ", false], ["EAT", true], [" THEM HERE OR THERE. I WOULD NOT ", false],
+        ["EAT", true], [" THEM ", false], ["ANYWHERE", true], [". I WOULD NOT ", false],
+        ["EAT", true], [" ", false], ["GREEN", true], [" ", false], ["EGGS", true],
+        [" AND ", false], ["HAM", true], [". I DO NOT ", false], ["LIKE", true],
+        [" THEM, ", false], ["SAM", true], [" I AM. WOULD YOU? COULD YOU? IN A ", false],
+        ["CAR", true], ["? ", false], ["EAT", true], [" THEM! ", false], ["EAT", true],
+        [" THEM! HERE THEY ARE. I WOULD NOT, COULD NOT, IN A ", false], ["CAR", true],
+        [". YOU ", false], ["MAY", true], [" ", false], ["LIKE", true], [" THEM. YOU ", false],
+        ["WILL", true], [" ", false], ["SEE", true], [". YOU ", false], ["MAY", true],
+        [" ", false], ["LIKE", true], [" THEM IN A ", false], ["TREE", true],
+        ["! I WOULD NOT, COULD NOT IN A ", false], ["TREE", true], [". NOT IN A ", false],
+        ["CAR", true], ["! YOU ", false], ["LET", true], [" ME BE. ", false],
+      ],
+      tokens: [
+        "eat", "box", "eat", "fox", "box", "fox", "hous", "mous", "eat", "eat", "anywher", "eat",
+        "green", "egg", "ham", "like", "sam", "car", "eat", "eat", "car", "may", "like", "will",
+        "see", "may", "like", "tree", "tree", "car", "let"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 2, 3, 0, 0, 0, 7, 1, 0, 2, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 3, 0, 0,
+        2, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0
+      ],
+    },
+    {
+      id: 4,
+      book: "Green Eggs and Ham",
+      bookLine: 4,
+      text: "I DO NOT LIKE THEM IN A BOX. I DO NOT LIKE THEM WITH A FOX. I DO NOT LIKE THEM IN A HOUSE. I DO NOT LIKE  THEM WITH A MOUSE. I DO NOT LIKE THEM HERE OR THERE. I DO NOT LIKE THEM ANYWHERE. I DO NOT LIKE GREEN EGGS AND HAM. I DO NOT LIKE THEM, SAM I AM.",
+      originalParts: [
+        ["I DO NOT ", false], ["LIKE", true], [" THEM IN A ", false], ["BOX", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM WITH A ", false], ["FOX", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM IN A ", false], ["HOUSE", true],
+        [". I DO NOT ", false], ["LIKE", true], ["  THEM WITH A ", false], ["MOUSE", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM HERE OR THERE. I DO NOT ", false],
+        ["LIKE", true], [" THEM ", false], ["ANYWHERE", true], [". I DO NOT ", false],
+        ["LIKE", true], [" ", false], ["GREEN", true], [" ", false], ["EGGS", true],
+        [" AND ", false], ["HAM", true], [". I DO NOT ", false], ["LIKE", true],
+        [" THEM, ", false], ["SAM", true], [" I AM.", false],
+      ],
+      tokens: [
+        "like", "box", "like", "fox", "like", "hous", "like", "mous", "like", "like", "anywher",
+        "like", "green", "egg", "ham", "like", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 8, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      ],
+    },
+    {
+      id: 5,
+      book: "Green Eggs and Ham",
+      bookLine: 5,
+      text: "A TRAIN! A TRAIN! A TRAIN! A TRAIN! COULD YOU, WOULD YOU ON A TRAIN? NOT ON TRAIN! NOT IN A TREE! NOT IN A CAR! SAM! LET ME BE! I WOULD NOT, COULD NOT, IN A BOX. I WOULD NOT, COULD NOT, WITH A FOX. I WILL NOT EAT THEM IN A HOUSE. I WILL NOT EAT THEM HERE OR THERE. I WILL NOT EAT THEM ANYWHERE. I DO NOT EAT GREEN EGGS AND HAM. I DO NOT LIKE THEM, SAM I AM.",
+      originalParts: [
+        ["A ", false], ["TRAIN", true], ["! A ", false], ["TRAIN", true], ["! A ", false],
+        ["TRAIN", true], ["! A ", false], ["TRAIN", true], ["! COULD YOU, WOULD YOU ON A ", false],
+        ["TRAIN", true], ["? NOT ON ", false], ["TRAIN", true], ["! NOT IN A ", false],
+        ["TREE", true], ["! NOT IN A ", false], ["CAR", true], ["! ", false], ["SAM", true],
+        ["! ", false], ["LET", true], [" ME BE! I WOULD NOT, COULD NOT, IN A ", false],
+        ["BOX", true], [". I WOULD NOT, COULD NOT, WITH A ", false], ["FOX", true],
+        [". I ", false], ["WILL", true], [" NOT ", false], ["EAT", true], [" THEM IN A ", false],
+        ["HOUSE", true], [". I ", false], ["WILL", true], [" NOT ", false], ["EAT", true],
+        [" THEM HERE OR THERE. I ", false], ["WILL", true], [" NOT ", false], ["EAT", true],
+        [" THEM ", false], ["ANYWHERE", true], [". I DO NOT ", false], ["EAT", true], [" ", false],
+        ["GREEN", true], [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM, ", false], ["SAM", true],
+        [" I AM.", false],
+      ],
+      tokens: [
+        "train", "train", "train", "train", "train", "train", "tree", "car", "sam", "let", "box",
+        "fox", "will", "eat", "hous", "will", "eat", "will", "eat", "anywher", "eat", "green",
+        "egg", "ham", "like", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 4, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 1, 0, 0, 0, 0, 3, 0, 0
+      ],
+    },
+    {
+      id: 6,
+      book: "Green Eggs and Ham",
+      bookLine: 6,
+      text: "SAY! IN THE DARK? HERE IN THE DARK! WOULD YOU, COULD YOU, IN THE DARK? I WOULD NOT, COULD NOT, IN THE DARK. WOULD YOU COULD YOU IN THE RAIN? I WOULD NOT, COULD NOT IN THE RAIN. NOT IN THE DARK. NOT ON A TRAIN. NOT IN A CAR. NOT IN A TREE. I DO NOT LIKE THEM, SAM, YOU SEE. NOT IN A HOUSE. NOT IN A BOX. NOT WITH A MOUSE. NOT WITH A FOX. I WILL NOT EAT THEM HERE OR THERE. I DO NOT LIKE THEM ANYWHERE! YOU DO NOT LIKE GREEN EGGS AND HAM? I DO NOT LIKE THEM, SAM I AM.",
+      originalParts: [
+        ["SAY", true], ["! IN THE ", false], ["DARK", true], ["? HERE IN THE ", false],
+        ["DARK", true], ["! WOULD YOU, COULD YOU, IN THE ", false], ["DARK", true],
+        ["? I WOULD NOT, COULD NOT, IN THE ", false], ["DARK", true],
+        [". WOULD YOU COULD YOU IN THE ", false], ["RAIN", true],
+        ["? I WOULD NOT, COULD NOT IN THE ", false], ["RAIN", true], [". NOT IN THE ", false],
+        ["DARK", true], [". NOT ON A ", false], ["TRAIN", true], [". NOT IN A ", false],
+        ["CAR", true], [". NOT IN A ", false], ["TREE", true], [". I DO NOT ", false],
+        ["LIKE", true], [" THEM, ", false], ["SAM", true], [", YOU ", false], ["SEE", true],
+        [". NOT IN A ", false], ["HOUSE", true], [". NOT IN A ", false], ["BOX", true],
+        [". NOT WITH A ", false], ["MOUSE", true], [". NOT WITH A ", false], ["FOX", true],
+        [". I ", false], ["WILL", true], [" NOT ", false], ["EAT", true],
+        [" THEM HERE OR THERE. I DO NOT ", false], ["LIKE", true], [" THEM ", false],
+        ["ANYWHERE", true], ["! YOU DO NOT ", false], ["LIKE", true], [" ", false],
+        ["GREEN", true], [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true],
+        ["? I DO NOT ", false], ["LIKE", true], [" THEM, ", false], ["SAM", true],
+        [" I AM.", false],
+      ],
+      tokens: [
+        "say", "dark", "dark", "dark", "dark", "rain", "rain", "dark", "train", "car", "tree",
+        "like", "sam", "see", "hous", "box", "mous", "fox", "will", "eat", "like", "anywher",
+        "like", "green", "egg", "ham", "like", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 1, 1, 5, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 4, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0
+      ],
+    },
+    {
+      id: 7,
+      book: "Green Eggs and Ham",
+      bookLine: 7,
+      text: "COULD YOU, WOULD YOU, WITH A GOAT? I WOULD NOT, COULD NOT WITH A GOAT! WOULD YOU, COULD YOU, ON A BOAT? I COULD NOT, WOULD NOT, ON A BOAT. I WILL NOT, WILL NOT, WITH A GOAT. I WILL NOT EAT THEM IN THE RAIN. NOT IN THE DARK! NOT IN A TREE! NOT IN A CAR! YOU LET ME BE! ",
+      originalParts: [
+        ["COULD YOU, WOULD YOU, WITH A ", false], ["GOAT", true],
+        ["? I WOULD NOT, COULD NOT WITH A ", false], ["GOAT", true],
+        ["! WOULD YOU, COULD YOU, ON A ", false], ["BOAT", true],
+        ["? I COULD NOT, WOULD NOT, ON A ", false], ["BOAT", true], [". I ", false],
+        ["WILL", true], [" NOT, ", false], ["WILL", true], [" NOT, WITH A ", false],
+        ["GOAT", true], [". I ", false], ["WILL", true], [" NOT ", false], ["EAT", true],
+        [" THEM IN THE ", false], ["RAIN", true], [". NOT IN THE ", false], ["DARK", true],
+        ["! NOT IN A ", false], ["TREE", true], ["! NOT IN A ", false], ["CAR", true],
+        ["! YOU ", false], ["LET", true], [" ME BE! ", false],
+      ],
+      tokens: [
+        "goat", "goat", "boat", "boat", "will", "will", "goat", "will", "eat", "rain", "dark",
+        "tree", "car", "let"
+      ],
+      counts: [
+        0, 0, 0, 0, 0, 0, 2, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 3, 0, 0
+      ],
+    },
+    {
+      id: 8,
+      book: "Green Eggs and Ham",
+      bookLine: 8,
+      text: "I DO NOT LIKE THEM IN A BOX. I DO NOT LIKE THEM WITH A FOX. I WILL NOT EAT THEM IN A HOUSE. I DO NOT LIKE THEM WITH A MOUSE. I DO NOT LIKE THEM HERE OR THERE. I DO NOT LIKE THEM ANYWHERE! I DO NOT LIKE GREEN EGGS AND HAM! I DO NOT LIKE THEM, SAM I AM. YOU DO NOT LIKE THEM. SO YOU SAY. TRY THEM! TRY THEM! AND YOU MAY. TRY THEM AND YOU MAY, I SAY. SAM! IF YOU LET ME BE, I WILL TRY THEM. YOU WILL SEE. ",
+      originalParts: [
+        ["I DO NOT ", false], ["LIKE", true], [" THEM IN A ", false], ["BOX", true],
+        [". I DO NOT ", false], ["LIKE", true], [" THEM WITH A ", false], ["FOX", true],
+        [". I ", false], ["WILL", true], [" NOT ", false], ["EAT", true], [" THEM IN A ", false],
+        ["HOUSE", true], [". I DO NOT ", false], ["LIKE", true], [" THEM WITH A ", false],
+        ["MOUSE", true], [". I DO NOT ", false], ["LIKE", true],
+        [" THEM HERE OR THERE. I DO NOT ", false], ["LIKE", true], [" THEM ", false],
+        ["ANYWHERE", true], ["! I DO NOT ", false], ["LIKE", true], [" ", false], ["GREEN", true],
+        [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true], ["! I DO NOT ", false],
+        ["LIKE", true], [" THEM, ", false], ["SAM", true], [" I AM. YOU DO NOT ", false],
+        ["LIKE", true], [" THEM. SO YOU ", false], ["SAY", true], [". ", false], ["TRY", true],
+        [" THEM! ", false], ["TRY", true], [" THEM! AND YOU ", false], ["MAY", true],
+        [". ", false], ["TRY", true], [" THEM AND YOU ", false], ["MAY", true], [", I ", false],
+        ["SAY", true], [". ", false], ["SAM", true], ["! IF YOU ", false], ["LET", true],
+        [" ME BE, I ", false], ["WILL", true], [" ", false], ["TRY", true], [" THEM. YOU ", false],
+        ["WILL", true], [" ", false], ["SEE", true], [". ", false],
+      ],
+      tokens: [
+        "like", "box", "like", "fox", "will", "eat", "hous", "like", "mous", "like", "like",
+        "anywher", "like", "green", "egg", "ham", "like", "sam", "like", "say", "tri", "tri", "may",
+        "tri", "may", "say", "sam", "let", "will", "tri", "will", "see"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 1, 0, 8, 0, 0,
+        2, 1, 0, 0, 0, 0, 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 3, 0, 0
+      ],
+    },
+    {
+      id: 9,
+      book: "Green Eggs and Ham",
+      bookLine: 9,
+      text: "SAY! I LIKE GREEN EGGS AND HAM! I DO! I LIKE THEM, SAM I AM! AND I WOULD EAT THEM IN A BOAT. AND I WOULD EAT THEM WITH A GOAT. AND I WILL EAT THEM, IN THE RAIN. AND IN THE DARK. AND ON A TRAIN. AND IN A CAR. AND IN A TREE. THEY ARE SO GOOD, SO GOOD, YOU SEE! ",
+      originalParts: [
+        ["SAY", true], ["! I ", false], ["LIKE", true], [" ", false], ["GREEN", true],
+        [" ", false], ["EGGS", true], [" AND ", false], ["HAM", true], ["! I DO! I ", false],
+        ["LIKE", true], [" THEM, ", false], ["SAM", true], [" I AM! AND I WOULD ", false],
+        ["EAT", true], [" THEM IN A ", false], ["BOAT", true], [". AND I WOULD ", false],
+        ["EAT", true], [" THEM WITH A ", false], ["GOAT", true], [". AND I ", false],
+        ["WILL", true], [" ", false], ["EAT", true], [" THEM, IN THE ", false], ["RAIN", true],
+        [". AND IN THE ", false], ["DARK", true], [". AND ON A ", false], ["TRAIN", true],
+        [". AND IN A ", false], ["CAR", true], [". AND IN A ", false], ["TREE", true],
+        [". THEY ARE SO ", false], ["GOOD", true], [", SO ", false], ["GOOD", true],
+        [", YOU ", false], ["SEE", true], ["! ", false],
+      ],
+      tokens: [
+        "say", "like", "green", "egg", "ham", "like", "sam", "eat", "boat", "eat", "goat", "will",
+        "eat", "rain", "dark", "train", "car", "tree", "good", "good", "see"
+      ],
+      counts: [
+        0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0, 0, 3, 1, 0, 0, 0, 1, 2, 0, 1, 1, 0, 0, 0, 0, 0, 0, 2, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 0
+      ],
+    },
+    {
+      id: 10,
+      book: "Green Eggs and Ham",
+      bookLine: 10,
+      text: "SO I WILL EAT THEM IN A BOX. AND I WILL EAT THEM WITH A FOX. AND I WILL EAT THEM IN A HOUSE. AND I WILL EAT THEM WITH A MOUSE. AND I WILL EAT THEM HERE AND THERE. SAY! I WILL EAT THEM ANYWHERE! I DO SO LIKE GREEN EGGS AND HAM! THANK YOU! THANK YOU, SAM I AM.",
+      originalParts: [
+        ["SO I ", false], ["WILL", true], [" ", false], ["EAT", true], [" THEM IN A ", false],
+        ["BOX", true], [". AND I ", false], ["WILL", true], [" ", false], ["EAT", true],
+        [" THEM WITH A ", false], ["FOX", true], [". AND I ", false], ["WILL", true], [" ", false],
+        ["EAT", true], [" THEM IN A ", false], ["HOUSE", true], [". AND I ", false],
+        ["WILL", true], [" ", false], ["EAT", true], [" THEM WITH A ", false], ["MOUSE", true],
+        [". AND I ", false], ["WILL", true], [" ", false], ["EAT", true],
+        [" THEM HERE AND THERE. ", false], ["SAY", true], ["! I ", false], ["WILL", true],
+        [" ", false], ["EAT", true], [" THEM ", false], ["ANYWHERE", true], ["! I DO SO ", false],
+        ["LIKE", true], [" ", false], ["GREEN", true], [" ", false], ["EGGS", true],
+        [" AND ", false], ["HAM", true], ["! ", false], ["THANK", true], [" YOU! ", false],
+        ["THANK", true], [" YOU, ", false], ["SAM", true], [" I AM.", false],
+      ],
+      tokens: [
+        "will", "eat", "box", "will", "eat", "fox", "will", "eat", "hous", "will", "eat", "mous",
+        "will", "eat", "say", "will", "eat", "anywher", "like", "green", "egg", "ham", "thank",
+        "thank", "sam"
+      ],
+      counts: [
+        1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 6, 1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0,
+        0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 0, 0
+      ],
+    },
+    {
+      id: 11,
+      book: "Go, Dog. Go!",
+      bookLine: 1,
+      text: "DOG. BIG DOG, LITTLE DOG. BIG DOGS AND LITTLE DOGS. BLACK AND WHITE DOGS. HELLO. HELLO. DO YOU LIKE MY HAT? I DO NOT. GOODBYE. GOODBYE. ONE LITTLE DOG GOING IN. THREE BIG DOGS GOING OUT. A RED DOG ON A BLUE TREE. A BIG BLUE DOG ON A RED TREE. A GREEN DOG ON A YELLOW TREE.",
+      originalParts: [
+        ["DOG", true], [". ", false], ["BIG", true], [" ", false], ["DOG", true], [", ", false],
+        ["LITTLE", true], [" ", false], ["DOG", true], [". ", false], ["BIG", true], [" ", false],
+        ["DOGS", true], [" AND ", false], ["LITTLE", true], [" ", false], ["DOGS", true],
+        [". ", false], ["BLACK", true], [" AND ", false], ["WHITE", true], [" ", false],
+        ["DOGS", true], [". ", false], ["HELLO", true], [". ", false], ["HELLO", true],
+        [". DO YOU ", false], ["LIKE", true], [" MY ", false], ["HAT", true],
+        ["? I DO NOT. ", false], ["GOODBYE", true], [". ", false], ["GOODBYE", true],
+        [". ", false], ["ONE", true], [" ", false], ["LITTLE", true], [" ", false], ["DOG", true],
+        [" GOING IN. ", false], ["THREE", true], [" ", false], ["BIG", true], [" ", false],
+        ["DOGS", true], [" GOING OUT. A ", false], ["RED", true], [" ", false], ["DOG", true],
+        [" ON A ", false], ["BLUE", true], [" ", false], ["TREE", true], [". A ", false],
+        ["BIG", true], [" ", false], ["BLUE", true], [" ", false], ["DOG", true],
+        [" ON A ", false], ["RED", true], [" ", false], ["TREE", true], [". A ", false],
+        ["GREEN", true], [" ", false], ["DOG", true], [" ON A ", false], ["YELLOW", true],
+        [" ", false], ["TREE", true], [".", false],
+      ],
+      tokens: [
+        "dog", "big", "dog", "littl", "dog", "big", "dog", "littl", "dog", "black", "white", "dog",
+        "hello", "hello", "like", "hat", "goodby", "goodby", "one", "littl", "dog", "three", "big",
+        "dog", "red", "dog", "blue", "tree", "big", "blue", "dog", "red", "tree", "green", "dog",
+        "yellow", "tree"
+      ],
+      counts: [
+        0, 0, 0, 4, 1, 2, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 2, 0, 0, 0, 0, 1, 3,
+        0, 0, 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 3, 0, 0, 0, 1, 0, 0, 1
+      ],
+    },
+    {
+      id: 12,
+      book: "Go, Dog. Go!",
+      bookLine: 2,
+      text: "SOME BIG DOGS AND SOME LITTLE DOGS GOING AROUND IN CARS. A DOG OUT OF A CAR. TWO BIG DOGS GOING UP, ONE LITTLE DOG GOING DOWN. THE GREEN DOG IS UP. THE YELLOW DOG IS DOWN. THE BLUE DOG IS IN. THE RED DOG IS OUT. ONE DOG UP ON A HOUSE. THREE DOGS DOWN IN THE WATER.",
+      originalParts: [
+        ["SOME ", false], ["BIG", true], [" ", false], ["DOGS", true], [" AND SOME ", false],
+        ["LITTLE", true], [" ", false], ["DOGS", true], [" GOING ", false], ["AROUND", true],
+        [" IN ", false], ["CARS", true], [". A ", false], ["DOG", true], [" OUT OF A ", false],
+        ["CAR", true], [". ", false], ["TWO", true], [" ", false], ["BIG", true], [" ", false],
+        ["DOGS", true], [" GOING UP, ", false], ["ONE", true], [" ", false], ["LITTLE", true],
+        [" ", false], ["DOG", true], [" GOING DOWN. THE ", false], ["GREEN", true], [" ", false],
+        ["DOG", true], [" IS UP. THE ", false], ["YELLOW", true], [" ", false], ["DOG", true],
+        [" IS DOWN. THE ", false], ["BLUE", true], [" ", false], ["DOG", true],
+        [" IS IN. THE ", false], ["RED", true], [" ", false], ["DOG", true], [" IS OUT. ", false],
+        ["ONE", true], [" ", false], ["DOG", true], [" UP ON A ", false], ["HOUSE", true],
+        [". ", false], ["THREE", true], [" ", false], ["DOGS", true], [" DOWN IN THE ", false],
+        ["WATER", true], [".", false],
+      ],
+      tokens: [
+        "big", "dog", "littl", "dog", "around", "car", "dog", "car", "two", "big", "dog", "one",
+        "littl", "dog", "green", "dog", "yellow", "dog", "blue", "dog", "red", "dog", "one", "dog",
+        "hous", "three", "dog", "water"
+      ],
+      counts: [
+        0, 1, 0, 2, 0, 1, 0, 0, 2, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 2,
+        0, 0, 0, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1
+      ],
+    },
+    {
+      id: 13,
+      book: "Go, Dog. Go!",
+      bookLine: 3,
+      text: "A GREEN DOG OVER A TREE. A YELLOW DOG UNDER A TREE. TWO DOGS ON A HOUSE IN A BOAT IN THE WATER. A DOG OVER THE WATER. A DOG UNDER THE WATER. HELLO AGAIN. HELLO. DO YOU LIKE MY HAT? I DO NOT LIKE IT. GOODBYE AGAIN. GOODBYE. THE DOGS ARE ALL GOING AROUND AND AROUND AND AROUND. GO AROUND AGAIN.",
+      originalParts: [
+        ["A ", false], ["GREEN", true], [" ", false], ["DOG", true], [" OVER A ", false],
+        ["TREE", true], [". A ", false], ["YELLOW", true], [" ", false], ["DOG", true],
+        [" UNDER A ", false], ["TREE", true], [". ", false], ["TWO", true], [" ", false],
+        ["DOGS", true], [" ON A ", false], ["HOUSE", true], [" IN A ", false], ["BOAT", true],
+        [" IN THE ", false], ["WATER", true], [". A ", false], ["DOG", true],
+        [" OVER THE ", false], ["WATER", true], [". A ", false], ["DOG", true],
+        [" UNDER THE ", false], ["WATER", true], [". ", false], ["HELLO", true],
+        [" AGAIN. ", false], ["HELLO", true], [". DO YOU ", false], ["LIKE", true],
+        [" MY ", false], ["HAT", true], ["? I DO NOT ", false], ["LIKE", true], [" IT. ", false],
+        ["GOODBYE", true], [" AGAIN. ", false], ["GOODBYE", true], [". THE ", false],
+        ["DOGS", true], [" ARE ALL GOING ", false], ["AROUND", true], [" AND ", false],
+        ["AROUND", true], [" AND ", false], ["AROUND", true], [". GO ", false], ["AROUND", true],
+        [" AGAIN.", false],
+      ],
+      tokens: [
+        "green", "dog", "tree", "yellow", "dog", "tree", "two", "dog", "hous", "boat", "water",
+        "dog", "water", "dog", "water", "hello", "hello", "like", "hat", "like", "goodby", "goodby",
+        "dog", "around", "around", "around", "around"
+      ],
+      counts: [
+        0, 4, 0, 0, 0, 0, 1, 0, 0, 0, 0, 6, 0, 0, 0, 0, 0, 0, 0, 2, 1, 0, 1, 2, 0, 1, 0, 0, 2, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 3, 0, 0, 0, 1
+      ],
+    },
+    {
+      id: 14,
+      book: "Go, Dog. Go!",
+      bookLine: 4,
+      text: "THE SUN IS UP. THE SUN IS YELLOW. THE YELLOW SUN IS OVER THE HOUSE. IT IS HOT OUT HERE IN THE SUN. IT IS NOT HOT HERE UNDER THE HOUSE. NOW IT IS NIGHT. THREE DOGS AT A PARTY ON A BOAT AT NIGHT. DOGS AT WORK. WORK, DOGS. WORK. DOGS AT PLAY. PLAY, DOGS. PLAY.",
+      originalParts: [
+        ["THE ", false], ["SUN", true], [" IS UP. THE ", false], ["SUN", true], [" IS ", false],
+        ["YELLOW", true], [". THE ", false], ["YELLOW", true], [" ", false], ["SUN", true],
+        [" IS OVER THE ", false], ["HOUSE", true], [". IT IS ", false], ["HOT", true],
+        [" OUT HERE IN THE ", false], ["SUN", true], [". IT IS NOT ", false], ["HOT", true],
+        [" HERE UNDER THE ", false], ["HOUSE", true], [". ", false], ["NOW", true],
+        [" IT IS ", false], ["NIGHT", true], [". ", false], ["THREE", true], [" ", false],
+        ["DOGS", true], [" AT A ", false], ["PARTY", true], [" ON A ", false], ["BOAT", true],
+        [" AT ", false], ["NIGHT", true], [". ", false], ["DOGS", true], [" AT ", false],
+        ["WORK", true], [". ", false], ["WORK", true], [", ", false], ["DOGS", true],
+        [". ", false], ["WORK", true], [". ", false], ["DOGS", true], [" AT ", false],
+        ["PLAY", true], [". ", false], ["PLAY", true], [", ", false], ["DOGS", true],
+        [". ", false], ["PLAY", true], [".", false],
+      ],
+      tokens: [
+        "sun", "sun", "yellow", "yellow", "sun", "hous", "hot", "sun", "hot", "hous", "now",
+        "night", "three", "dog", "parti", "boat", "night", "dog", "work", "work", "dog", "work",
+        "dog", "play", "play", "dog", "play"
+      ],
+      counts: [
+        0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 0, 0, 0, 0, 0,
+        0, 0, 2, 1, 0, 1, 3, 0, 0, 0, 0, 0, 0, 0, 4, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2
+      ],
+    },
+    {
+      id: 15,
+      book: "Go, Dog. Go!",
+      bookLine: 5,
+      text: "HELLO AGAIN. HELLO. DO YOU LIKE MY HAT? I DO NOT LIKE THAT HAT. GOODBYE AGAIN. GOODBYE. DOGS IN CARS AGAIN, GOING AWAY. GOING AWAY FAST. LOOK AT THOSE DOGS GO. GO, DOGS. GO! STOP, DOGS. STOP! THE LIGHT IS RED NOW. GO, DOGS. GO! THE LIGHT IS GREEN NOW. ",
+      originalParts: [
+        ["HELLO", true], [" AGAIN. ", false], ["HELLO", true], [". DO YOU ", false],
+        ["LIKE", true], [" MY ", false], ["HAT", true], ["? I DO NOT ", false], ["LIKE", true],
+        [" THAT ", false], ["HAT", true], [". ", false], ["GOODBYE", true], [" AGAIN. ", false],
+        ["GOODBYE", true], [". ", false], ["DOGS", true], [" IN ", false], ["CARS", true],
+        [" AGAIN, GOING ", false], ["AWAY", true], [". GOING ", false], ["AWAY", true],
+        [" ", false], ["FAST", true], [". ", false], ["LOOK", true], [" AT THOSE ", false],
+        ["DOGS", true], [" GO. GO, ", false], ["DOGS", true], [". GO! ", false], ["STOP", true],
+        [", ", false], ["DOGS", true], [". ", false], ["STOP", true], ["! THE ", false],
+        ["LIGHT", true], [" IS ", false], ["RED", true], [" ", false], ["NOW", true],
+        [". GO, ", false], ["DOGS", true], [". GO! THE ", false], ["LIGHT", true], [" IS ", false],
+        ["GREEN", true], [" ", false], ["NOW", true], [". ", false],
+      ],
+      tokens: [
+        "hello", "hello", "like", "hat", "like", "hat", "goodby", "goodby", "dog", "car", "away",
+        "away", "fast", "look", "dog", "dog", "stop", "dog", "stop", "light", "red", "now", "dog",
+        "light", "green", "now"
+      ],
+      counts: [
+        0, 0, 2, 0, 0, 0, 0, 0, 1, 0, 0, 5, 0, 0, 1, 0, 0, 0, 0, 2, 1, 0, 2, 2, 0, 0, 0, 2, 2, 0, 1,
+        0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+      ],
+    },
+    {
+      id: 16,
+      book: "Go, Dog. Go!",
+      bookLine: 6,
+      text: "TWO DOGS AT PLAY, AT PLAY UP ON TOP. GO, DOGS. GO! DO NOT PLAY UP THERE. GO DOWN. NOW IT IS NIGHT. NIGHT IS NOT A TIME FOR PLAY. IT IS A TIME FOR SLEEP. THE DOGS GO TO SLEEP. THEY WILL SLEEP ALL NIGHT.",
+      originalParts: [
+        ["TWO", true], [" ", false], ["DOGS", true], [" AT ", false], ["PLAY", true],
+        [", AT ", false], ["PLAY", true], [" UP ON ", false], ["TOP", true], [". GO, ", false],
+        ["DOGS", true], [". GO! DO NOT ", false], ["PLAY", true], [" UP THERE. GO DOWN. ", false],
+        ["NOW", true], [" IT IS ", false], ["NIGHT", true], [". ", false], ["NIGHT", true],
+        [" IS NOT A ", false], ["TIME", true], [" FOR ", false], ["PLAY", true],
+        [". IT IS A ", false], ["TIME", true], [" FOR ", false], ["SLEEP", true],
+        [". THE ", false], ["DOGS", true], [" GO TO ", false], ["SLEEP", true], [". THEY ", false],
+        ["WILL", true], [" ", false], ["SLEEP", true], [" ALL ", false], ["NIGHT", true],
+        [".", false],
+      ],
+      tokens: [
+        "two", "dog", "play", "play", "top", "dog", "play", "now", "night", "night", "time", "play",
+        "time", "sleep", "dog", "sleep", "will", "sleep", "night"
+      ],
+      counts: [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 3, 1, 0, 0, 4, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 2, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0
+      ],
+    },
+    {
+      id: 17,
+      book: "Go, Dog. Go!",
+      bookLine: 7,
+      text: "NOW IT IS DAY. THE SUN IS UP. NOW IS THE TIME FOR ALL DOGS TO GET UP. GET UP. IT IS DAY. TIME TO GET GOING. GO, DOGS. GO! THERE THEY GO. LOOK AT THOSE DOGS GO. WHY ARE THEY GOING FAST IN THOSE CARS? WHAT ARE THEY GOING TO DO? WHERE ARE THOSE DOGS GOING? LOOK WHERE THEY ARE GOING. THEY ARE ALL GOING TO THAT BIG TREE OVER THERE.",
+      originalParts: [
+        ["NOW", true], [" IT IS ", false], ["DAY", true], [". THE ", false], ["SUN", true],
+        [" IS UP. ", false], ["NOW", true], [" IS THE ", false], ["TIME", true],
+        [" FOR ALL ", false], ["DOGS", true], [" TO ", false], ["GET", true], [" UP. ", false],
+        ["GET", true], [" UP. IT IS ", false], ["DAY", true], [". ", false], ["TIME", true],
+        [" TO ", false], ["GET", true], [" GOING. GO, ", false], ["DOGS", true],
+        [". GO! THERE THEY GO. ", false], ["LOOK", true], [" AT THOSE ", false], ["DOGS", true],
+        [" GO. WHY ARE THEY GOING ", false], ["FAST", true], [" IN THOSE ", false], ["CARS", true],
+        ["? WHAT ARE THEY GOING TO DO? WHERE ARE THOSE ", false], ["DOGS", true],
+        [" GOING? ", false], ["LOOK", true],
+        [" WHERE THEY ARE GOING. THEY ARE ALL GOING TO THAT ", false], ["BIG", true], [" ", false],
+        ["TREE", true], [" OVER THERE.", false],
+      ],
+      tokens: [
+        "now", "day", "sun", "now", "time", "dog", "get", "get", "day", "time", "get", "dog",
+        "look", "dog", "fast", "car", "dog", "look", "big", "tree"
+      ],
+      counts: [
+        0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 4, 0, 0, 1, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,
+        0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0
+      ],
+    },
+    {
+      id: 18,
+      book: "Go, Dog. Go!",
+      bookLine: 8,
+      text: "NOW THE CARS STOP AND ALL THE DOGS GET OUT. AND NOW LOOK WHERE ALL THOSE DOGS ARE GOING. TO THE TREE. TO THE TREE. UP THE TREE. UP THE TREE. UP THEY GO TO THE TOP OF THE TREE. WHY? WILL THEY WORK THERE? WILL THEY PLAY THERE? WHAT IS UP THERE ON TOP OF THAT TREE?",
+      originalParts: [
+        ["NOW", true], [" THE ", false], ["CARS", true], [" ", false], ["STOP", true],
+        [" AND ALL THE ", false], ["DOGS", true], [" ", false], ["GET", true],
+        [" OUT. AND ", false], ["NOW", true], [" ", false], ["LOOK", true],
+        [" WHERE ALL THOSE ", false], ["DOGS", true], [" ARE GOING. TO THE ", false],
+        ["TREE", true], [". TO THE ", false], ["TREE", true], [". UP THE ", false], ["TREE", true],
+        [". UP THE ", false], ["TREE", true], [". UP THEY GO TO THE ", false], ["TOP", true],
+        [" OF THE ", false], ["TREE", true], [". WHY? ", false], ["WILL", true], [" THEY ", false],
+        ["WORK", true], [" THERE? ", false], ["WILL", true], [" THEY ", false], ["PLAY", true],
+        [" THERE? WHAT IS UP THERE ON ", false], ["TOP", true], [" OF THAT ", false],
+        ["TREE", true], ["?", false],
+      ],
+      tokens: [
+        "now", "car", "stop", "dog", "get", "now", "look", "dog", "tree", "tree", "tree", "tree",
+        "top", "tree", "will", "work", "will", "play", "top", "tree"
+      ],
+      counts: [
+        0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+        0, 0, 0, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 2, 0, 6, 0, 0, 0, 0, 2, 1, 0
+      ],
+    },
+    {
+      id: 19,
+      book: "Go, Dog. Go!",
+      bookLine: 9,
+      text: "A BIG DOG PARTY! BIG DOGS, LITTLE DOGS, RED DOGS, BLUE DOGS, YELLOW DOGS, GREEN DOGS, BLACK DOGS, AND WHITE DOGS ARE ALL AT A DOG PARTY. WHAT A DOG PARTY! HELLO AGAIN AND NOW DO YOU LIKE MY HAT? I DO! WHAT A HAT! I LIKE IT. I LIKE THAT PARTY HAT. GOODBYE.",
+      originalParts: [
+        ["A ", false], ["BIG", true], [" ", false], ["DOG", true], [" ", false], ["PARTY", true],
+        ["! ", false], ["BIG", true], [" ", false], ["DOGS", true], [", ", false],
+        ["LITTLE", true], [" ", false], ["DOGS", true], [", ", false], ["RED", true], [" ", false],
+        ["DOGS", true], [", ", false], ["BLUE", true], [" ", false], ["DOGS", true], [", ", false],
+        ["YELLOW", true], [" ", false], ["DOGS", true], [", ", false], ["GREEN", true],
+        [" ", false], ["DOGS", true], [", ", false], ["BLACK", true], [" ", false], ["DOGS", true],
+        [", AND ", false], ["WHITE", true], [" ", false], ["DOGS", true],
+        [" ARE ALL AT A ", false], ["DOG", true], [" ", false], ["PARTY", true],
+        [". WHAT A ", false], ["DOG", true], [" ", false], ["PARTY", true], ["! ", false],
+        ["HELLO", true], [" AGAIN AND ", false], ["NOW", true], [" DO YOU ", false],
+        ["LIKE", true], [" MY ", false], ["HAT", true], ["? I DO! WHAT A ", false], ["HAT", true],
+        ["! I ", false], ["LIKE", true], [" IT. I ", false], ["LIKE", true], [" THAT ", false],
+        ["PARTY", true], [" ", false], ["HAT", true], [". ", false], ["GOODBYE", true],
+        [".", false],
+      ],
+      tokens: [
+        "big", "dog", "parti", "big", "dog", "littl", "dog", "red", "dog", "blue", "dog", "yellow",
+        "dog", "green", "dog", "black", "dog", "white", "dog", "dog", "parti", "dog", "parti",
+        "hello", "now", "like", "hat", "hat", "like", "like", "parti", "hat", "goodby"
+      ],
+      counts: [
+        0, 0, 0, 2, 1, 1, 0, 0, 0, 0, 0, 11, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 3, 1, 0, 0, 0, 0, 3, 1,
+        0, 0, 0, 0, 1, 0, 4, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1
+      ],
+    },
+  ],
+  initialAssignments: [1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1],
+};

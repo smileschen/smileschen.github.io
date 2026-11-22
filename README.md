@@ -34,6 +34,12 @@ Generate bag weights from a Normal hierarchy, estimate the machine means from we
 
 - [Coffee-bag filling walkthrough](https://smileschen.github.io/coffee-filling/)
 
+# Document clustering
+
+Step through the collapsed Gibbs sampler for Lecture 22’s two-book corpus.
+
+- [Document clustering walkthrough](https://smileschen.github.io/document-clustering/)
+
 # Additional Links
 
 - [Youtube Channel](https://www.youtube.com/@smileschen)

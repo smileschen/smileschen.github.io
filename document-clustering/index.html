@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Step through the collapsed Gibbs sampler for the 19-document bag-of-words example in Stats 102C Lecture 22.">
+  <title>Document clustering | Stats 102C</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="corpus.js"></script>
+  <script defer src="sampler.js"></script>
+  <script defer src="walkthrough.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="course" href="../">Stats 102C</a>
+      <span class="header-divider" aria-hidden="true"></span>
+      <span>Lecture 22</span>
+    </div>
+  </header>
+  <main class="shell">
+    <header class="intro">
+      <div>
+        <h1>Document clustering</h1>
+        <p>Follow a collapsed Gibbs sampler as it removes each document, scores both clusters, and draws a new assignment from the resulting probabilities.</p>
+      </div>
+      <dl class="model-stats" aria-label="Model dimensions">
+        <div><dt>Documents</dt><dd>19</dd></div>
+        <div><dt>Vocabulary stems</dt><dd>59</dd></div>
+        <div><dt>Clusters</dt><dd>2</dd></div>
+      </dl>
+    </header>
+    <noscript><p>Enable JavaScript to step through the Gibbs sampler.</p></noscript>
+    <div class="workspace" id="activity" hidden>
+      <section class="right-column" aria-labelledby="sampler-title">
+        <div class="panel sampler-panel">
+          <div class="panel-header sampler-header">
+            <div>
+              <h2 id="sampler-title">Gibbs sampler</h2>
+              <p id="next-document"></p>
+            </div>
+            <span class="sweep-tag" id="sweep-tag"></span>
+          </div>
+          <div class="sampler-body">
+            <div class="sweep-track" id="sweep-track" aria-hidden="true"></div>
+            <div class="progress-labels">
+              <span id="sweep-progress"></span>
+              <span id="completed-sweeps"></span>
+            </div>
+            <div class="sampler-actions">
+              <button type="button" class="button primary" id="step">Step one document</button>
+              <button type="button" class="button secondary" id="finish">Finish sweep</button>
+            </div>
+            <div class="setup-controls">
+              <label class="lecture-mode"><input type="checkbox" id="lecture-draw"> Use lecture draw (U = 0.60)</label>
+              <button type="button" class="button subtle" id="reset">Reset</button>
+            </div>
+            <p class="sr-only" id="announcement" role="status"></p>
+          </div>
+        </div>
+
+        <div class="panel update-panel" aria-labelledby="update-title">
+          <div class="panel-header update-header">
+            <div>
+              <h2 id="update-title">Inside one update</h2>
+              <p id="update-subtitle">Step through Document 01 to see the calculation.</p>
+            </div>
+          </div>
+          <div class="update-body">
+            <ol class="stage-list" id="stages" aria-label="Gibbs update stages">
+              <li data-stage="remove"><span>1</span> Remove</li>
+              <li data-stage="score"><span>2</span> Score</li>
+              <li data-stage="sample"><span>3</span> Draw</li>
+              <li data-stage="restore"><span>4</span> Restore</li>
+            </ol>
+            <div id="update-details">
+              <div class="empty-update">
+                <strong>How one document moves</strong>
+                <p>Temporarily hold out its word counts. Compare how well the other documents in each cluster predict it, then sample where it goes.</p>
+              </div>
+            </div>
+            <details class="model-details">
+              <summary>Model and notation</summary>
+              <p>The two cluster proportions and each cluster’s 59 word probabilities have symmetric Dirichlet priors with all entries equal to one. Collapsing integrates out both sets of probabilities, so the sampler updates only the labels.</p>
+              <p>For cluster <var>k</var>, <var>mₖ</var> counts the other documents, <var>Tₖ</var> counts their tokens, and <var>cₖᵥ</var> counts copies of stem <var>v</var>. The held-out document contributes <var>n</var> tokens in total and <var>xᵥ</var> copies of stem <var>v</var>.</p>
+              <p>The cluster size term is ln(<var>mₖ</var> + 1) − ln(18 + 2). For each stem, the word numerator adds ln(<var>cₖᵥ</var> + 1), ln(<var>cₖᵥ</var> + 2), and so on for <var>xᵥ</var> copies. The shared denominator within that cluster adds ln(<var>Tₖ</var> + 59), ln(<var>Tₖ</var> + 60), and so on for all <var>n</var> tokens.</p>
+              <p>The multinomial coefficient is identical for both candidate clusters and cancels when the scores are normalized. A sweep visits all documents in order, using each new assignment immediately.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+      <div class="left-column">
+        <section class="panel" aria-labelledby="corpus-title">
+          <div class="panel-header corpus-header">
+            <div>
+              <h2 id="corpus-title">Document corpus</h2>
+              <p>Each document is one passage. Highlights mark words that contribute to the matrix.</p>
+            </div>
+            <div class="segments text-mode" role="group" aria-label="Document text display">
+              <button type="button" id="original" aria-pressed="true">Original text</button>
+              <button type="button" id="stemmed" aria-pressed="false">Stemmed</button>
+            </div>
+          </div>
+          <div class="corpus-tools">
+            <div id="cluster-summary" class="cluster-summary" aria-label="Current cluster sizes"></div>
+            <button id="randomize" class="button subtle" type="button">Randomize starting labels</button>
+          </div>
+          <div class="corpus-scroll" id="corpus-scroll" role="region" aria-label="All 19 documents and their assignments" tabindex="0">
+            <ol class="document-list" id="documents"></ol>
+          </div>
+          <p class="panel-foot" id="corpus-note">Sources are shown for reference. The sampler uses word counts alone.</p>
+        </section>
+
+        <section class="panel matrix-panel" aria-labelledby="matrix-title">
+          <div class="panel-header matrix-header">
+            <div>
+              <h2 id="matrix-title">Document–term matrix</h2>
+              <p>19 document rows × 59 vocabulary columns. Cluster subtotals and document lengths are shown alongside the word counts.</p>
+            </div>
+          </div>
+          <div class="matrix-tools">
+            <div class="segments snapshots" role="group" aria-label="Count snapshot">
+              <button type="button" id="before" aria-pressed="false" disabled>Before removal</button>
+              <button type="button" id="excluded" aria-pressed="false" disabled>While scoring</button>
+              <button type="button" id="after" aria-pressed="true" disabled>After update</button>
+            </div>
+            <label class="term-filter"><input id="word-filter" type="checkbox"> Current stems only</label>
+          </div>
+          <p class="matrix-caption" id="matrix-caption"></p>
+          <div class="matrix-scroll" id="matrix-scroll" role="region" aria-label="Scrollable document-term matrix" tabindex="0">
+            <table class="matrix" id="matrix" aria-describedby="matrix-caption">
+              <caption class="sr-only">Document counts grouped by cluster, with a separate row for the current document</caption>
+            </table>
+          </div>
+          <p class="panel-foot">Scroll across to see all vocabulary columns. The current document appears separately as a reference row. While scoring, its row is excluded from both clusters.</p>
+        </section>
+      </div>
+
+    </div>
+    <footer class="site-footer">Course materials by Miles Chen · Stats 102C</footer>
+  </main>
+</body>
+</html>
