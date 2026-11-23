@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f3">
+  <meta name="description" content="Step through a miniature Mersenne Twister. Watch seven five-bit words generate a new word and replay the twist with one bit changed.">
+  <title>Miniature Mersenne Twister · Stats 102C</title>
+  <link rel="stylesheet" href="../lcg/styles.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="workbench.css">
+  <script type="module" src="explorer.js"></script>
+</head>
+<body>
+  <a class="skip" href="#explorer">Skip to explorer</a>
+  <header class="masthead"><div class="shell mast-inner">
+    <div class="course"><svg viewBox="0 0 34 34" width="34" height="34" aria-hidden="true"><rect width="34" height="34" rx="8" fill="#164d4b"/><path d="M7 23 13 12v11l7-13v13l7-13" fill="none" stroke="white" stroke-linejoin="round" stroke-linecap="round" stroke-width="1.8"/></svg><strong>Stats 102C</strong><span class="course-name">Computational Statistics</span></div>
+    <nav aria-label="Random number generators"><a href="../lcg/">LCG</a><a href="./" aria-current="page">Mersenne Twister</a></nav>
+  </div></header>
+  <main class="shell">
+    <header class="intro">
+      <div><p class="subject">Random number generation</p><h1>Miniature Mersenne Twister</h1>
+        <p class="lede">Where does the next word come from? Follow five bits from memory through the twist, then watch the result become part of the generator’s state.</p>
+      </div>
+      <div class="bit-key" aria-label="A white square represents zero. A black square represents one."><p class="small-title">Reading the bits</p>
+        <div aria-hidden="true"><span><i></i>Zero</span><span><i class="ink-bit"></i>One</span></div>
+      </div>
+    </header>
+    <noscript><p>Enable JavaScript to step through the twist and run the bit-flip experiment.</p></noscript>
+    <div class="mt-lab" id="explorer">
+      <section class="panel state-panel" aria-labelledby="state-title">
+        <div class="section-head"><div><p class="small-title">7 words × 5 bits</p><h2 id="state-title">State memory</h2></div>
+          <button type="button" id="reset" class="reset" title="Reset all seven words and return to the first update"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 8a6.5 6.5 0 1 1 .2 5M4 3.5V8h4.5"/></svg>Reset</button>
+        </div>
+        <div id="memory" class="memory" role="list" aria-label="State memory slots A to G"></div>
+        <p class="memory-note" id="memory-note"></p>
+      </section>
+      <section class="panel calculation-panel" aria-labelledby="stage-title">
+        <div class="stage-intro">
+          <p class="small-title">Word <span id="word-number">1</span></p><h2 id="stage-title">Read the source words</h2>
+          <p id="stage-instruction" class="subline"></p>
+        </div>
+        <ol id="step-track" class="step-track" aria-label="Four operations in one update"><li>Join</li><li>Shift</li><li>Twist</li><li>Write</li></ol>
+        <div id="workbench" data-stage="0"></div>
+        <div class="stage-controls" role="group" aria-label="Animation controls">
+          <button type="button" class="lab-btn subtle" id="back" aria-label="Previous operation" title="Previous operation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="m12 5-5 5 5 5"/></svg></button>
+          <button type="button" class="lab-btn primary" id="operation">Next operation</button>
+          <button type="button" class="lab-btn" id="word">Next word</button>
+          <button type="button" class="lab-btn play-btn" id="play"><svg viewBox="0 0 18 18" aria-hidden="true"><path id="play-shape" d="M5 3.5 14 9l-9 5.5Z"/></svg><span id="play-text">Play</span></button>
+        </div>
+      </section>
+    </div>
+    <div class="extensions">
+      <section class="panel experiment-panel" aria-labelledby="flip-title">
+        <h2 id="flip-title">Flip one bit</h2>
+        <p class="subline" id="flip-question"></p>
+        <div class="experiment-actions"><button type="button" id="flip" class="lab-btn">Flip bit and replay</button>
+          <button type="button" id="restore" class="text-btn" hidden>Restore original</button></div>
+        <div id="comparison-result" class="comparison" hidden></div>
+      </section>
+      <section class="panel output-section" aria-labelledby="output-title">
+        <h2 id="output-title">From state to output</h2>
+        <p class="subline">Tempering mixes the bits on a copy of the stored word to produce an output from 0 to 31.</p>
+        <button type="button" id="output-toggle" class="lab-btn" aria-expanded="false" aria-controls="output-panel">Show output</button>
+        <div id="output-panel" hidden><div id="output-content"></div></div>
+      </section>
+    </div>
+    <details class="model-notes"><summary>How this compares with MT19937</summary>
+      <p>Both generators join parts of two neighboring words, shift the result, apply a mask if the discarded bit was 1, and XOR with another word in memory. XOR compares the bits in each position. Two different bits give 1, and two equal bits give 0.</p>
+      <p>MT19937 stores 624 words of 32 bits and uses a word 397 slots ahead. Here there are seven words of five bits, the offset is three slots, and the twist mask is <code>10101</code>. This model also uses two shorter tempering steps.</p>
+      <p>From the starting state, the first two outputs are both 13. On the first update the generator writes to A, and on the second it writes to B. The recurrence uses all 30 bits of six words and the high bit of the oldest word. With this mask and offset, those 31 bits, read in order from the pointer, cycle through all 2<sup>31</sup> − 1 nonzero states. MT19937 has period 2<sup>19937</sup> − 1.</p>
+      <p><a href="https://doi.org/10.1145/272991.272995">Matsumoto and Nishimura’s original paper</a></p>
+    </details>
+    <p class="sr-only" role="status" aria-atomic="true" id="notice"></p>
+  </main>
+  <footer class="shell"><span>Stats 102C</span><span>Computational Statistics</span></footer>
+</body>
+</html>

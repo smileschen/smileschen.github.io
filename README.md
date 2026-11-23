@@ -12,6 +12,7 @@ Here are a couple vibe-coded streamlit apps illustrating statistical concepts.
 # Random number generation
 
 - [Explore a linear congruential generator](https://smileschen.github.io/random-number-generation/lcg/) and see how the multiplier, increment, modulus, and seed affect the sequence and its period.
+- [Step through a miniature Mersenne Twister](https://smileschen.github.io/random-number-generation/mersenne-twister/) and see how seven five-bit words produce the next state and output.
 
 # MCMC Animations
 
