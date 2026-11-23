@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#162830">
+  <meta name="description" content="Build a miniature floating-point number, decode its bits, and see how real numbers round on a number line. An interactive Stats 102C explorer.">
+  <title>Floating-point explorer · Stats 102C</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./number-line.css">
+  <script type="module" src="./explorer.js"></script>
+</head>
+<body>
+  <a class="skip" href="#explorer">Skip to bit editor</a>
+  <header class="masthead">
+    <div class="shell mast-inner">
+      <div class="brand">
+        <svg viewBox="0 0 34 34" width="32" height="32" aria-hidden="true"><rect width="34" height="34" rx="7" fill="#174d4b"/><path d="M7 23 13 12v11l7-13v13l7-13" fill="none" stroke="#c7f7de" stroke-linejoin="round" stroke-linecap="round" stroke-width="1.9"/></svg>
+        <strong>Stats 102C</strong><span class="course-name">Computational Statistics</span>
+      </div>
+      <nav aria-label="On this page"><a href="#explorer">Explorer</a><a href="#field-guide">Field guide</a></nav>
+    </div>
+  </header>
+  <main class="shell">
+    <header class="intro">
+      <p class="subject">Computer arithmetic</p>
+      <h1>Floating-point explorer</h1>
+      <p class="lede">Flip a bit, count through the patterns, or drag along the number line to see which values a computer can store.</p>
+    </header>
+    <noscript><p>Please enable JavaScript to use the interactive explorer.</p></noscript>
+    <div class="workspace" id="explorer">
+      <section class="editor" aria-labelledby="editor-title">
+        <div class="editor-head">
+          <h2 id="editor-title">Bit editor</h2>
+          <span class="format-label" id="format-label">8-bit format</span>
+        </div>
+        <div class="register-area">
+          <div id="register" class="register" role="group" aria-label="Bit pattern, most significant bit first"></div>
+          <div class="editor-help"><span>Click a bit to flip it, or type 0 and 1.</span>
+            <button class="type-button" id="open-word" type="button" aria-expanded="false" aria-controls="word-editor"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="1.8" y="4.5" width="16.4" height="11" rx="2.2"/><path d="M5 8h.9M8.6 8h.9M12.2 8h.9M15 8h.3M5 11.7h1.2M8.5 11.7H14"/></svg>Type bits</button>
+          </div>
+          <div id="word-editor" class="word-editor" hidden>
+            <label for="word">Bit string</label><input id="word" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="word-note">
+            <span id="word-note"></span>
+          </div>
+        </div>
+        <div class="width-controls">
+          <div class="width-control"><span id="exp-width-label">Exponent bits</span><div class="stepper" role="group" aria-labelledby="exp-width-label"><button type="button" id="exp-less" aria-label="Decrease exponent bits">−</button><output id="exp-width">3</output><button type="button" id="exp-more" aria-label="Increase exponent bits">+</button></div></div>
+          <div class="width-control"><span id="mant-width-label">Mantissa bits</span><div class="stepper" role="group" aria-labelledby="mant-width-label"><button type="button" id="mant-less" aria-label="Decrease mantissa bits">−</button><output id="mant-width">4</output><button type="button" id="mant-more" aria-label="Increase mantissa bits">+</button></div></div>
+        </div>
+        <div class="transport">
+          <button type="button" id="play" class="play"><svg viewBox="0 0 18 18" aria-hidden="true"><path id="play-icon" d="M5 3.5 14 9l-9 5.5Z"/></svg><span id="play-text">Play count</span></button>
+          <div class="step-buttons"><button type="button" id="prev" title="Previous bit pattern" aria-label="Previous bit pattern"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 4v10M13 4l-7.5 5 7.5 5Z"/></svg></button><button type="button" id="next" title="Next bit pattern" aria-label="Next bit pattern"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M13.5 4v10M5 4l7.5 5L5 14Z"/></svg></button></div>
+          <label class="speed"><span class="sr-only">Playback speed</span><select id="speed"><option value="1500">0.5×</option><option value="750" selected>1×</option><option value="375">2×</option><option value="187.5">4×</option></select></label>
+          <button type="button" id="reset" class="reset" title="Restore the starting format and bit pattern"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3.1 7.5A6 6 0 1 1 4 12.4M3 3.3v4.4h4.4"/></svg>Reset</button>
+        </div>
+      </section>
+      <section class="panel decoding" aria-labelledby="dec-title">
+        <div class="card-head"><h2 id="dec-title">Decoded value</h2><span id="kind" class="kind">Normal</span></div>
+        <div class="decoded-result"><strong id="decimal" aria-label="Stored decimal value"></strong><div id="equation" class="equation"></div></div>
+        <div class="derivation">
+          <div class="math-row"><h3 class="exp-ink"><i></i>Exponent</h3><div id="exponent-calc"></div></div>
+          <div class="math-row"><h3 class="mant-ink"><i></i>Significand</h3><div id="mantissa-calc"></div></div>
+        </div>
+        <p id="selection-note" class="selection-note" hidden></p>
+      </section>
+    </div>
+    <section class="panel line-panel" id="number-system" aria-labelledby="line-title">
+      <div class="line-heading"><div><h2 id="line-title">Number line</h2><p>Drag to choose a real number. Each tick is a value this format can store.</p></div>
+        <div class="line-readouts">
+          <div><label for="real-input">Real input</label><input type="text" id="real-input" inputmode="decimal" autocomplete="off" spellcheck="false" aria-describedby="rounding-note"></div>
+          <span class="readout-connect" aria-hidden="true">≈</span>
+          <div><span class="readout-label">Stored value</span><output id="rounded"></output></div>
+        </div>
+      </div>
+      <div id="number-line"></div>
+      <p id="rounding-note" class="rounding-note"></p>
+      <div class="landmark-area"><h3>Jump to a landmark</h3><div id="landmarks" class="landmarks" role="group" aria-label="Floating-point landmarks"></div></div>
+    </section>
+<section id="field-guide" class="field-guide" aria-labelledby="guide-title">
+  <h2 id="guide-title">Field guide</h2>
+  <p class="guide-intro">The examples use the starting format with 3 exponent bits and 4 mantissa bits. The sign stays at 0, so every finite value is nonnegative.</p>
+
+  <details>
+    <summary>How does the exponent bias work?</summary>
+    <p>With <var>e</var> exponent bits, the bias is 2<sup><var>e</var> − 1</sup> − 1. Subtracting this offset lets an unsigned bit field describe both negative and positive powers of two.</p>
+    <p>For 3 bits, the bias is 3. The stored exponent <code>100</code> is 4 in decimal, so the actual exponent is 4 − 3 = 1. The scale factor is 2<sup>1</sup> = 2. The all-zero and all-one exponent fields have special rules.</p>
+  </details>
+
+  <details>
+    <summary>How do the mantissa bits become a number?</summary>
+    <p>Read the stored bits after the binary point. Their weights are 1/2, 1/4, 1/8, 1/16, and so on. Each 1 adds its weight. A normal number has an implicit leading 1, giving the full <em>significand</em>.</p>
+    <p>With <code>0 100 1010</code>, the significand is <code>1.1010</code><sub>2</sub> = 1 + 1/2 + 1/8 = 1.625. Multiply by the scale factor of 2 to get <strong>3.25</strong>. Each time the exponent increases by one, this scale factor doubles, and so does the distance between neighboring ticks.</p>
+  </details>
+
+  <details>
+    <summary>What happens near zero?</summary>
+    <p>An all-zero exponent gives an implicit leading 0 and fixes the exponent at 1 − bias. A nonzero mantissa then represents a <em>subnormal</em> (denormalized) number. An all-zero mantissa in this exponent field gives zero.</p>
+    <p>The smallest positive bit pattern, <code>0 000 0001</code>, gives (1/16) × 2<sup>−2</sup> = 1/64. Subnormals rise in steps of 1/64. From the largest subnormal, 15/64, one more step reaches the smallest normal, 16/64 = <strong>0.25</strong>. These evenly spaced values between zero and the smallest normal provide <em>gradual underflow</em>.</p>
+  </details>
+
+  <details>
+    <summary>How does rounding choose a tick?</summary>
+    <p>The input can fall anywhere between two ticks. The format stores the nearer tick. At an exact midpoint, choose the value whose last significand bit is 0. This is <em>round to nearest, ties to even</em>.</p>
+    <p>Try 1 and its next tick, 1.0625. Their midpoint is 1.03125, which rounds to 1 because its mantissa ends in 0. Just above that midpoint, the nearer tick is 1.0625.</p>
+    <p>At the top of this format, the last two ticks are 15 and 15.5. Extending that spacing would put the next tick at 16. At 15.75, halfway between 15.5 and 16, rounding carries into an exponent too large to store. Inputs of 15.75 or more round to +∞.</p>
+  </details>
+
+  <details>
+    <summary>Where are epsilon, the smallest normal, and the largest finite value?</summary>
+    <p><strong>Machine epsilon</strong> is the gap from 1 to the next larger representable value. With <var>m</var> mantissa bits it equals 2<sup>−<var>m</var></sup>. Here the gap is 1.0625 − 1 = <strong>0.0625</strong>.</p>
+    <p><strong>Smallest positive normal.</strong> Set the exponent field to 1 and the mantissa to all zeros. The pattern <code>0 001 0000</code> gives 1 × 2<sup>−2</sup> = <strong>0.25</strong>.</p>
+    <p><strong>Largest finite value.</strong> Use the highest exponent field below all ones, then fill the mantissa with ones. The pattern <code>0 110 1111</code> gives (1 + 15/16) × 2<sup>3</sup> = <strong>15.5</strong>.</p>
+  </details>
+
+  <details>
+    <summary>Which patterns mean infinity and NaN?</summary>
+    <p>An all-ones exponent reserves the pattern for a special value. With a zero mantissa, <code>0 111 0000</code> means positive infinity (+∞). With any nonzero mantissa, such as <code>0 111 0001</code>, it means NaN (“not a number”). An undefined operation such as 0 ÷ 0 produces NaN, which has no position on the number line.</p>
+  </details>
+
+  <details open>
+    <summary>How do 32-bit and 64-bit floats compare?</summary>
+    <p>IEEE 754 binary32 and binary64 use the same field structure and special cases. More exponent bits extend the range. More mantissa bits fit more ticks between adjacent powers of two.</p>
+    <table>
+      <caption>IEEE 754 binary formats</caption>
+      <thead><tr><th scope="col">Format</th><th scope="col">Sign</th><th scope="col">Exponent</th><th scope="col">Mantissa</th><th scope="col">Bias</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">binary32</th><td>1 bit</td><td>8 bits</td><td>23 bits</td><td>127</td></tr>
+        <tr><th scope="row">binary64</th><td>1 bit</td><td>11 bits</td><td>52 bits</td><td>1023</td></tr>
+      </tbody>
+    </table>
+    <p>The implicit leading 1 gives normal values 24 significant binary digits in binary32 and 53 in binary64.</p>
+    <p><a href="https://docs.oracle.com/cd/E77782_01/html/E77791/z4000ac019878.html">Oracle’s guide to IEEE floating-point arithmetic</a></p>
+  </details>
+</section>
+    <div class="sr-only" id="announcement" role="status" aria-atomic="true"></div>
+  </main>
+  <footer class="shell"><strong>Stats 102C</strong><span>Computational Statistics</span><a href="#explorer">Back to explorer</a></footer>
+  <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "e251c81079eb47098b5eaf0c0209403a"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

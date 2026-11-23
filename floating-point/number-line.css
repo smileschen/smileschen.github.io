@@ -1,0 +1,125 @@
+.fp-number-line {
+  --fp-axis-ink: #243645;
+  --fp-axis-muted: #506172;
+  --fp-axis-teal: #07695f;
+  --fp-axis-blue: #356da1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.fp-number-line .fp-line-frame {
+  border: 1px solid #d6e0e4;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #f8fbfc;
+}
+
+.fp-number-line .fp-line-slider {
+  position: relative;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fp-number-line .fp-line-slider:active { cursor: grabbing; }
+.fp-number-line .fp-line-slider:focus { outline: none; }
+.fp-number-line .fp-line-slider:focus-visible {
+  outline: 3px solid var(--fp-axis-blue);
+  outline-offset: -3px;
+}
+
+.fp-number-line .fp-line-svg { display: block; overflow: hidden; }
+.fp-number-line .fp-line-svg path { fill: none; }
+.fp-number-line .fp-axis-grid { stroke: #d6e1e6; stroke-width: 1; stroke-dasharray: 3 5; }
+.fp-number-line .fp-axis-base { stroke: #687e8c; stroke-width: 1.4; }
+.fp-number-line .fp-axis-ticks { stroke: #7b8e99; stroke-width: 1; }
+.fp-number-line .fp-axis-boundaries { stroke: #405466; stroke-width: 1.35; }
+.fp-number-line .fp-axis-label, .fp-number-line .fp-stored-label {
+  font: 500 12px ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.fp-number-line .fp-axis-label { fill: var(--fp-axis-muted); }
+.fp-number-line .fp-raw-halo { fill: #d7e7f3; fill-opacity: 0.8; }
+.fp-number-line .fp-raw-thumb { fill: #fff; stroke: var(--fp-axis-blue); stroke-width: 2.7; }
+.fp-number-line .fp-stored-stem { stroke: var(--fp-axis-teal); stroke-width: 1.6; }
+.fp-number-line .fp-line-svg .fp-stored-pointer, .fp-number-line .fp-stored-badge { fill: var(--fp-axis-teal); }
+.fp-number-line .fp-stored-label { fill: #fff; font-weight: 650; }
+.fp-number-line .fp-line-note { fill: var(--fp-axis-ink); font: 600 14px system-ui, sans-serif; }
+.fp-number-line .fp-epsilon-bracket { stroke: var(--fp-axis-teal); stroke-width: 1.25; }
+.fp-number-line .fp-epsilon-label { fill: var(--fp-axis-teal); font: 600 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+.fp-number-line .fp-line-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid #dee6ea;
+  background: #fff;
+}
+.fp-number-line .fp-line-key, .fp-number-line .fp-line-key span {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.fp-number-line .fp-line-key {
+  gap: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  color: var(--fp-axis-muted);
+}
+.fp-number-line .fp-line-key span { gap: 0.4rem; white-space: nowrap; }
+.fp-number-line .fp-line-key i { display: inline-block; box-sizing: border-box; }
+.fp-number-line .fp-key-stored {
+  width: 0; height: 0;
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top: 7px solid var(--fp-axis-teal);
+}
+.fp-number-line .fp-key-real {
+  width: 0.62rem; height: 0.62rem;
+  border-radius: 50%;
+  border: 2px solid var(--fp-axis-blue);
+}
+.fp-number-line .fp-line-views {
+  display: inline-flex;
+  gap: 2px;
+  align-items: stretch;
+  padding: 2px;
+  background: #edf2f4;
+  border: 1px solid #d8e1e5;
+  border-radius: 6px;
+}
+.fp-number-line .fp-line-views button {
+  appearance: none;
+  background: transparent;
+  color: var(--fp-axis-muted);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0.24rem 0.54rem;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  font-weight: 550;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.fp-number-line .fp-line-views button[aria-pressed="true"] {
+  background: #fff;
+  border-color: #cbd7dd;
+  color: var(--fp-axis-ink);
+  box-shadow: 0 1px 2px #1f344312;
+}
+.fp-number-line .fp-line-views button:hover:enabled { color: #004d45; }
+.fp-number-line .fp-line-views button:disabled { opacity: 0.5; cursor: default; }
+.fp-number-line .fp-line-views button:focus-visible { outline: 2px solid var(--fp-axis-blue); }
+
+@media (max-width: 480px) {
+  .fp-number-line .fp-line-toolbar { gap: 0.55rem; padding: 0.45rem 0.55rem; }
+  .fp-number-line .fp-line-key { column-gap: 0.65rem; }
+}

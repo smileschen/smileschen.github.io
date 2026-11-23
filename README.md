@@ -9,6 +9,10 @@ Here are a couple vibe-coded streamlit apps illustrating statistical concepts.
 - [Hypothesis Testing for Proportions Game - Detect the cheating booth](https://boardwalk-ht.streamlit.app/)
 - [Least Squares Regression](https://least-squares.streamlit.app/)
 
+# Floating-point numbers
+
+- [Explore a miniature floating-point system](https://smileschen.github.io/floating-point/) by editing its bits and rounding real numbers on a number line.
+
 # Random number generation
 
 - [Explore a linear congruential generator](https://smileschen.github.io/random-number-generation/lcg/) and see how the multiplier, increment, modulus, and seed affect the sequence and its period.
