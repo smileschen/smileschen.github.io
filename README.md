@@ -7,7 +7,10 @@ Here are a couple vibe-coded streamlit apps illustrating statistical concepts.
 - [Confidence Interval for Proportion Simulator](https://smileschen.streamlit.app/)
 - [Confidence Interval for Proportion Game](https://ci-proportion-game.streamlit.app/)
 - [Hypothesis Testing for Proportions Game - Detect the cheating booth](https://boardwalk-ht.streamlit.app/)
-- [Least Squares Regression](https://least-squares.streamlit.app/)
+
+# Linear regression
+
+- [Least Squares Regression Explorer](https://smileschen.github.io/least-squares/) — adjust the intercept and slope to minimize the sum of squared residuals.
 
 # Floating-point numbers
 

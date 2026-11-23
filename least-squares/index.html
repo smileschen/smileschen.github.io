@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Adjust a regression line and see how its residual squares determine the least-squares fit.">
+  <title>Least Squares Regression Explorer</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" defer></script>
+  <script src="explorer.js" defer></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink:#183047; --muted:#4d6175; --border:#d5e0ea; --paper:#fff;
+      --ground:#f1f5fa; --accent:#17629e;
+      font:16px/1.45 "Inter","Segoe UI",system-ui,sans-serif;
+      font-variant-numeric:tabular-nums;
+    }
+    * { box-sizing:border-box; }
+    [hidden] { display:none !important; }
+    body { margin:0; background:var(--ground); color:var(--ink); }
+    main { max-width:1290px; margin:auto; padding:30px clamp(16px,4vw,54px) 44px; }
+    header { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:baseline; gap:8px 18px; }
+    h1,h2,h3,p { margin:0; }
+    h1 { font-size:clamp(1.9rem,4.2vw,3rem); line-height:1.1; letter-spacing:-.045em; }
+    h2 { font-size:1.18rem; letter-spacing:-.02em; }
+    h3 { font-size:1rem; }
+    a { color:var(--accent); text-underline-offset:3px; }
+    .intro { max-width:850px; margin:13px 0 22px; color:var(--muted); }
+    .workspace { display:grid; grid-template-columns:minmax(270px,335px) minmax(0,1fr); align-items:start; gap:18px; }
+    .card { min-width:0; background:var(--paper); border:1px solid var(--border); border-radius:14px; padding:19px; box-shadow:0 3px 14px #18304708; }
+    .section + .section { margin-top:20px; padding-top:18px; border-top:1px solid var(--border); }
+    .hint { color:var(--muted); font-size:.87rem; margin:6px 0 12px; }
+    .heading-row { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    .scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+    th,td { padding:8px; border-bottom:1px solid var(--border); text-align:right; }
+    thead th { background:var(--ground); white-space:nowrap; font-weight:650; }
+    .input-table th,.input-table td { padding:5px; }
+    .input-table input { display:block; width:100%; min-width:0; }
+    input[type=number],button { font:inherit; border:1px solid #aabccd; border-radius:7px; padding:7px 9px; color:var(--ink); background:white; }
+    input[type=number] { text-align:right; font-variant-numeric:tabular-nums; }
+    button { cursor:pointer; font-weight:600; font-size:.9rem; min-height:38px; }
+    button:hover:enabled { background:var(--ground); border-color:var(--accent); }
+    button:disabled { opacity:.48; cursor:not-allowed; }
+    button.primary { background:var(--accent); color:white; border-color:var(--accent); }
+    button.primary:hover:enabled { background:#124f80; }
+    button.remove { padding:4px 10px; font-size:1.15rem; line-height:1; }
+    :where(input,button,a):focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+    .actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    .actions button { flex:1; }
+    .challenge { display:grid; gap:8px; margin-top:10px; }
+    .control { margin-top:16px; }
+    .control label { font-size:.95rem; font-weight:650; }
+    input[type=range] { display:block; width:100%; margin:8px 0; accent-color:var(--accent); cursor:pointer; }
+    .fine { display:grid; grid-template-columns:42px minmax(0,1fr) 42px; gap:8px; }
+    .fine input { width:100%; min-width:0; font-weight:650; text-align:center; }
+    .fine button { font-size:1.15rem; padding:2px; }
+    #plot { width:100%; height:clamp(410px,54vw,560px); }
+    .equation { margin-top:5px; font-size:1.12rem; font-weight:650; }
+    .sse { margin-top:14px; padding:12px 14px; background:var(--ground); border-radius:8px; display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; font-weight:650; }
+    .sse output { color:var(--accent); font-size:1.6rem; overflow-wrap:anywhere; }
+    .results-heading { margin-top:20px; }
+    #results { min-width:355px; }
+    #results th,#results td { padding:8px 10px; }
+    #results tbody tr:nth-child(even) { background:#f8fafc; }
+    .positive { color:#147269; }
+    .negative { color:#a94727; }
+    .legend-hint { color:var(--muted); font-size:.85rem; margin-top:4px; }
+    .notice { font-size:.86rem; color:#9b4625; margin-top:9px; }
+    .solution { margin-top:12px; padding:12px; background:#f0f7fd; border:1px solid var(--border); border-radius:8px; font-size:.91rem; overflow-wrap:anywhere; }
+    .solution p + p { margin-top:8px; }
+    .solution button { margin-top:10px; width:100%; }
+    .status { color:var(--muted); margin-top:9px; font-size:.86rem; overflow-wrap:anywhere; }
+    .labels { display:inline-flex; gap:6px; align-items:center; font-size:.85rem; color:var(--muted); }
+    .labels input { accent-color:var(--accent); }
+    @media(max-width:790px) { .workspace { grid-template-columns:minmax(0,1fr); } .card { padding:16px; } #plot { height:440px; } }
+    @media(max-width:430px) { main { padding:20px 10px 30px; } #plot { height:380px; } .card { padding:12px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Least Squares Regression Explorer</h1>
+    <nav aria-label="Home"><a href="../">All activities</a></nav>
+  </header>
+  <p class="intro">Try to find the line that best fits the data. Change the intercept and slope and watch the residuals, their squares, and the sum of squared residuals update. Try to make the total as small as possible. Submit your best line, then reveal the least-squares solution to see how close you came. You can also edit the data and try again.</p>
+  <div class="workspace">
+    <section class="card" aria-label="Inputs and controls">
+      <div class="section">
+        <h2>Input data</h2>
+        <p class="hint">Edit any value, or add or remove points.</p>
+        <table class="input-table" aria-label="Editable data points">
+          <thead><tr><th scope="col">x</th><th scope="col">y</th><th scope="col"><span aria-label="Remove row"> </span></th></tr></thead>
+          <tbody id="data-rows"></tbody>
+        </table>
+        <div class="actions"><button id="add">+ Add point</button><button id="reset">Reset activity</button></div>
+        <p class="notice" id="data-warning" role="status" hidden></p>
+      </div>
+      <div class="section">
+        <h2>Adjust your line</h2>
+        <p class="hint">Drag the sliders, use +/− to change a value by 0.1, or type a value for finer control.</p>
+        <div class="control">
+          <label for="intercept-slider">Intercept (b₀)</label>
+          <input type="range" id="intercept-slider" min="-10" max="10" step="0.1" value="0" aria-label="Intercept slider">
+          <div class="fine"><button data-param="intercept" data-delta="-0.1" aria-label="Decrease intercept">−</button><input type="number" id="intercept-value" value="0" step="any" aria-label="Intercept value"><button data-param="intercept" data-delta="0.1" aria-label="Increase intercept">+</button></div>
+        </div>
+        <div class="control">
+          <label for="slope-slider">Slope (b₁)</label>
+          <input type="range" id="slope-slider" min="-10" max="10" step="0.1" value="1" aria-label="Slope slider">
+          <div class="fine"><button data-param="slope" data-delta="-0.1" aria-label="Decrease slope">−</button><input type="number" id="slope-value" value="1" step="any" aria-label="Slope value"><button data-param="slope" data-delta="0.1" aria-label="Increase slope">+</button></div>
+        </div>
+      </div>
+      <div class="section">
+        <h2>Least-squares challenge</h2>
+        <div class="challenge"><button class="primary" id="submit">Submit my best</button><button id="reveal">Reveal optimal solution</button></div>
+        <p class="status" id="submission" role="status" hidden></p>
+        <div class="solution" id="solution" aria-live="polite" hidden>
+          <p><strong>Optimal line</strong></p>
+          <p id="optimal-line"></p>
+          <p id="optimal-sse"></p>
+          <p id="comparison"></p>
+          <button id="apply">Use optimal line</button>
+        </div>
+      </div>
+    </section>
+    <section class="card" aria-labelledby="plot-title">
+      <div class="heading-row"><h2 id="plot-title">Current fitted line</h2><label class="labels"><input type="checkbox" id="show-labels" checked> Label squares</label></div>
+      <p class="equation" id="equation"></p>
+      <div id="plot" role="region" aria-label="Scatterplot with fitted line and residual squares"></div>
+      <p class="legend-hint">The square's side length is |e| and its area is e². Positive residuals face left; negative residuals face right. Both axes use the same scale.</p>
+      <div class="sse"><span>Total sum of squared residuals (Σe²)</span><output id="sse" aria-live="off">—</output></div>
+      <h2 class="results-heading">Residual calculations</h2>
+      <div class="scroll">
+        <table id="results">
+          <thead><tr><th scope="col">x</th><th scope="col">y</th><th scope="col">ŷ</th><th scope="col">e = y − ŷ</th><th scope="col">e²</th></tr></thead>
+          <tbody id="result-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+  <noscript><p>Enable JavaScript to use the regression explorer.</p></noscript>
+</main>
+<!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e251c81079eb47098b5eaf0c0209403a"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
