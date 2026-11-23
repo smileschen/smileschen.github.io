@@ -113,7 +113,6 @@ function render(direction = 0) {
     sumTerms.forEach((term, i) => { term.textContent = terms[i]; });
     const hex = nibble.toString(16).toUpperCase();
     group.dataset.value = nibble;
-    group.style.setProperty('--hue', String((194 + nibble * 22.5) % 360));
     hexRow.hidden = !hexadecimal.checked;
     hexRow.setAttribute('aria-label', 'Hexadecimal digit ' + hex);
     setDigit(hexDigit, hex, hexRow.hidden || group.hidden ? 0 : direction);
