@@ -34,16 +34,16 @@ export function getOrbit({ a, b, m, seed }) {
   return { values, repeatIndex, period };
 }
 
-// Count the increment on the baseline, then move along the wrapped rule.
+// Count the increment at input zero, then move along the wrapped rule.
 // At input u the accumulated distance is b + a*u, measured in dial ticks.
 export function getUpdatePath({ a, b, m }, current) {
   const total = a * current + b;
-  // For a constant rule only the vertical input coordinate changes after b.
+  // A constant rule moves horizontally to the input after counting b.
   const length = a === 0 ? total + current : total;
-  function pointAt(travel, rightEdge, landed) {
+  function pointAt(travel, topEdge, landed) {
     const distance = Math.min(travel, total);
     const input = a === 0 ? travel - distance : Math.max(0, (distance - b) / a);
-    return { distance, remainder: rightEdge ? m : distance % m, input, landed };
+    return { distance, remainder: topEdge ? m : distance % m, input, landed };
   }
   return { total, length, pointAt };
 }

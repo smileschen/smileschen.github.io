@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#f7f8f5">
   <meta name="description" content="Explore a linear congruential generator. Change the multiplier, increment, modulus, and seed to see the wrapped graph and the exact cycle of generated values.">
   <title>Linear congruential generator · Stats 102C</title>
-  <link rel="stylesheet" href="styles.css?v=historical-examples">
-  <script type="module" src="explorer.js?v=zero-origin"></script>
+  <link rel="stylesheet" href="styles.css?v=square-map">
+  <script type="module" src="explorer.js?v=square-map"></script>
 </head>
 <body>
   <a class="skip" href="#explorer">Skip to explorer</a>
@@ -33,7 +33,7 @@
     <div class="workspace" id="explorer">
       <section class="panel plot-panel" aria-labelledby="map-title">
         <h2 class="plot-head" id="map-title">Wrapped generator map</h2>
-        <p class="plot-caption">Height shows the input. The horizontal position tracks the remainder and wraps from the right edge to zero. The final remainder becomes the next input.</p>
+        <p class="plot-caption">Read the input along the bottom and the remainder up the left side. Each time the count reaches the modulus, the marker wraps from top to bottom. The highlighted remainder becomes the next input.</p>
         <div class="linked-views">
           <div class="graph-view">
             <p id="plot-caption" class="plot-caption"></p>

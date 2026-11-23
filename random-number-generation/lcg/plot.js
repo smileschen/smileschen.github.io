@@ -36,125 +36,120 @@ function ticks(limit, step) {
 export function drawPlot(svg, { a, b, m, current, next, position }) {
   const width = Math.max(240, Math.round(svg.getBoundingClientRect().width || 720));
   const compact = width < 490;
-  const height = Math.round(Math.max(compact ? 254 : 280, Math.min(305, width * 0.47)));
-  const left = compact ? 40 : 48;
-  const right = width - 26;
-  const top = 36;
-  const bottom = height - 51;
-  const X = remainder => left + remainder / m * (right - left);
-  const Y = input => bottom - input / m * (bottom - top);
+  const left = compact ? 52 : 58;
+  const right = width - 18;
+  const top = 28;
+  const side = right - left;
+  const bottom = top + side;
+  const unit = side / m;
+  const X = input => left + input * unit;
+  const Y = remainder => bottom - remainder * unit;
 
   svg.replaceChildren();
-  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  svg.setAttribute("viewBox", `0 0 ${width} ${width}`);
   svg.setAttribute("role", "img");
   const title = "Wrapped generator map";
-  const description = `Read the input on the vertical axis and its remainder on the horizontal axis. Starting at zero, the marker counts ${a * current + b} ticks, wrapping from ${m} to zero. At input ${current}, the remainder is ${next}.`;
+  const description = `Read the input on the horizontal axis and the remainder on the vertical axis. Starting at zero, the marker counts ${a * current + b} ticks, wrapping from the top at ${m} to the bottom at zero. At input ${current}, the generated remainder is ${next}.`;
   svg.setAttribute("aria-label", `${title}. ${description}`);
   add(svg, "title", {}, title);
   add(svg, "desc", {}, description);
 
-  add(svg, "rect", { x: left, y: top, width: right - left, height: bottom - top, fill: "#fbfdfc" });
+  add(svg, "rect", { class: "plot-frame", x: left, y: top, width: side, height: side, fill: "#fbfdfc" });
   const axes = add(svg, "g", { "font-family": "inherit" });
   const grid = add(axes, "g", { "stroke-width": 1 });
-  const xStep = tickStep(m / Math.max(2, Math.floor((right - left) / 39)));
-  const xTicks = ticks(m - 1, xStep);
-  if (xTicks.length > 1 && right - X(xTicks.at(-1)) < 36) xTicks.pop();
-  xTicks.push(m);
-  for (const x of xTicks) {
-    line(grid, X(x), top, X(x), bottom, { stroke: "#dce6e4", "stroke-dasharray": "2 4" });
-    line(axes, X(x), bottom, X(x), bottom + 4, { stroke: "#8e9f9f" });
-    label(axes, X(x), bottom + 19, x === m ? `${m} ≡ 0` : x, { "text-anchor": "middle" });
-  }
-
-  const yTicks = ticks(m, tickStep(m / 6));
-  if (yTicks.at(-1) !== m) {
-    if (Y(yTicks.at(-1)) - top < 19) yTicks.pop();
-    yTicks.push(m);
-  }
-  for (const input of yTicks) {
-    if (input > 0) {
-      line(grid, left, Y(input), right, Y(input), { stroke: "#dce6e4", "stroke-dasharray": "5 5" });
-    }
-    label(axes, left - 8, Y(input) + 4, input, { "text-anchor": "end" });
+  const step = tickStep(m / Math.max(2, Math.floor(side / 36)));
+  const values = ticks(m - 1, step);
+  if (values.length > 1 && (m - values.at(-1)) * unit < 23) values.pop();
+  values.push(m);
+  const ticksBehindResult = [];
+  for (const value of values) {
+    const x = X(value);
+    const y = Y(value);
+    line(grid, x, top, x, bottom, { stroke: "#dce6e4", "stroke-dasharray": "2 4" });
+    line(grid, left, y, right, y, { stroke: "#dce6e4", "stroke-dasharray": "2 4" });
+    line(axes, x, bottom, x, bottom + 4, { stroke: "#8e9f9f" });
+    line(axes, left - 4, y, left, y, { stroke: "#8e9f9f" });
+    label(axes, x, bottom + 18, value, { "text-anchor": "middle" });
+    const tick = label(axes, left - 8, y + 4, value === m ? `${m} ≡ 0` : value, { "text-anchor": "end" });
+    if (Math.abs(y - Y(next)) < 19) ticksBehindResult.push(tick);
   }
   line(axes, left, top, left, bottom, { stroke: "#849696" });
   line(axes, left, bottom, right, bottom, { stroke: "#849696" });
-  label(axes, left, 17, "Input state, xₙ", { "font-weight": 600 });
-  label(axes, (left + right) / 2, height - 7, "Remainder, xₙ₊₁", {
+  label(axes, left, 16, "Remainder, xₙ₊₁", { "font-weight": 600 });
+  label(axes, (left + right) / 2, width - 7, "Input state, xₙ", {
     "text-anchor": "middle", "font-weight": 600,
   });
 
-  // Parameterize the curve by input. At each raw multiple of m, split the
-  // path between the right and left boundaries at exactly the same height.
+  // Split at each raw multiple of m. The curve restarts at the bottom at
+  // the same input, leaving the vertical jump out of the drawn rule.
   const rawEnd = a * m + b;
   const crossings = [];
-  const pieces = [`M ${X(b % m)} ${bottom}`];
+  const pieces = [`M ${left} ${Y(b % m)}`];
   for (let level = (Math.floor(b / m) + 1) * m; level < rawEnd; level += m) {
-    const y = Y((level - b) / a);
-    crossings.push(y);
-    pieces.push(`L ${right} ${y} M ${left} ${y}`);
+    const x = X((level - b) / a);
+    crossings.push(x);
+    pieces.push(`L ${x} ${top} M ${x} ${bottom}`);
   }
   const end = a > 0 && rawEnd % m === 0 ? m : rawEnd % m;
-  pieces.push(`L ${X(end)} ${top}`);
+  pieces.push(`L ${right} ${Y(end)}`);
   const rulePath = pieces.join(" ");
   const curve = add(svg, "g", { "stroke-linecap": "round" });
-  add(curve, "path", { d: rulePath, fill: "none", stroke: teal, "stroke-width": 2.6 });
-  for (const y of crossings) {
-    add(curve, "circle", { cx: right, cy: y, r: 3, stroke: teal, "stroke-width": 1.4, fill: "white" });
-    add(curve, "circle", { cx: left, cy: y, r: 2.6, fill: teal });
+  add(curve, "path", { class: "plot-rule", d: rulePath, fill: "none", stroke: teal, "stroke-width": 2.6 });
+  for (const x of crossings) {
+    add(curve, "circle", { cx: x, cy: top, r: 3, stroke: teal, "stroke-width": 1.4, fill: "white" });
+    add(curve, "circle", { cx: x, cy: bottom, r: 2.6, fill: teal });
   }
-  add(curve, "circle", { cx: X(end), cy: top, r: 3, fill: "white", stroke: teal, "stroke-width": 1.4 });
-  const pointRadius = (bottom - top) / m >= 9 ? 3.5 : 2.1;
+  add(curve, "circle", { cx: right, cy: Y(end), r: 3, fill: "white", stroke: teal, "stroke-width": 1.4 });
+  const pointRadius = unit >= 9 ? 3.5 : 2.1;
   for (let input = 0; input < m; input++) {
     add(curve, "circle", {
-      cx: X((a * input + b) % m), cy: Y(input), r: pointRadius,
+      cx: X(input), cy: Y((a * input + b) % m), r: pointRadius,
       stroke: "#fff", "stroke-width": pointRadius > 3 ? 1.2 : 0.5, fill: teal,
     });
   }
 
-  // The initial horizontal leg counts the increment. The rest of the
-  // traveled path is the portion of the generator map up to the current row.
+  // Count b upward at input zero, then reveal the rule up to the marker's x.
   const clipId = `${svg.id || "generator-map"}-trace-clip`;
   const clip = add(curve, "clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
-  const traceWindow = add(clip, "rect", { x: left - 3, width: right - left + 6 });
+  const traceWindow = add(clip, "rect", { x: left, y: top - 3, height: side + 6 });
   const trace = add(curve, "g", { class: "plot-trace", fill: "none", stroke: orange, "stroke-width": 2.6 });
   const incrementLine = line(trace, left, bottom, left, bottom, { "stroke-dasharray": "3 3" });
   add(trace, "path", { d: rulePath, "clip-path": `url(#${clipId})` });
 
-  const activeX = X(next);
-  const activeY = Y(current);
+  const activeX = X(current);
+  const activeY = Y(next);
   const marker = add(svg, "g", { "font-family": "inherit", "pointer-events": "none" });
-  const landed = add(marker, "g", {});
-  add(landed, "path", {
+  const result = add(marker, "g", { class: "plot-result" });
+  add(result, "path", {
     d: `M ${left} ${activeY} H ${activeX} V ${bottom}`,
-    stroke: orange, "stroke-width": 1.4, "stroke-dasharray": "4 4", fill: "none", opacity: .7,
+    stroke: orange, "stroke-width": 1.4, "stroke-dasharray": "4 4", fill: "none", opacity: .8,
   });
-  const note = label(landed, 0, 0, `Input ${current} → ${next}`, {
-    fill: "#93401f", "font-weight": 600, "font-size": 13,
+  const badge = add(result, "g", {
+    class: "generated-value plot-output-badge", transform: `translate(${left - 7} ${activeY})`,
   });
-  const noteWidth = Math.ceil(note.getComputedTextLength()) + 16;
-  const putLeft = activeX - left >= noteWidth + 13;
-  const noteX = Math.max(left + 2, Math.min(right - noteWidth, putLeft ? activeX - 12 - noteWidth : activeX + 12));
-  const noteY = activeY - 32 >= top ? activeY - 32 : activeY + 10;
-  const box = add(landed, "rect", {
-    x: noteX, y: noteY, width: noteWidth, height: 24, rx: 5, fill: "#fff6ef", stroke: "#e7b99f",
+  const badgeWidth = next < 10 ? 26 : 34;
+  add(badge, "path", { d: "M -3 -5 L 5 0 L -3 5 Z", fill: "#99411f" });
+  add(badge, "rect", { x: -badgeWidth, y: -12, width: badgeWidth, height: 24, rx: 5, fill: "#99411f" });
+  label(badge, -badgeWidth / 2, 5, next, {
+    "text-anchor": "middle", "font-size": 15, "font-weight": 700, fill: "#fff",
   });
-  landed.insertBefore(box, note);
-  note.setAttribute("x", noteX + 8);
-  note.setAttribute("y", noteY + 16.5);
 
   const cursor = add(marker, "g", { class: "plot-cursor" });
   add(cursor, "circle", { r: 7.5, fill: "#fff", stroke: orange, "stroke-width": 1.6 });
   add(cursor, "circle", { r: 4.4, fill: orange });
 
+  let wasComplete;
   function setPosition({ remainder, input, distance, landed: complete }) {
-    const y = Y(input);
-    incrementLine.setAttribute("x2", X(Math.min(b, m, distance)));
-    traceWindow.setAttribute("y", y);
-    traceWindow.setAttribute("height", bottom - y);
-    trace.setAttribute("visibility", complete ? "hidden" : "visible");
-    landed.setAttribute("visibility", complete ? "visible" : "hidden");
-    cursor.setAttribute("transform", `translate(${X(remainder)} ${y})`);
+    incrementLine.setAttribute("y2", Y(Math.min(b, m, distance)));
+    traceWindow.setAttribute("width", input * unit);
+    cursor.setAttribute("transform", `translate(${X(input)} ${Y(remainder)})`);
+    if (complete !== wasComplete) {
+      trace.setAttribute("visibility", complete ? "hidden" : "visible");
+      result.setAttribute("visibility", complete ? "visible" : "hidden");
+      result.classList.toggle("is-landed", complete);
+      for (const tick of ticksBehindResult) tick.setAttribute("visibility", complete ? "hidden" : "visible");
+      wasComplete = complete;
+    }
   }
   setPosition(position);
   return setPosition;

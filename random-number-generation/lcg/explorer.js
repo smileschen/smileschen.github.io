@@ -1,5 +1,5 @@
-import { getOrbit, getUpdatePath, presets } from "./generator.js?v=zero-origin";
-import { drawPlot } from "./plot.js?v=zero-origin";
+import { getOrbit, getUpdatePath, presets } from "./generator.js?v=square-map";
+import { drawPlot } from "./plot.js?v=square-map";
 import { createDial } from "./dial.js?v=zero-origin";
 
 const byId = id => document.getElementById(id);
@@ -39,7 +39,7 @@ function lastStep() {
 }
 
 function position() {
-  return path.pointAt(travel, edge === "right", landed);
+  return path.pointAt(travel, edge === "top", landed);
 }
 
 function draw() {
@@ -54,12 +54,16 @@ function drawDial(point) {
 }
 
 function setTravel(value, side = null) {
+  const wasLanded = landed;
   travel = value;
   edge = side;
-  landed = value === path.length && side !== "right";
+  landed = value === path.length && side !== "top";
   const point = position();
   moveGraph(point);
   drawDial(point);
+  if (landed && !wasLanded) {
+    byId("status").textContent = `Update ${step + 1} complete. Generated value ${orbit.values[step + 1]}.`;
+  }
 }
 
 function renderPlayback() {
@@ -91,7 +95,7 @@ function renderStep(announce = false) {
   }
   draw();
   if (announce) {
-    byId("status").textContent = `Update ${step + 1}. Input ${current}. ${raw} modulo ${m} gives ${next}.`;
+    byId("status").textContent = `Update ${step + 1}. Input ${current}. Counting ${raw} modulo ${m}.`;
   }
 }
 
@@ -138,18 +142,18 @@ function animate() {
     if (edge) {
       edgeHoldRemaining = Math.max(0, edgeHoldRemaining - elapsed);
       if (edgeHoldRemaining > 0) return;
-      if (edge === "right") {
+      if (edge === "top") {
         // Show the same tick at each edge on separate frames, even on slow screens.
-        setTravel(travel, "left");
+        setTravel(travel, "bottom");
         edgeHoldRemaining = edgeHold;
         return;
       }
     }
-    if (travel === 0 || edge === "left") stride = Math.min(stride, m / 8);
+    if (travel === 0 || edge === "bottom") stride = Math.min(stride, m / 8);
     const nextTravel = Math.min(path.length, travel + stride);
     const boundary = (Math.floor(travel / m) + 1) * m;
     if (boundary <= path.total && nextTravel >= boundary) {
-      setTravel(boundary, "right");
+      setTravel(boundary, "top");
       edgeHoldRemaining = edgeHold;
     } else {
       setTravel(nextTravel);
