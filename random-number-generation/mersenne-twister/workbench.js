@@ -6,6 +6,8 @@ const make = (tag, className, text) => {
 };
 const slotName = slot => String.fromCharCode(65 + slot % 7);
 const bitsOf = word => word.toString(2).padStart(5, "0");
+const transferDuration = 900;
+const columnDelay = 50;
 
 function bitCell(digit) {
   const cell = make("span", "wb-bit", digit);
@@ -101,17 +103,25 @@ function transfer(sheet, source, destination, delay = 0) {
   const dy = from.top + from.height / 2 - to.top - to.height / 2;
   const travel = `translate(${dx}px, ${dy}px) scale(${from.width / to.width}, ${from.height / to.height})`;
   const flips = source.dataset.value !== destination.dataset.value;
-  const timing = { duration: 530, delay, easing: "ease-in-out", fill: "backwards" };
-  const movement = ghost.animate([
-    { transform: travel, opacity: 1 },
-    { transform: "translate(0,0)", opacity: 1, offset: .73 },
-    { transform: flips ? "rotateX(90deg)" : "translate(0,0)", opacity: 0 },
-  ], timing);
+  const timing = { duration: transferDuration, delay, fill: "backwards" };
+  const motion = [{ transform: travel, easing: "ease-in-out" }];
+  let reveal;
+  if (flips) {
+    // Let the original digit land, then turn the two faces over in sequence.
+    motion.push({ transform: "none", offset: .60 }, { transform: "none", offset: .66, easing: "ease-in" },
+      { transform: "rotateX(90deg)", offset: .82 }, { transform: "rotateX(90deg)" });
+    reveal = [
+      { opacity: 0, transform: "rotateX(-90deg)" },
+      { opacity: 0, transform: "rotateX(-90deg)", offset: .82, easing: "ease-out" },
+      { opacity: 1, transform: "none" },
+    ];
+  } else {
+    motion.push({ transform: "none", opacity: 1, offset: .90 }, { transform: "none", opacity: 0 });
+    reveal = [{ opacity: 0 }, { opacity: 0, offset: .9 }, { opacity: 1 }];
+  }
+  const movement = ghost.animate(motion, timing);
   movement.onfinish = () => ghost.remove();
-  destination.animate([
-    { opacity: 0 }, { opacity: 0, offset: .7 },
-    { opacity: 1 },
-  ], timing);
+  destination.animate(reveal, timing);
 }
 
 export function renderWorkbench(element, { head, stage, update, animate = false }) {
@@ -149,16 +159,16 @@ export function renderWorkbench(element, { head, stage, update, animate = false 
     twisted.forEach((cell, i) => transfers.push([shifted[i], cell]));
   } else {
     const twisted = wordRow(board, "Twisted word", "After the twist", update.twisted);
-    wordRow(board, `Word ${d}`, "Three slots ahead", update.offset, { xor: true, mark: selectedBits(update.offset) });
+    wordRow(board, `Word ${d}`, `Offset 3 from ${a}`, update.offset, { xor: true, mark: selectedBits(update.offset) });
     const next = wordRow(board, "New word", `Write to slot ${a}`, update.newWord, { result: true });
     next.forEach((cell, i) => transfers.push([twisted[i], cell]));
   }
   element.replaceChildren(sheet);
   if (animate && typeof sheet.animate === "function" && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    transfers.forEach(([from, to], i) => transfer(board, from, to, 24 * i));
+    transfers.forEach(([from, to], i) => transfer(board, from, to, columnDelay * i));
     incomingZero?.animate([
       { transform: "translateX(-70%)", opacity: 0 },
       { transform: "translateX(0)", opacity: 1 },
-    ], { duration: 420, easing: "ease-out" });
+    ], { duration: transferDuration, easing: "ease-out" });
   }
 }

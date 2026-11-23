@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="../lcg/styles.css">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="workbench.css">
-  <script type="module" src="explorer.js"></script>
+  <script type="module" src="explorer.js?v=slower-twist"></script>
 </head>
 <body>
   <a class="skip" href="#explorer">Skip to explorer</a>
@@ -34,6 +34,7 @@
         </div>
         <div id="memory" class="memory" role="list" aria-label="State memory slots A to G"></div>
         <p class="memory-note" id="memory-note"></p>
+        <p class="result-note">The <strong>twist mask</strong> is <code>10101</code>. We chose an <strong>offset of 3</strong> for this example. Count three slots forward from the oldest word, wrapping from G to A.</p>
       </section>
       <section class="panel calculation-panel" aria-labelledby="stage-title">
         <div class="stage-intro">

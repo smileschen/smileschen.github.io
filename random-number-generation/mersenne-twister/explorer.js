@@ -1,10 +1,10 @@
 import { INITIAL_WORDS, computeUpdate, applyUpdate, temper } from "./twister.js";
-import { renderWorkbench } from "./workbench.js";
+import { renderWorkbench } from "./workbench.js?v=slower-twist";
 
 const byId = id => document.getElementById(id);
 const binary = value => value.toString(2).padStart(5, "0");
 const slotName = index => "ABCDEFG"[index % 7];
-const beat = 1250;
+const beat = 2100;
 const workbench = byId("workbench");
 const memory = byId("memory");
 const outputPanel = byId("output-panel");
@@ -77,8 +77,8 @@ function describeStage(update) {
     ["Join the bits", `Take the leftmost bit from ${oldest} and the four rightmost bits from ${next} to make one five-bit word.`],
     ["Shift one place right", "Save the rightmost bit as it leaves the word. A zero enters the empty position on the left."],
     update.dropped
-      ? ["Apply the twist mask", "The saved bit is 1. XOR with 10101 flips the first, middle and last bits of the shifted word."]
-      : ["Skip the twist mask", "The saved bit is 0. The five shifted bits pass through unchanged."],
+      ? ["Apply the twist mask", `The saved bit is 1. XOR with the twist mask ${binary(update.mask)} flips bits 4, 2 and 0.`]
+      : ["Skip the twist mask", `The saved bit is 0, so skip the twist mask ${binary(update.mask)} and copy the shifted word.`],
     ["Write the new word", `XOR with ${offset}, store ${binary(update.newWord)} in ${oldest}, then move the pointer to ${next}. XOR gives 1 wherever the two input bits differ.`],
   ];
   const [title, instruction] = stages[stage];
