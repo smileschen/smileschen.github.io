@@ -34,12 +34,35 @@ export function getOrbit({ a, b, m, seed }) {
   return { values, repeatIndex, period };
 }
 
-export function pointOnRule(a, b, startInput, current, progress) {
-  const x = progress === 1 ? current : startInput + (current - startInput) * progress;
+export function pointOnRule(a, b, startInput, current, progress, m) {
+  const end = m && current < startInput ? current + m : current;
+  const unwrappedX = progress === 1 ? end : startInput + (end - startInput) * progress;
+  const x = m ? unwrappedX % m : unwrappedX;
   const height = a * x + b;
   // An exact wrap belongs at zero, including when a fractional starting x
   // puts the computed height a few floating-point bits below the boundary.
   const nearest = Math.round(height);
   const raw = Math.abs(height - nearest) <= 4 * Number.EPSILON * Math.max(1, height) ? nearest : height;
-  return { x, raw };
+  // Crossing the right edge subtracts m from x and a*m from the plotted
+  // height. Keep those whole turns in the dial's angle.
+  const unwrappedRaw = raw + a * (unwrappedX - x);
+  return { x, raw, unwrappedX, unwrappedRaw };
+}
+
+export function getUpdateTraces({ a, b, m, seed }, values) {
+  let startInput = seed;
+  if (seed !== values[1]) {
+    // There is no previous input for the first update. Begin at the first
+    // point on the line whose height has the seed's residue, when it exists.
+    startInput = a === 0 ? 0 : ((seed - b) % m + m) % m / a;
+  }
+  let dialOffset = 0;
+  return values.slice(0, -1).map(current => {
+    const startHeight = pointOnRule(a, b, startInput, current, 0, m).raw;
+    const end = pointOnRule(a, b, startInput, current, 1, m);
+    const trace = { startInput, startHeight, dialOffset, ticks: end.unwrappedRaw - startHeight };
+    dialOffset += end.unwrappedRaw - end.raw;
+    startInput = current;
+    return trace;
+  });
 }

@@ -1,5 +1,5 @@
-import { getOrbit, pointOnRule, presets } from "./generator.js?v=line-motion";
-import { drawPlot } from "./plot.js?v=line-motion";
+import { getOrbit, getUpdateTraces, pointOnRule, presets } from "./generator.js?v=forward-motion";
+import { drawPlot } from "./plot.js?v=forward-motion";
 import { createDial } from "./dial.js?v=line-motion";
 
 const byId = id => document.getElementById(id);
@@ -25,8 +25,7 @@ let continuous = false;
 let frame;
 let hold;
 let moveGraph;
-let startInput;
-let startHeight;
+let traces;
 
 function maxFor(parameter) {
   return parameter.max ?? settings.m - 1;
@@ -36,17 +35,8 @@ function lastStep() {
   return orbit.values.length - 2;
 }
 
-function startOfTrace() {
-  if (step > 0) return orbit.values[step - 1];
-  const { a, b, m, seed } = settings;
-  if (seed === orbit.values[1]) return seed;
-  if (a === 0) return 0;
-  // On the first update there is no previous plotted input. Start where the
-  // line's height first matches the seed modulo m, possibly between ticks.
-  return ((seed - b) % m + m) % m / a;
-}
-
 function draw() {
+  const { startInput } = traces[step];
   moveGraph = drawPlot(svg, { ...settings, startInput, current: orbit.values[step], next: orbit.values[step + 1], mode, progress });
   drawDial();
 }
@@ -54,8 +44,9 @@ function draw() {
 function drawDial() {
   const { a, b, m } = settings;
   const current = orbit.values[step];
-  const { raw } = pointOnRule(a, b, startInput, current, progress);
-  dial.update({ m, from: startHeight % m, input: current, to: orbit.values[step + 1], position: raw, progress });
+  const { startInput, startHeight, dialOffset } = traces[step];
+  const { unwrappedRaw } = pointOnRule(a, b, startInput, current, progress, m);
+  dial.update({ m, from: startHeight % m, input: current, to: orbit.values[step + 1], position: dialOffset + unwrappedRaw, progress });
 }
 
 function setProgress(value) {
@@ -76,16 +67,13 @@ function renderStep(announce = false) {
   const current = orbit.values[step];
   const next = orbit.values[step + 1];
   const raw = a * current + b;
-  startInput = startOfTrace();
-  startHeight = pointOnRule(a, b, startInput, current, 0).raw;
+  const { startHeight, ticks } = traces[step];
   byId("update-label").textContent = `Update ${step + 1} of ${lastStep() + 1}`;
   byId("calculation").innerHTML = `<span class="raw">${a} × ${current} + ${b} = ${raw}</span><span class="remainder">${raw} mod ${m} = <strong>${next}</strong></span>`;
   byId("previous").disabled = step === 0;
   byId("next").disabled = step === lastStep();
-  const distance = Math.abs(raw - startHeight);
-  const direction = raw > startHeight ? "clockwise" : "counterclockwise";
-  byId("dial-caption").textContent = distance
-    ? `From ${startHeight % m}, move ${distance} ${distance === 1 ? "tick" : "ticks"} ${direction} to ${next}.`
+  byId("dial-caption").textContent = ticks
+    ? `From ${startHeight % m}, move ${ticks} ${ticks === 1 ? "tick" : "ticks"} clockwise to ${next}.`
     : `The hand stays on ${next}${a === 0 ? " because the rule is constant" : " for this update"}.`;
   renderPlayback();
   for (const [index, tile] of [...valueList.querySelectorAll(".seq-value")].entries()) {
@@ -125,9 +113,8 @@ function animate() {
     land();
     return;
   }
-  const { a, b, m } = settings;
-  const from = orbit.values[step];
-  const turns = Math.abs(a * from + b - startHeight) / m;
+  const { a, m } = settings;
+  const turns = traces[step].ticks / m;
   const turnsPerSecond = Math.max(1, a / 2);
   const duration = Math.min(1350, 460 + 1000 * turns / turnsPerSecond);
   const started = performance.now() - progress * duration;
@@ -193,8 +180,8 @@ function renderView() {
   byId("line-label").textContent = mode === "line" ? "Linear rule" : "Wrapped rule";
   byId("crossing-legend").hidden = mode === "wrapped";
   byId("plot-caption").textContent = mode === "line"
-    ? `The marker follows the line to each input. At each stop, its height modulo ${settings.m} gives the next value.`
-    : `The marker follows the wrapped line. Its height matches the dial, including at the jumps between 0 and ${settings.m}.`;
+    ? `Inputs advance to the right and wrap from ${settings.m} to 0. The dial shows the marker’s height modulo ${settings.m}.`
+    : `Inputs advance to the right and wrap from ${settings.m} to 0. The marker’s height gives the dial reading.`;
 }
 
 function renderSettings() {
@@ -202,6 +189,7 @@ function renderSettings() {
   playback = "idle";
   progress = 1;
   step = 0;
+  traces = getUpdateTraces(settings, orbit.values);
   picker.value = parameters.every(({ key }) => example[key] === settings[key]) ? example.id : "custom";
   for (const parameter of parameters) {
     const field = byId(parameter.key);

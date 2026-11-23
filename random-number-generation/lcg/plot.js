@@ -1,4 +1,4 @@
-import { pointOnRule } from "./generator.js?v=line-motion";
+import { pointOnRule } from "./generator.js?v=forward-motion";
 
 const NS = "http://www.w3.org/2000/svg";
 const ink = "#425466";
@@ -40,8 +40,8 @@ function ticks(limit, step) {
 function crossings(a, b, m) {
   if (a === 0) return [];
   const result = [];
-  const end = a * (m - 1) + b;
-  for (let level = (Math.floor(b / m) + 1) * m; level <= end; level += m) {
+  const end = a * m + b;
+  for (let level = (Math.floor(b / m) + 1) * m; level < end; level += m) {
     result.push({ x: (level - b) / a, level });
   }
   return result;
@@ -53,17 +53,16 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
   const compact = width < 490;
   const height = Math.round(Math.max(compact ? 254 : 280, Math.min(305, width * 0.47)));
   const left = compact ? 40 : 48;
-  const right = width - (compact ? 16 : 24);
+  const right = width - 26;
   const top = 36;
   const bottom = height - 51;
   const raw = a * current + b;
   const base = raw - next;
-  const lastState = m - 1;
-  const rawEnd = a * lastState + b;
-  // A shared scale across neighboring slopes makes the change in steepness visible.
-  const fiveBands = 5 * m;
-  const yMax = wrapped ? m : Math.max(1, Math.ceil(rawEnd / fiveBands)) * fiveBands;
-  const X = value => left + value / lastState * (right - left);
+  const rawEnd = a * m + b;
+  // Six bands include the edge of the graph even for the slope-five examples.
+  const bands = Math.ceil(rawEnd / m);
+  const yMax = wrapped ? m : (bands <= 6 ? 6 : 5 * Math.ceil(bands / 5)) * m;
+  const X = value => left + value / m * (right - left);
   const Y = value => bottom - value / yMax * (bottom - top);
   const breaks = crossings(a, b, m);
 
@@ -74,9 +73,10 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
   const description = wrapped
     ? `At input ${current}, the next value is ${next}. The line wraps to zero at every multiple of ${m}. Filled sample points mark the valid integer inputs.`
     : `At input ${current}, the line reaches ${raw}, which is ${next} above ${base}, a multiple of ${m}. Horizontal dashed lines mark multiples of ${m}.`;
-  svg.setAttribute("aria-label", `${title}. ${description}`);
+  const chartDescription = `${description} The marker moves right to ${m} and continues at zero.`;
+  svg.setAttribute("aria-label", `${title}. ${chartDescription}`);
   add(svg, "title", {}, title);
-  add(svg, "desc", {}, description);
+  add(svg, "desc", {}, chartDescription);
 
   add(svg, "rect", { x: left, y: top, width: right - left, height: bottom - top, fill: "#fbfdfc" });
   const axes = add(svg, "g", { "font-family": "inherit" });
@@ -93,17 +93,15 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
     }
   }
 
-  const xStep = tickStep(lastState / Math.max(2, Math.floor((right - left) / 39)));
-  const xTicks = ticks(lastState, xStep);
-  // Keep the last valid input visible, even when it is off the regular tick interval.
-  if (xTicks.at(-1) !== lastState) {
-    if (X(lastState) - X(xTicks.at(-1)) < 26) xTicks.pop();
-    xTicks.push(lastState);
-  }
+  const xStep = tickStep(m / Math.max(2, Math.floor((right - left) / 39)));
+  const xTicks = ticks(m - 1, xStep);
+  // Reserve space for the longer tick label at the horizontal wrap.
+  if (xTicks.length > 1 && right - X(xTicks.at(-1)) < 36) xTicks.pop();
+  xTicks.push(m);
   for (const x of xTicks) {
     line(grid, X(x), top, X(x), bottom, { stroke: "#dce6e4", "stroke-dasharray": "2 4" });
     line(axes, X(x), bottom, X(x), bottom + 4, { stroke: "#8e9f9f" });
-    label(axes, X(x), bottom + 19, x, { "text-anchor": "middle" });
+    label(axes, X(x), bottom + 19, x === m ? `${m} ≡ 0` : x, { "text-anchor": "middle" });
   }
 
   const yStep = wrapped
@@ -146,12 +144,18 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
       pieces.push(`L ${X(point.x)} ${Y(m)} M ${X(point.x)} ${Y(0)}`);
     }
   }
-  pieces.push(`L ${right} ${Y(wrapped ? rawEnd % m : rawEnd)}`);
+  // The edge is excluded. If the rule reaches a multiple of m exactly there,
+  // the wrapped line approaches m from below before x restarts at zero.
+  const edgeRemainder = a > 0 && rawEnd % m === 0 ? m : rawEnd % m;
+  const edgeY = Y(wrapped ? edgeRemainder : rawEnd);
+  pieces.push(`L ${right} ${edgeY}`);
   const rulePath = pieces.join(" ");
   add(curve, "path", { d: rulePath, fill: "none", stroke: teal, "stroke-width": 2.6 });
   const clipId = `${svg.id || "generator-map"}-trace-clip`;
   const clip = add(curve, "clipPath", { id: clipId, clipPathUnits: "userSpaceOnUse" });
-  const windowRect = add(clip, "rect", { y: top - 3, height: bottom - top + 6 });
+  const clipBounds = { y: top - 3, height: bottom - top + 6 };
+  const firstWindow = add(clip, "rect", { ...clipBounds, x: X(startInput) });
+  const nextWindow = add(clip, "rect", { ...clipBounds, x: left });
   const trace = add(curve, "path", {
     class: "plot-trace", d: rulePath, fill: "none", stroke: orange, "stroke-width": 2.6,
     "clip-path": `url(#${clipId})`, "pointer-events": "none",
@@ -163,8 +167,9 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
     }
   }
 
-  const pointRadius = (right - left) / lastState >= 14 ? 3.5 : 2.1;
-  for (let x = 0; x <= lastState; x++) {
+  add(curve, "circle", { cx: right, cy: edgeY, r: 3.5, fill: "white", stroke: teal, "stroke-width": 1.4 });
+  const pointRadius = (right - left) / m >= 14 ? 3.5 : 2.1;
+  for (let x = 0; x < m; x++) {
     const value = a * x + b;
     add(curve, "circle", {
       cx: X(x), cy: Y(wrapped ? value % m : value), r: pointRadius,
@@ -192,7 +197,7 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
   const baseY = wrapped ? bottom : Y(base);
   const marker = add(svg, "g", { "font-family": "inherit", "pointer-events": "none" });
   const startX = X(startInput);
-  const startRaw = pointOnRule(a, b, startInput, current, 0).raw;
+  const startRaw = pointOnRule(a, b, startInput, current, 0, m).raw;
   const startDot = add(marker, "circle", {
     cx: startX, cy: Y(wrapped ? startRaw % m : startRaw), r: 3.7,
     fill: "#fff", stroke: orange, "stroke-width": 1.5,
@@ -231,11 +236,12 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
 
   function setProgress(value) {
     const t = Math.max(0, Math.min(1, value));
-    const point = pointOnRule(a, b, startInput, current, t);
+    const point = pointOnRule(a, b, startInput, current, t, m);
     const x = X(point.x);
     const y = Y(wrapped ? point.raw % m : point.raw);
-    windowRect.setAttribute("x", Math.min(startX, x));
-    windowRect.setAttribute("width", Math.abs(x - startX));
+    const crossedEdge = point.unwrappedX >= m;
+    firstWindow.setAttribute("width", (crossedEdge ? right : x) - startX);
+    nextWindow.setAttribute("width", crossedEdge ? x - left : 0);
     trace.setAttribute("visibility", t < 1 ? "visible" : "hidden");
     startDot.setAttribute("visibility", t < 1 ? "visible" : "hidden");
     landed.setAttribute("visibility", t === 1 ? "visible" : "hidden");
