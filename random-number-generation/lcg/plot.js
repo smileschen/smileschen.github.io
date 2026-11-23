@@ -47,7 +47,7 @@ function crossings(a, b, m) {
   return result;
 }
 
-export function drawPlot(svg, { a, b, m, current, next, mode, startInput = current, progress = 1 }) {
+export function drawPlot(svg, { a, b, m, current, next, mode, startInput = current, progress = 1, edge = null }) {
   const wrapped = mode === "wrapped";
   const width = Math.max(240, Math.round(svg.getBoundingClientRect().width || 720));
   const compact = width < 490;
@@ -138,7 +138,8 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
   const curve = add(svg, "g", { "stroke-linecap": "round" });
   // Each modular boundary begins a new subpath. The base rule and the
   // highlighted portion share this path so their geometry always agrees.
-  const pieces = [`M ${left} ${Y(wrapped ? b % m : b)}`];
+  const interceptY = Y(wrapped ? b % m : b);
+  const pieces = [`M ${left} ${interceptY}`];
   if (wrapped) {
     for (const point of breaks) {
       pieces.push(`L ${X(point.x)} ${Y(m)} M ${X(point.x)} ${Y(0)}`);
@@ -234,20 +235,28 @@ export function drawPlot(svg, { a, b, m, current, next, mode, startInput = curre
   note.setAttribute("x", noteX + 8);
   note.setAttribute("y", noteY + 16.5);
 
-  function setProgress(value) {
+  function setProgress(value, edge = null) {
     const t = Math.max(0, Math.min(1, value));
     const point = pointOnRule(a, b, startInput, current, t, m);
-    const x = X(point.x);
-    const y = Y(wrapped ? point.raw % m : point.raw);
-    const crossedEdge = point.unwrappedX >= m;
+    let x = X(point.x);
+    let y = Y(wrapped ? point.raw % m : point.raw);
+    if (edge === "right") {
+      x = right;
+      y = edgeY;
+    } else if (edge === "left") {
+      x = left;
+      y = interceptY;
+    }
+    const crossedEdge = edge !== null || point.unwrappedX >= m;
     firstWindow.setAttribute("width", (crossedEdge ? right : x) - startX);
-    nextWindow.setAttribute("width", crossedEdge ? x - left : 0);
-    trace.setAttribute("visibility", t < 1 ? "visible" : "hidden");
-    startDot.setAttribute("visibility", t < 1 ? "visible" : "hidden");
-    landed.setAttribute("visibility", t === 1 ? "visible" : "hidden");
+    nextWindow.setAttribute("width", crossedEdge && edge === null ? x - left : 0);
+    const atDestination = t === 1 && edge !== "right";
+    trace.setAttribute("visibility", atDestination ? "hidden" : "visible");
+    startDot.setAttribute("visibility", atDestination ? "hidden" : "visible");
+    landed.setAttribute("visibility", atDestination ? "visible" : "hidden");
     cursor.setAttribute("transform", `translate(${x} ${y})`);
     if (startInput === current) ring.setAttribute("r", 7.5 + 3 * Math.sin(Math.PI * t));
   }
-  setProgress(progress);
+  setProgress(progress, edge);
   return setProgress;
 }

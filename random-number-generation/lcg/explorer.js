@@ -1,5 +1,5 @@
 import { getOrbit, getUpdateTraces, pointOnRule, presets } from "./generator.js?v=forward-motion";
-import { drawPlot } from "./plot.js?v=forward-motion";
+import { drawPlot } from "./plot.js?v=edge-frames";
 import { createDial } from "./dial.js?v=line-motion";
 
 const byId = id => document.getElementById(id);
@@ -20,6 +20,8 @@ let orbit = getOrbit(settings);
 let step = 0;
 let mode = "line";
 let progress = 1;
+let edge = null;
+let edgeHoldRemaining = 0;
 let playback = "idle";
 let continuous = false;
 let frame;
@@ -37,7 +39,7 @@ function lastStep() {
 
 function draw() {
   const { startInput } = traces[step];
-  moveGraph = drawPlot(svg, { ...settings, startInput, current: orbit.values[step], next: orbit.values[step + 1], mode, progress });
+  moveGraph = drawPlot(svg, { ...settings, startInput, current: orbit.values[step], next: orbit.values[step + 1], mode, progress, edge });
   drawDial();
 }
 
@@ -45,13 +47,14 @@ function drawDial() {
   const { a, b, m } = settings;
   const current = orbit.values[step];
   const { startInput, startHeight, dialOffset } = traces[step];
-  const { unwrappedRaw } = pointOnRule(a, b, startInput, current, progress, m);
+  const unwrappedRaw = edge ? a * m + b : pointOnRule(a, b, startInput, current, progress, m).unwrappedRaw;
   dial.update({ m, from: startHeight % m, input: current, to: orbit.values[step + 1], position: dialOffset + unwrappedRaw, progress });
 }
 
-function setProgress(value) {
+function setProgress(value, side = null) {
   progress = value;
-  moveGraph(progress);
+  edge = side;
+  moveGraph(progress, edge);
   drawDial();
 }
 
@@ -108,19 +111,48 @@ function land() {
 }
 
 function animate() {
-  if (progress === 1 || reducedMotion.matches) {
+  if ((progress === 1 && edge !== "right") || reducedMotion.matches) {
     setProgress(1);
     land();
     return;
   }
   const { a, m } = settings;
-  const turns = traces[step].ticks / m;
+  const { startInput, ticks } = traces[step];
+  const current = orbit.values[step];
+  const wrapAt = current < startInput ? (m - startInput) / (current + m - startInput) : null;
+  const turns = ticks / m;
   const turnsPerSecond = Math.max(1, a / 2);
-  const duration = Math.min(1350, 460 + 1000 * turns / turnsPerSecond);
-  const started = performance.now() - progress * duration;
+  // Reserve time for both edges inside the usual per-update timing budget.
+  const travelTime = Math.min(wrapAt === null ? 1350 : 1100, 460 + 1000 * turns / turnsPerSecond);
+  const edgeHold = 80;
+  let lastFrame = performance.now();
+  function advance(elapsed) {
+    if (edge) {
+      const spare = elapsed - edgeHoldRemaining;
+      edgeHoldRemaining = Math.max(0, -spare);
+      if (spare < 0) return;
+      if (edge === "right") {
+        setProgress(wrapAt, "left");
+        edgeHoldRemaining = edgeHold;
+        return;
+      }
+      // Drop stale wall time at re-entry. The first move after zero should
+      // be small even if the browser delayed the next animation frame.
+      elapsed = Math.min(spare, 16);
+      if (elapsed === 0) return;
+    }
+    const nextProgress = Math.min(1, progress + elapsed / travelTime);
+    if (wrapAt !== null && progress < wrapAt && nextProgress >= wrapAt) {
+      setProgress(wrapAt, "right");
+      edgeHoldRemaining = edgeHold;
+    } else {
+      setProgress(nextProgress);
+    }
+  }
   function tick(now) {
-    setProgress(Math.min(1, Math.max(0, (now - started) / duration)));
-    if (progress < 1) frame = requestAnimationFrame(tick);
+    advance(Math.max(0, now - lastFrame));
+    lastFrame = now;
+    if (progress < 1 || edge === "right") frame = requestAnimationFrame(tick);
     else land();
   }
   frame = requestAnimationFrame(tick);
@@ -130,6 +162,8 @@ function selectStep(index, playContinuously = false) {
   clearClock();
   step = index;
   progress = reducedMotion.matches ? 1 : 0;
+  edge = null;
+  edgeHoldRemaining = 0;
   playback = "running";
   continuous = playContinuously;
   renderStep(true);
@@ -188,6 +222,8 @@ function renderSettings() {
   clearClock();
   playback = "idle";
   progress = 1;
+  edge = null;
+  edgeHoldRemaining = 0;
   step = 0;
   traces = getUpdateTraces(settings, orbit.values);
   picker.value = parameters.every(({ key }) => example[key] === settings[key]) ? example.id : "custom";
@@ -286,7 +322,7 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && playback === "running") pause();
 });
 reducedMotion.addEventListener("change", () => {
-  if (reducedMotion.matches && progress < 1) {
+  if (reducedMotion.matches && (progress < 1 || edge === "right")) {
     clearClock();
     setProgress(1);
     if (playback === "running") land();
