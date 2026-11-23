@@ -12,8 +12,9 @@ Here are a couple vibe-coded streamlit apps illustrating statistical concepts.
 
 - [Least Squares Regression Explorer](https://smileschen.github.io/least-squares/) — adjust the intercept and slope to minimize the sum of squared residuals.
 
-# Floating-point numbers
+# Binary and floating-point numbers
 
+- [Count in binary and hexadecimal](https://smileschen.github.io/binary-counter/) with an odometer that also shows fractional places.
 - [Explore a miniature floating-point system](https://smileschen.github.io/floating-point/) by editing its bits and rounding real numbers on a number line.
 
 # Random number generation

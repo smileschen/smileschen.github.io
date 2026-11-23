@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#182d33">
+  <meta name="description" content="Count in binary, watch carries roll through the bits, and explore how four bits make one hexadecimal digit.">
+  <title>Binary and hexadecimal counter · Stats 102C</title>
+  <link rel="stylesheet" href="../floating-point/styles.css">
+  <link rel="stylesheet" href="./counter.css">
+  <script type="module" src="./counter.js"></script>
+</head>
+<body>
+  <a class="skip" href="#counter">Skip to counter</a>
+  <header class="masthead">
+    <div class="shell mast-inner">
+      <div class="brand">
+        <svg viewBox="0 0 34 34" width="32" height="32" aria-hidden="true"><rect width="34" height="34" rx="7" fill="#174d4b"/><path d="M7 23 13 12v11l7-13v13l7-13" fill="none" stroke="#c7f7de" stroke-linejoin="round" stroke-linecap="round" stroke-width="1.9"/></svg>
+        <strong>Stats 102C</strong><span class="course-name">Computational Statistics</span>
+      </div>
+      <nav aria-label="Related explorer"><a href="../floating-point/">Floating-point explorer</a></nav>
+    </div>
+  </header>
+  <main class="shell">
+    <header class="intro">
+      <p class="subject">Computer arithmetic</p>
+      <h1>Counting in binary</h1>
+      <p class="lede">Watch the bits carry from right to left. Add fractional places or see how four bits make one hexadecimal digit.</p>
+    </header>
+    <noscript><p>Enable JavaScript to use the counter.</p></noscript>
+    <section class="counter-panel" id="counter" aria-labelledby="counter-title">
+      <div class="instrument">
+        <div class="instrument-head">
+          <h2 id="counter-title" tabindex="-1">Binary odometer</h2>
+          <div class="display-switches" role="group" aria-label="Display options">
+            <label class="display-switch"><input type="checkbox" role="switch" id="fractional"><span class="switch-track" aria-hidden="true"></span>Fractional places</label>
+            <label class="display-switch"><input type="checkbox" role="switch" id="hexadecimal"><span class="switch-track" aria-hidden="true"></span>Hexadecimal</label>
+          </div>
+        </div>
+        <div id="register" class="count-register" role="group" aria-label="Binary counter, most significant bit first"></div>
+        <div class="register-caption"><span>Each bit’s place value is shown above it. Click a bit to flip it.</span><span>Step size <strong id="stride">1</strong></span></div>
+        <div class="playback-bar">
+          <button type="button" id="play" class="play count-play" aria-pressed="false"><svg viewBox="0 0 18 18" aria-hidden="true"><path class="play-glyph" d="M5 3.5 14 9l-9 5.5Z"/><path class="pause-glyph" d="M4 4h3.6v10H4zm6.4 0H14v10h-3.6z"/></svg><span id="play-text">Play</span></button>
+          <div class="manual-controls" role="group" aria-label="Manual counting">
+            <button type="button" id="prev" aria-label="Step backward"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M4.5 4v10M13 4l-7.5 5 7.5 5Z"/></svg>Back</button>
+            <button type="button" id="next" aria-label="Step forward"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M13.5 4v10M5 4l7.5 5L5 14Z"/></svg>Step</button>
+          </div>
+          <label class="speed"><span class="sr-only">Counting speed</span><select id="speed"><option value="1600">0.5×</option><option value="800" selected>1×</option><option value="400">2×</option><option value="200">4×</option></select></label>
+          <button type="button" class="reset" id="zero" aria-label="Reset count to zero"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3.1 7.5A6 6 0 1 1 4 12.4M3 3.3v4.4h4.4"/></svg>Zero</button>
+        </div>
+      </div>
+      <div class="calculation" aria-labelledby="sum-title">
+        <div class="sum-block"><h3 id="sum-title">Place-value sum</h3><div class="sum-formula" id="sum">8 + 0 + 2 + 0</div></div>
+        <span class="equals" aria-hidden="true">=</span>
+        <div class="total-block"><h3>Decimal value</h3><span id="decimal">10</span></div>
+      </div>
+    </section>
+    <section id="hex-key" class="hex-key" aria-labelledby="key-title" hidden>
+      <h2 id="key-title">Hexadecimal key</h2>
+      <p>Each rectangle matches a group of four bits. After 9, the digits A through F stand for 10 through 15.</p>
+      <ul class="key-grid" aria-label="Hexadecimal digits and their four-bit binary equivalents">
+        <li style="--hue: 194" aria-label="Hex 0, decimal 0, binary 0000"><b>0</b><span>0000</span></li>
+        <li style="--hue: 216.5" aria-label="Hex 1, decimal 1, binary 0001"><b>1</b><span>0001</span></li>
+        <li style="--hue: 239" aria-label="Hex 2, decimal 2, binary 0010"><b>2</b><span>0010</span></li>
+        <li style="--hue: 261.5" aria-label="Hex 3, decimal 3, binary 0011"><b>3</b><span>0011</span></li>
+        <li style="--hue: 284" aria-label="Hex 4, decimal 4, binary 0100"><b>4</b><span>0100</span></li>
+        <li style="--hue: 306.5" aria-label="Hex 5, decimal 5, binary 0101"><b>5</b><span>0101</span></li>
+        <li style="--hue: 329" aria-label="Hex 6, decimal 6, binary 0110"><b>6</b><span>0110</span></li>
+        <li style="--hue: 351.5" aria-label="Hex 7, decimal 7, binary 0111"><b>7</b><span>0111</span></li>
+        <li style="--hue: 14" aria-label="Hex 8, decimal 8, binary 1000"><b>8</b><span>1000</span></li>
+        <li style="--hue: 36.5" aria-label="Hex 9, decimal 9, binary 1001"><b>9</b><span>1001</span></li>
+        <li style="--hue: 59" aria-label="Hex A, decimal 10, binary 1010"><b>A</b><span>1010</span></li>
+        <li style="--hue: 81.5" aria-label="Hex B, decimal 11, binary 1011"><b>B</b><span>1011</span></li>
+        <li style="--hue: 104" aria-label="Hex C, decimal 12, binary 1100"><b>C</b><span>1100</span></li>
+        <li style="--hue: 126.5" aria-label="Hex D, decimal 13, binary 1101"><b>D</b><span>1101</span></li>
+        <li style="--hue: 149" aria-label="Hex E, decimal 14, binary 1110"><b>E</b><span>1110</span></li>
+        <li style="--hue: 171.5" aria-label="Hex F, decimal 15, binary 1111"><b>F</b><span>1111</span></li>
+      </ul>
+    </section>
+    <section class="examples" aria-labelledby="examples-title">
+      <h2 id="examples-title">Try it on the counter</h2>
+      <div class="example-grid">
+        <article><h3>Carry into the next group</h3><p>Start at 15 and step once. The four rightmost bits roll from <code>1111</code> to <code>0000</code> as the next place picks up 16.</p><button type="button" data-example="carry">Start at 15</button></article>
+        <article><h3>Count in sixteenths</h3><p>To the right of the binary point, the places are 1/2, 1/4, 1/8, and 1/16. In <code>1010.1010</code>, the fractional bits add 1/2 + 1/8 to 10.</p><button type="button" data-example="fraction">Show 10.625</button></article>
+      </div>
+    </section>
+    <div class="sr-only" id="announcement" role="status" aria-atomic="true"></div>
+  </main>
+  <footer class="shell"><strong>Stats 102C</strong><span>Computational Statistics</span><a href="../floating-point/">Explore floating-point numbers</a></footer>
+  <!-- Cloudflare Web Analytics --><script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "e251c81079eb47098b5eaf0c0209403a"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
