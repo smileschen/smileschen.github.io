@@ -24,7 +24,11 @@ export function applyUpdate(words, head) {
 
 // This teaching model tempers an output copy with two invertible five-bit steps.
 export function temper(word) {
-  const first = word ^ (word >>> 2);
-  const output = first ^ ((first << 1) & 0b10110);
-  return { first, output };
+  const right = word >>> 2;
+  const first = word ^ right;
+  const left = (first << 1) & 0b11111;
+  const mask = 0b10110;
+  const masked = left & mask;
+  const output = first ^ masked;
+  return { right, first, left, mask, masked, output };
 }

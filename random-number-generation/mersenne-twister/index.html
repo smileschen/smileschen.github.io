@@ -7,9 +7,10 @@
   <meta name="description" content="Step through a miniature Mersenne Twister. Watch seven five-bit words generate a new word and replay the twist with one bit changed.">
   <title>Miniature Mersenne Twister · Stats 102C</title>
   <link rel="stylesheet" href="../lcg/styles.css">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=tempering">
   <link rel="stylesheet" href="workbench.css">
-  <script type="module" src="explorer.js?v=slower-twist"></script>
+  <link rel="stylesheet" href="output.css?v=tempering">
+  <script type="module" src="explorer.js?v=tempering"></script>
 </head>
 <body>
   <a class="skip" href="#explorer">Skip to explorer</a>
@@ -51,21 +52,38 @@
         </div>
       </section>
     </div>
-    <div class="extensions">
-      <section class="panel experiment-panel" aria-labelledby="flip-title">
-        <h2 id="flip-title">Flip one bit</h2>
-        <p class="subline" id="flip-question"></p>
+    <section class="panel output-section" id="output-panel" aria-labelledby="output-title">
+      <div class="output-head">
+        <div><h2 id="output-title">From state to output</h2>
+          <p class="subline">Tempering shifts and XORs a copy of the stored word to produce a number from 0 to 31.</p></div>
+        <div class="output-actions" role="group" aria-label="Output controls">
+          <button type="button" class="lab-btn" id="output-replay" disabled>Replay tempering</button>
+          <button type="button" class="lab-btn primary" id="output-next">Next word</button>
+        </div>
+      </div>
+      <div class="output-layout">
+        <div class="output-steps"><p id="tempered-word">Waiting for first write</p>
+          <div id="output-content"></div></div>
+        <aside id="output-tally" aria-labelledby="tally-title">
+          <div class="tally-head"><h3 id="tally-title">Output counts</h3>
+            <span>Total draws <strong id="output-total">0</strong></span></div>
+          <ol id="output-counts" aria-label="Frequency of each output from 0 to 31"></ol>
+        </aside>
+      </div>
+      <div class="output-log">
+        <div class="history-head"><h3 id="history-title">Output sequence</h3><span>Oldest first</span></div>
+        <p id="history-empty" class="result-note">Write a word to start the sequence.</p>
+        <ol id="output-history" aria-label="Generated outputs, oldest first" tabindex="0"></ol>
+      </div>
+    </section>
+    <section class="panel experiment-panel" aria-labelledby="flip-title">
+      <div class="experiment-head">
+        <div><h2 id="flip-title">Flip one bit</h2><p class="subline" id="flip-question"></p></div>
         <div class="experiment-actions"><button type="button" id="flip" class="lab-btn">Flip bit and replay</button>
           <button type="button" id="restore" class="text-btn" hidden>Restore original</button></div>
-        <div id="comparison-result" class="comparison" hidden></div>
-      </section>
-      <section class="panel output-section" aria-labelledby="output-title">
-        <h2 id="output-title">From state to output</h2>
-        <p class="subline">Tempering mixes the bits on a copy of the stored word to produce an output from 0 to 31.</p>
-        <button type="button" id="output-toggle" class="lab-btn" aria-expanded="false" aria-controls="output-panel">Show output</button>
-        <div id="output-panel" hidden><div id="output-content"></div></div>
-      </section>
-    </div>
+      </div>
+      <div id="comparison-result" class="comparison" hidden></div>
+    </section>
     <details class="model-notes"><summary>How this compares with MT19937</summary>
       <p>Both generators join parts of two neighboring words, shift the result, apply a mask if the discarded bit was 1, and XOR with another word in memory. XOR compares the bits in each position. Two different bits give 1, and two equal bits give 0.</p>
       <p>MT19937 stores 624 words of 32 bits and uses a word 397 slots ahead. Here there are seven words of five bits, the offset is three slots, and the twist mask is <code>10101</code>. This model also uses two shorter tempering steps.</p>

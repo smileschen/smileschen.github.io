@@ -1,5 +1,6 @@
-import { INITIAL_WORDS, computeUpdate, applyUpdate, temper } from "./twister.js";
+import { INITIAL_WORDS, computeUpdate, applyUpdate, temper } from "./twister.js?v=output-panel";
 import { renderWorkbench } from "./workbench.js?v=slower-twist";
+import { renderTempering } from "./output.js?v=tempering";
 
 const byId = id => document.getElementById(id);
 const binary = value => value.toString(2).padStart(5, "0");
@@ -7,7 +8,11 @@ const slotName = index => "ABCDEFG"[index % 7];
 const beat = 2100;
 const workbench = byId("workbench");
 const memory = byId("memory");
-const outputPanel = byId("output-panel");
+const outputContent = byId("output-content");
+const historyList = byId("output-history");
+const counts = Array(32).fill(0);
+const history = [];
+let displayedEntry;
 
 // Keep the pre-update snapshot until the next word starts so each step can be undone.
 let words = [...INITIAL_WORDS];
@@ -15,7 +20,6 @@ let head = 0;
 let wordNumber = 1;
 let stage = 0;
 let originalWords = null;
-let history = [];
 let playback = null;
 let timer;
 
@@ -117,32 +121,60 @@ function drawExperiment(update) {
   }
 }
 
-function drawOutput() {
-  if (outputPanel.hidden) return;
-  const content = byId("output-content");
-  content.replaceChildren();
-  const completed = stage === 4
-    ? [...history, { number: wordNumber, value: computeUpdate(words, head).newWord }]
-    : history;
-  if (!completed.length) {
-    content.append(element("p", "result-note", "Finish the first word to see how its stored bits become an output."));
-    return;
+const bins = counts.map((count, output) => {
+  const cell = element("li", "tally-cell");
+  cell.dataset.output = output;
+  const value = element("span", "tally-number", output);
+  const frequency = element("span", "tally-count", `×${count}`);
+  value.setAttribute("aria-hidden", "true");
+  frequency.setAttribute("aria-hidden", "true");
+  cell.append(value, frequency);
+  byId("output-counts").append(cell);
+  return cell;
+});
+
+function updateTally(latest) {
+  bins.forEach((cell, output) => {
+    const n = counts[output];
+    cell.dataset.count = n;
+    cell.classList.toggle("latest", latest?.output === output);
+    cell.classList.toggle("seen", n > 0);
+    cell.lastElementChild.textContent = `×${n}`;
+    cell.setAttribute("aria-label", `Output ${output}, ${n} ${n === 1 ? "occurrence" : "occurrences"}`);
+  });
+  byId("output-total").textContent = history.length;
+  byId("history-empty").hidden = history.length > 0;
+}
+
+function drawOutput(update, animate) {
+  // A write is provisional until the next word starts. Undoing it also
+  // retracts that draw, so replaying and branching never double-count it.
+  const completed = stage === 4 ? wordNumber : wordNumber - 1;
+  if (completed > history.length) {
+    const value = update.newWord;
+    const { output } = temper(value);
+    history.push({ number: wordNumber, value, output });
+    counts[output]++;
+    const following = historyList.scrollWidth - historyList.clientWidth - historyList.scrollLeft < 3;
+    const item = element("li", "", output);
+    item.title = `Word ${wordNumber} · ${output}`;
+    historyList.append(item);
+    if (following) historyList.scrollLeft = historyList.scrollWidth;
+  } else if (completed < history.length) {
+    counts[history.pop().output]--;
+    historyList.lastElementChild.remove();
   }
-  const latest = completed.at(-1);
-  const { first, output } = temper(latest.value);
-  const decimal = element("div", "output-value", "Output in decimal");
-  const number = element("strong", "", output);
-  number.id = "output-decimal";
-  decimal.append(number);
-  content.append(resultRow(`Copy of word ${latest.number}`, latest.value),
-    resultRow("XOR with its right shift by 2", first),
-    resultRow("XOR with its masked left shift by 1", output),
-    element("p", "result-note", "The second step shifts the middle row and keeps only the bits selected by 10110 before applying XOR."),
-    decimal);
-  if (completed.length > 1) {
-    const outputs = completed.slice(-8).map(entry => temper(entry.value).output);
-    content.append(element("p", "result-note history", `Recent outputs (oldest first) · ${outputs.join(", ")}`));
-  }
+  const latest = history.at(-1) ?? null;
+  if (latest === displayedEntry) return;
+
+  displayedEntry = latest;
+  const wordLabel = latest
+    ? `Word ${latest.number} · slot ${slotName(latest.number - 1)}`
+    : "Waiting for the first write";
+  byId("tempered-word").textContent = wordLabel;
+  byId("output-replay").disabled = !latest;
+  renderTempering(outputContent, latest, animate && stage === 4);
+  updateTally(latest);
 }
 
 function drawPlayback() {
@@ -159,13 +191,15 @@ function render(animate = false, announce = false) {
   byId("back").disabled = stage === 0;
   drawPlayback();
   drawExperiment(update);
-  drawOutput();
-  if (announce) byId("notice").textContent = `Word ${wordNumber}. ${byId("stage-title").textContent}. ${byId("stage-instruction").textContent}`;
+  drawOutput(update, animate);
+  if (announce) {
+    const outputMessage = stage === 4 ? ` The tempered output is ${displayedEntry.output}.` : "";
+    byId("notice").textContent = `Word ${wordNumber}. ${byId("stage-title").textContent}. ${byId("stage-instruction").textContent}${outputMessage}`;
+  }
 }
 
 function nextWindow() {
   const next = applyUpdate(words, head);
-  history = [...history, { number: wordNumber, value: next.words[head] }].slice(-8);
   words = next.words;
   head = next.head;
   wordNumber++;
@@ -203,12 +237,14 @@ byId("operation").addEventListener("click", () => {
   nextOperation();
   render(true, true);
 });
-byId("word").addEventListener("click", () => {
+function completeWord() {
   stopPlayback();
   if (stage === 4) nextWindow();
   stage = 4;
   render(true, true);
-});
+}
+byId("word").addEventListener("click", completeWord);
+byId("output-next").addEventListener("click", completeWord);
 byId("back").addEventListener("click", () => {
   stopPlayback();
   stage = Math.max(0, stage - 1);
@@ -224,7 +260,9 @@ byId("reset").addEventListener("click", () => {
   head = 0;
   stage = 0;
   wordNumber = 1;
-  history = [];
+  history.length = 0;
+  counts.fill(0);
+  historyList.replaceChildren();
   originalWords = null;
   render(false, true);
 });
@@ -251,11 +289,9 @@ byId("restore").addEventListener("click", () => {
   render(false, true);
   byId("flip").focus({ preventScroll: true });
 });
-byId("output-toggle").addEventListener("click", event => {
-  outputPanel.hidden = !outputPanel.hidden;
-  event.currentTarget.textContent = outputPanel.hidden ? "Show output" : "Hide output";
-  event.currentTarget.setAttribute("aria-expanded", String(!outputPanel.hidden));
-  drawOutput();
+byId("output-replay").addEventListener("click", () => {
+  stopPlayback();
+  if (displayedEntry) renderTempering(outputContent, displayedEntry, true);
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) stopPlayback();

@@ -46,21 +46,41 @@ nav [aria-current="page"] { color: var(--deep); font-weight: 650; text-decoratio
 .subtle svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .play-btn { margin-left: auto; display: flex; gap: 5px; align-items: center; }
 .play-btn svg { fill: currentColor; }
-.extensions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; align-items: start; margin: 18px 0; }
-.extensions h2 { font-size: 1.55rem; }
-.experiment-actions { flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.experiment-panel, .output-section { margin-top: 18px; }
+.output-head, .experiment-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 22px; }
+.output-head > div:first-child, .experiment-head > div:first-child { flex: 1 1 26rem; }
+.output-actions, .experiment-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.output-layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 20px 24px; margin-top: 20px; }
+.output-steps, #output-tally { min-width: 0; }
+#tempered-word { color: var(--muted); font-size: .875rem; font-weight: 600; margin-bottom: 9px; }
+#output-tally { border-left: 1px solid var(--line); padding-left: 24px; }
+.tally-head, .history-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.tally-head { justify-content: space-between; }
+.tally-head h3, .history-head h3 { margin: 0; font: 400 1.25rem/1.2 var(--serif); }
+.tally-head > span, .history-head > span { color: var(--muted); font-size: .8rem; }
+#output-total { color: var(--deep); font-variant-numeric: tabular-nums; }
+#output-counts, #output-history { list-style: none; margin: 9px 0 0; padding: 0; font-variant-numeric: tabular-nums; }
+#output-counts { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+#output-counts li { display: grid; justify-items: center; align-content: center; gap: 1px; padding: 4px 1px; background: #f5f7f4; border: 1px solid #e1e7e2; border-radius: 4px; color: var(--muted); }
+#output-counts .seen { color: var(--deep); background: var(--tint); border-color: #c0d4c8; }
+#output-counts .latest { color: #823b22; background: #fff2e9; border-color: #c87756; }
+.tally-number { font-weight: 650; font-size: .88rem; }
+.tally-count { max-width: 100%; overflow-wrap: anywhere; font-size: .74rem; }
+.output-log { margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); }
+#output-history { display: flex; overflow-x: auto; gap: 5px; padding-bottom: 4px; }
+#output-history:empty { display: none; }
+#output-history:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
+#output-history li { flex: 0 0 auto; min-width: 2rem; padding: 4px 6px; border: 1px solid var(--line); border-radius: 5px; background: #f5f7f4; text-align: center; font-size: .9rem; }
+#output-history li:last-child { border-color: #c87756; color: #823b22; background: #fff2e9; }
+.experiment-panel h2 { font-size: 1.55rem; }
 .text-btn { background: transparent; border: 0; color: var(--teal); text-decoration: underline; text-underline-offset: 3px; }
-#output-toggle { margin-top: 14px; }
-.comparison, #output-content { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 8px; }
+.comparison { max-width: 38rem; margin-top: 16px; border-top: 1px solid var(--line); padding-top: 8px; }
 .result-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; padding-block: 5px; }
 .result-row .word-bits { --cell: 21px; --bitgap: 3px; }
 .result-row .mt-cell.changed { box-shadow: 0 2px 0 0 white, 0 4px 0 0 var(--orange); }
 .result-label, .result-note { font-size: .875rem; line-height: 1.45; color: var(--muted); }
 .result-label code { font-size: .85em; }
 .result-note { margin-top: 6px; }
-.output-value { display: flex; align-items: baseline; gap: 10px; font-size: .875rem; color: var(--muted); margin-top: 6px; }
-#output-decimal { font: 1.9rem/1.1 var(--serif); color: var(--deep); }
-.history { font-variant-numeric: tabular-nums; }
 .model-notes { margin: 20px 0 6px; border-block: 1px solid var(--line); padding: 13px 0; color: var(--muted); font-size: .95rem; }
 .model-notes summary { cursor: pointer; color: var(--deep); font-weight: 600; }
 .model-notes summary:focus-visible { outline: 2px solid var(--teal); }
@@ -68,6 +88,11 @@ nav [aria-current="page"] { color: var(--deep); font-weight: 650; text-decoratio
 .model-notes a { color: var(--teal); }
 @media (min-width: 1200px) { .memory-row { --cell: 29px; --bitgap: 5px; min-height: 43px; } }
 @media (max-width: 1040px) { .state-panel { padding-inline: 16px; } .memory-row { padding-inline: 6px; gap: 6px; } }
+@media (max-width: 960px) {
+  .output-layout { grid-template-columns: minmax(0, 1fr); }
+  #output-tally { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 14px; }
+}
+@media (min-width: 681px) and (max-width: 960px) { #output-counts { grid-template-columns: repeat(16, minmax(0, 1fr)); } }
 @media (max-width: 820px) {
   .intro { grid-template-columns: 1fr; gap: 12px; }
   .bit-key { display: flex; align-items: center; gap: 14px; padding: 0 0 0 10px; }
@@ -81,7 +106,7 @@ nav [aria-current="page"] { color: var(--deep); font-weight: 650; text-decoratio
   .stage-controls { padding: 12px 17px; }
 }
 @media (max-width: 680px) {
-  .mt-lab, .extensions { grid-template-columns: minmax(0,1fr); }
+  .mt-lab { grid-template-columns: minmax(0,1fr); }
   .state-panel { padding: 14px 16px; }
   .calculation-panel { min-block-size: clamp(34rem, calc(29rem + 15vw), 35.5rem); }
   .memory { grid-template-columns: repeat(2,minmax(0, 1fr)); margin: 10px 0 7px; gap: 4px 8px; }
@@ -92,7 +117,7 @@ nav [aria-current="page"] { color: var(--deep); font-weight: 650; text-decoratio
   .slot-name { font-size: .825rem; }
   .stage-controls { gap: 6px; padding: 11px 12px; }
   .stage-controls .lab-btn { padding-inline: 9px; }
-  .extensions { gap: 12px; margin-block: 12px; }
+  .output-section, .experiment-panel { margin-top: 12px; }
   nav { gap: 12px; }
 }
 @media (max-width: 480px) { .memory-note { min-block-size: calc(2lh + 8px); } }
