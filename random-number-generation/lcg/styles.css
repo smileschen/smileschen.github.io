@@ -120,6 +120,15 @@ button.seq-value:hover { box-shadow: 0 0 0 2px #98b9af; }
 .cycle-note { display: flex; align-items: flex-start; gap: 8px; font-size: .9rem; line-height: 1.55; color: var(--muted); }
 .cycle-note svg { width: 17px; height: 17px; flex: none; margin-top: 2px; stroke: var(--teal); stroke-width: 1.6; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .cycle-note b { color: var(--ink); font-weight: 600; }
+.historical-note { margin-top: 24px; padding-block: 18px 6px; border-top: 1px solid var(--line); }
+.historical-note h2 { font-size: 1.4rem; }
+.historical-note p { max-width: 82ch; margin: 8px 0; font-size: .9rem; line-height: 1.55; color: var(--muted); }
+.historical-note table { width: min(100%, 40rem); margin: 12px 0; border-collapse: collapse; font-size: .875rem; font-variant-numeric: tabular-nums; }
+.historical-note th, .historical-note td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; }
+.historical-note th:first-child { padding-left: 0; text-align: left; }
+.historical-note th { font-weight: 600; }
+.historical-note th i { font-family: var(--serif); }
+.historical-note a { color: var(--teal); text-underline-offset: 2px; }
 footer.shell { display: flex; justify-content: space-between; color: var(--muted); font-size: .8rem; margin-block: 25px 20px; }
 .sr-only, .skip:not(:focus) { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .skip:focus { position: absolute; top: 6px; left: 6px; background: white; color: var(--deep); padding: 12px; z-index: 2; }

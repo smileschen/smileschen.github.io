@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f8f5">
   <meta name="description" content="Explore a linear congruential generator. Change the multiplier, increment, modulus, and seed to see the wrapped graph and the exact cycle of generated values.">
   <title>Linear congruential generator · Stats 102C</title>
-  <link rel="stylesheet" href="styles.css?v=zero-origin">
+  <link rel="stylesheet" href="styles.css?v=historical-examples">
   <script type="module" src="explorer.js?v=zero-origin"></script>
 </head>
 <body>
@@ -71,6 +71,20 @@
       </div>
       <ol class="sequence" id="values" aria-label="Sequence from the seed through the first repeat"></ol>
       <p id="cycle-note" class="cycle-note"></p>
+    </section>
+    <section class="historical-note" id="real-generators" aria-labelledby="history-title">
+      <h2 id="history-title">LCGs in Excel and C</h2>
+      <p>This explorer keeps the multiplier between 0 and 16 and the increment between 0 and 63 so you can follow the wraps. Here are the values two software implementations used.</p>
+      <table aria-labelledby="history-title">
+        <thead><tr><th scope="col">Parameter</th><th scope="col">Excel 97 <code>RAND()</code></th><th scope="col">Microsoft C runtime <code>rand()</code></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Multiplier <i>a</i></th><td>9,821</td><td>214,013</td></tr>
+          <tr><th scope="row">Increment <i>b</i></th><td>0.211327</td><td>2,531,011</td></tr>
+          <tr><th scope="row">Modulus <i>m</i></th><td>1</td><td>2<sup>32</sup></td></tr>
+        </tbody>
+      </table>
+      <p><strong>Excel 97</strong> used a fractional state. For example, starting at 0.5 gives 9,821 × 0.5 + 0.211327 = 4,910.711327. Taking the remainder modulo 1 keeps the fractional part, 0.711327. <a href="https://simul.iro.umontreal.ca/testu01/guideshorttestu01-2009.pdf#page=139">L’Ecuyer and Simard’s Excel 97 example (PDF)</a></p>
+      <p><strong>C</strong> leaves the choice of generator to each library. Microsoft’s Universal C Runtime in the Windows 10 SDK stored a 32-bit state, so it wrapped at 2<sup>32</sup> (4,294,967,296). Its <code>rand()</code> returned 15 bits of that state, giving an integer from 0 to 32,767. <a href="https://github.com/ojdkbuild/tools_toolchain_sdk10_1607/blob/a3b2cdc2d3e74f81484514056b17ccc031df6739/Source/10.0.14393.0/ucrt/stdlib/rand.cpp#L18-L27">Windows SDK source</a></p>
     </section>
     <p class="sr-only" id="status" role="status" aria-atomic="true"></p>
   </main>
