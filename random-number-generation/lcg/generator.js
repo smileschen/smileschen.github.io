@@ -34,35 +34,16 @@ export function getOrbit({ a, b, m, seed }) {
   return { values, repeatIndex, period };
 }
 
-export function pointOnRule(a, b, startInput, current, progress, m) {
-  const end = m && current < startInput ? current + m : current;
-  const unwrappedX = progress === 1 ? end : startInput + (end - startInput) * progress;
-  const x = m ? unwrappedX % m : unwrappedX;
-  const height = a * x + b;
-  // An exact wrap belongs at zero, including when a fractional starting x
-  // puts the computed height a few floating-point bits below the boundary.
-  const nearest = Math.round(height);
-  const raw = Math.abs(height - nearest) <= 4 * Number.EPSILON * Math.max(1, height) ? nearest : height;
-  // Crossing the right edge subtracts m from x and a*m from the plotted
-  // height. Keep those whole turns in the dial's angle.
-  const unwrappedRaw = raw + a * (unwrappedX - x);
-  return { x, raw, unwrappedX, unwrappedRaw };
-}
-
-export function getUpdateTraces({ a, b, m, seed }, values) {
-  let startInput = seed;
-  if (seed !== values[1]) {
-    // There is no previous input for the first update. Begin at the first
-    // point on the line whose height has the seed's residue, when it exists.
-    startInput = a === 0 ? 0 : ((seed - b) % m + m) % m / a;
+// Count the increment on the baseline, then move along the wrapped rule.
+// At input u the accumulated distance is b + a*u, measured in dial ticks.
+export function getUpdatePath({ a, b, m }, current) {
+  const total = a * current + b;
+  // For a constant rule only the vertical input coordinate changes after b.
+  const length = a === 0 ? total + current : total;
+  function pointAt(travel, rightEdge, landed) {
+    const distance = Math.min(travel, total);
+    const input = a === 0 ? travel - distance : Math.max(0, (distance - b) / a);
+    return { distance, remainder: rightEdge ? m : distance % m, input, landed };
   }
-  let dialOffset = 0;
-  return values.slice(0, -1).map(current => {
-    const startHeight = pointOnRule(a, b, startInput, current, 0, m).raw;
-    const end = pointOnRule(a, b, startInput, current, 1, m);
-    const trace = { startInput, startHeight, dialOffset, ticks: end.unwrappedRaw - startHeight };
-    dialOffset += end.unwrappedRaw - end.raw;
-    startInput = current;
-    return trace;
-  });
+  return { total, length, pointAt };
 }

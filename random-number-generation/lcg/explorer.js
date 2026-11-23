@@ -1,12 +1,12 @@
-import { getOrbit, getUpdateTraces, pointOnRule, presets } from "./generator.js?v=forward-motion";
-import { drawPlot } from "./plot.js?v=edge-frames";
-import { createDial } from "./dial.js?v=line-motion";
+import { getOrbit, getUpdatePath, presets } from "./generator.js?v=zero-origin";
+import { drawPlot } from "./plot.js?v=zero-origin";
+import { createDial } from "./dial.js?v=zero-origin";
 
 const byId = id => document.getElementById(id);
 const parameters = [
-  { key: "a", name: "Multiplier", hint: "Slope of the line", symbol: "a", min: 0, max: 16 },
-  { key: "b", name: "Increment", hint: "Vertical intercept", symbol: "b", min: 0, max: 63 },
-  { key: "m", name: "Modulus", hint: "Height of each band", symbol: "m", min: 2, max: 64 },
+  { key: "a", name: "Multiplier", hint: "Ticks per input unit", symbol: "a", min: 0, max: 16 },
+  { key: "b", name: "Increment", hint: "Ticks added each update", symbol: "b", min: 0, max: 63 },
+  { key: "m", name: "Modulus", hint: "Ticks per full turn", symbol: "m", min: 2, max: 64 },
   { key: "seed", name: "Seed", hint: "Starting value", symbol: "x<sub>0</sub>", min: 0 },
 ];
 const picker = byId("preset");
@@ -18,16 +18,17 @@ let example = presets[0];
 let settings = { ...example };
 let orbit = getOrbit(settings);
 let step = 0;
-let mode = "line";
-let progress = 1;
+let travel = 0;
+let landed = false;
 let edge = null;
+let startHoldRemaining = 0;
 let edgeHoldRemaining = 0;
-let playback = "idle";
+let playback = "ready";
 let continuous = false;
 let frame;
 let hold;
 let moveGraph;
-let traces;
+let path;
 
 function maxFor(parameter) {
   return parameter.max ?? settings.m - 1;
@@ -37,30 +38,33 @@ function lastStep() {
   return orbit.values.length - 2;
 }
 
+function position() {
+  return path.pointAt(travel, edge === "right", landed);
+}
+
 function draw() {
-  const { startInput } = traces[step];
-  moveGraph = drawPlot(svg, { ...settings, startInput, current: orbit.values[step], next: orbit.values[step + 1], mode, progress, edge });
-  drawDial();
+  const point = position();
+  moveGraph = drawPlot(svg, { ...settings, current: orbit.values[step], next: orbit.values[step + 1], position: point });
+  drawDial(point);
 }
 
-function drawDial() {
-  const { a, b, m } = settings;
-  const current = orbit.values[step];
-  const { startInput, startHeight, dialOffset } = traces[step];
-  const unwrappedRaw = edge ? a * m + b : pointOnRule(a, b, startInput, current, progress, m).unwrappedRaw;
-  dial.update({ m, from: startHeight % m, input: current, to: orbit.values[step + 1], position: dialOffset + unwrappedRaw, progress });
+function drawDial(point) {
+  const phase = point.landed ? "landed" : travel === 0 ? "start" : "moving";
+  dial.update({ m: settings.m, input: orbit.values[step], to: orbit.values[step + 1], position: point.distance, phase });
 }
 
-function setProgress(value, side = null) {
-  progress = value;
+function setTravel(value, side = null) {
+  travel = value;
   edge = side;
-  moveGraph(progress, edge);
-  drawDial();
+  landed = value === path.length && side !== "right";
+  const point = position();
+  moveGraph(point);
+  drawDial(point);
 }
 
 function renderPlayback() {
   const running = playback === "running";
-  const label = running ? "Pause" : playback === "paused" ? "Resume" : step === lastStep() ? "Replay" : "Play";
+  const label = running ? "Pause" : playback === "paused" ? "Resume" : playback === "idle" && step === lastStep() ? "Replay" : "Play";
   byId("play-label").textContent = label;
   byId("play-icon").setAttribute("d", running ? "M4 3h3v12H4ZM11 3h3v12h-3Z" : "M5 3.5 14 9l-9 5.5Z");
 }
@@ -69,15 +73,16 @@ function renderStep(announce = false) {
   const { a, b, m } = settings;
   const current = orbit.values[step];
   const next = orbit.values[step + 1];
-  const raw = a * current + b;
-  const { startHeight, ticks } = traces[step];
+  path = getUpdatePath(settings, current);
+  const raw = path.total;
   byId("update-label").textContent = `Update ${step + 1} of ${lastStep() + 1}`;
   byId("calculation").innerHTML = `<span class="raw">${a} × ${current} + ${b} = ${raw}</span><span class="remainder">${raw} mod ${m} = <strong>${next}</strong></span>`;
   byId("previous").disabled = step === 0;
-  byId("next").disabled = step === lastStep();
-  byId("dial-caption").textContent = ticks
-    ? `From ${startHeight % m}, move ${ticks} ${ticks === 1 ? "tick" : "ticks"} clockwise to ${next}.`
-    : `The hand stays on ${next}${a === 0 ? " because the rule is constant" : " for this update"}.`;
+  byId("next").disabled = playback !== "ready" && step === lastStep();
+  byId("plot-caption").textContent = `Start at 0. Count ${b} ${b === 1 ? "tick" : "ticks"} for the increment, then ${current} ${current === 1 ? "group" : "groups"} of ${a} ${a === 1 ? "tick" : "ticks"}.`;
+  byId("dial-caption").textContent = raw
+    ? `From 0, count ${raw} ${raw === 1 ? "tick" : "ticks"} clockwise to ${next}.`
+    : "The total is 0, so the hand stays at 0.";
   renderPlayback();
   for (const [index, tile] of [...valueList.querySelectorAll(".seq-value")].entries()) {
     tile.classList.toggle("current", index === step);
@@ -111,49 +116,50 @@ function land() {
 }
 
 function animate() {
-  if ((progress === 1 && edge !== "right") || reducedMotion.matches) {
-    setProgress(1);
+  if (landed || path.length === 0 || reducedMotion.matches) {
+    setTravel(path.length);
     land();
     return;
   }
   const { a, m } = settings;
-  const { startInput, ticks } = traces[step];
-  const current = orbit.values[step];
-  const wrapAt = current < startInput ? (m - startInput) / (current + m - startInput) : null;
-  const turns = ticks / m;
+  const wraps = Math.floor(path.total / m);
   const turnsPerSecond = Math.max(1, a / 2);
-  // Reserve time for both edges inside the usual per-update timing budget.
-  const travelTime = Math.min(wrapAt === null ? 1350 : 1100, 460 + 1000 * turns / turnsPerSecond);
-  const edgeHold = 80;
+  const travelTime = Math.min(1350, 460 + 1000 * path.length / m / turnsPerSecond);
+  const edgeHold = 70 / Math.max(1, wraps);
   let lastFrame = performance.now();
+
   function advance(elapsed) {
+    // Give the reset its own visible frames before counting any ticks.
+    if (startHoldRemaining > 0) {
+      startHoldRemaining = Math.max(0, startHoldRemaining - elapsed);
+      return;
+    }
+    let stride = path.length * elapsed / travelTime;
     if (edge) {
-      const spare = elapsed - edgeHoldRemaining;
-      edgeHoldRemaining = Math.max(0, -spare);
-      if (spare < 0) return;
+      edgeHoldRemaining = Math.max(0, edgeHoldRemaining - elapsed);
+      if (edgeHoldRemaining > 0) return;
       if (edge === "right") {
-        setProgress(wrapAt, "left");
+        // Show the same tick at each edge on separate frames, even on slow screens.
+        setTravel(travel, "left");
         edgeHoldRemaining = edgeHold;
         return;
       }
-      // Drop stale wall time at re-entry. The first move after zero should
-      // be small even if the browser delayed the next animation frame.
-      elapsed = Math.min(spare, 16);
-      if (elapsed === 0) return;
     }
-    const nextProgress = Math.min(1, progress + elapsed / travelTime);
-    if (wrapAt !== null && progress < wrapAt && nextProgress >= wrapAt) {
-      setProgress(wrapAt, "right");
+    if (travel === 0 || edge === "left") stride = Math.min(stride, m / 8);
+    const nextTravel = Math.min(path.length, travel + stride);
+    const boundary = (Math.floor(travel / m) + 1) * m;
+    if (boundary <= path.total && nextTravel >= boundary) {
+      setTravel(boundary, "right");
       edgeHoldRemaining = edgeHold;
     } else {
-      setProgress(nextProgress);
+      setTravel(nextTravel);
     }
   }
   function tick(now) {
     advance(Math.max(0, now - lastFrame));
     lastFrame = now;
-    if (progress < 1 || edge === "right") frame = requestAnimationFrame(tick);
-    else land();
+    if (landed) land();
+    else frame = requestAnimationFrame(tick);
   }
   frame = requestAnimationFrame(tick);
 }
@@ -161,8 +167,10 @@ function animate() {
 function selectStep(index, playContinuously = false) {
   clearClock();
   step = index;
-  progress = reducedMotion.matches ? 1 : 0;
+  travel = 0;
+  landed = false;
   edge = null;
+  startHoldRemaining = 150;
   edgeHoldRemaining = 0;
   playback = "running";
   continuous = playContinuously;
@@ -209,23 +217,15 @@ function renderSequence() {
   }
 }
 
-function renderView() {
-  document.querySelectorAll("[data-mode]").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
-  byId("line-label").textContent = mode === "line" ? "Linear rule" : "Wrapped rule";
-  byId("crossing-legend").hidden = mode === "wrapped";
-  byId("plot-caption").textContent = mode === "line"
-    ? `Inputs advance to the right and wrap from ${settings.m} to 0. The dial shows the marker’s height modulo ${settings.m}.`
-    : `Inputs advance to the right and wrap from ${settings.m} to 0. The marker’s height gives the dial reading.`;
-}
-
 function renderSettings() {
   clearClock();
-  playback = "idle";
-  progress = 1;
+  playback = "ready";
+  travel = 0;
+  landed = false;
   edge = null;
+  startHoldRemaining = 0;
   edgeHoldRemaining = 0;
   step = 0;
-  traces = getUpdateTraces(settings, orbit.values);
   picker.value = parameters.every(({ key }) => example[key] === settings[key]) ? example.id : "custom";
   for (const parameter of parameters) {
     const field = byId(parameter.key);
@@ -237,7 +237,6 @@ function renderSettings() {
     field.previousElementSibling.disabled = value <= parameter.min;
     field.nextElementSibling.disabled = value >= limit;
   }
-  renderView();
   renderSequence();
   renderStep();
 }
@@ -301,7 +300,7 @@ parameters.forEach(addParameter);
 picker.addEventListener("change", () => loadExample(presets.find(preset => preset.id === picker.value)));
 byId("reset").addEventListener("click", () => loadExample(example));
 byId("previous").addEventListener("click", () => selectStep(step - 1));
-byId("next").addEventListener("click", () => selectStep(step + 1));
+byId("next").addEventListener("click", () => selectStep(playback === "ready" ? 0 : step + 1));
 byId("play").addEventListener("click", () => {
   if (playback === "running") {
     pause();
@@ -313,18 +312,13 @@ byId("play").addEventListener("click", () => {
     selectStep(step === lastStep() ? 0 : step, true);
   }
 });
-document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
-  mode = button.dataset.mode;
-  renderView();
-  draw();
-}));
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && playback === "running") pause();
 });
 reducedMotion.addEventListener("change", () => {
-  if (reducedMotion.matches && (progress < 1 || edge === "right")) {
+  if (reducedMotion.matches && playback !== "ready" && !landed) {
     clearClock();
-    setProgress(1);
+    setTravel(path.length);
     if (playback === "running") land();
   }
 });

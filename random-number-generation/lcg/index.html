@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f7f8f5">
-  <meta name="description" content="Explore a linear congruential generator. Change the slope, increment, modulus, and seed to see the graph and the exact cycle of generated values.">
+  <meta name="description" content="Explore a linear congruential generator. Change the multiplier, increment, modulus, and seed to see the wrapped graph and the exact cycle of generated values.">
   <title>Linear congruential generator · Stats 102C</title>
-  <link rel="stylesheet" href="styles.css?v=dial">
-  <script type="module" src="explorer.js?v=edge-frames"></script>
+  <link rel="stylesheet" href="styles.css?v=zero-origin">
+  <script type="module" src="explorer.js?v=zero-origin"></script>
 </head>
 <body>
   <a class="skip" href="#explorer">Skip to explorer</a>
@@ -32,18 +32,13 @@
     <noscript><p>Enable JavaScript to use the generator and explore its sequence.</p></noscript>
     <div class="workspace" id="explorer">
       <section class="panel plot-panel" aria-labelledby="map-title">
-        <div class="plot-head">
-          <h2 id="map-title">Generator map</h2>
-          <div class="view-switch" role="group" aria-label="Graph view">
-            <button type="button" data-mode="line" aria-pressed="true">Unwrapped</button>
-            <button type="button" data-mode="wrapped" aria-pressed="false">Wrapped</button>
-          </div>
-        </div>
+        <h2 class="plot-head" id="map-title">Wrapped generator map</h2>
+        <p class="plot-caption">Height shows the input. The horizontal position tracks the remainder and wraps from the right edge to zero. The final remainder becomes the next input.</p>
         <div class="linked-views">
           <div class="graph-view">
             <p id="plot-caption" class="plot-caption"></p>
             <div class="plot-area"><svg id="plot" role="img" aria-label="Cartesian graph of the generator"></svg></div>
-            <div class="legend" aria-hidden="true"><span><i class="line-key"></i><span id="line-label">Linear rule</span></span><span id="crossing-legend"><i class="crossing-key"></i>Modulus crossing</span><span><i class="point-key"></i>Selected update</span></div>
+            <div class="legend" aria-hidden="true"><span><i class="line-key"></i>Wrapped rule</span><span><i class="point-key"></i>Selected update</span></div>
           </div>
           <figure class="dial-view">
             <svg id="dial" role="img" aria-label="Remainder dial"></svg>

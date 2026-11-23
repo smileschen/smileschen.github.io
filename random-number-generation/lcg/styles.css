@@ -26,7 +26,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 button, select, a { -webkit-tap-highlight-color: transparent; }
 .shell { width: min(1264px, calc(100% - clamp(32px, 8vw, 128px))); margin-inline: auto; }
 .masthead { border-bottom: 1px solid var(--line); background: #fcfdfa; }
-.mast-inner, .course, nav, .plot-head, .params-head, .sequence-head, .update-bar, .playback, .legend, .metrics { display: flex; align-items: center; }
+.mast-inner, .course, nav, .params-head, .sequence-head, .update-bar, .playback, .legend, .metrics { display: flex; align-items: center; }
 .mast-inner { min-height: 66px; justify-content: space-between; gap: 18px; }
 .course { gap: 11px; white-space: nowrap; }
 .course strong { font-size: 1.05rem; font-weight: 700; letter-spacing: -.045em; }
@@ -51,12 +51,8 @@ h1 { font-size: clamp(2.35rem, 4.1vw, 3.95rem); line-height: 1.09; letter-spacin
 .panel { min-width: 0; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: hidden; }
 h2 { font-size: clamp(1.5rem, 2.15vw, 1.95rem); line-height: 1.2; letter-spacing: -.043em; }
 .plot-panel { display: flex; flex-direction: column; }
-.plot-head, .params-head, .sequence-head, .update-bar { justify-content: space-between; gap: 14px; }
+.params-head, .sequence-head, .update-bar { justify-content: space-between; gap: 14px; }
 .plot-head { margin: 22px 24px 0; }
-.view-switch { flex-shrink: 0; display: inline-flex; gap: 2px; border-radius: 8px; padding: 3px; background: #f0f3ef; border: 1px solid #e1e6e0; }
-.view-switch button { font-size: .875rem; padding: 6px 11px; color: var(--muted); font-weight: 540; background: transparent; border: 1px solid transparent; border-radius: 5px; }
-.view-switch button[aria-pressed="true"] { color: var(--deep); background: white; border-color: #d0dcd5; box-shadow: 0 1px 3px #192e3310; }
-.view-switch button:hover { color: var(--deep); }
 .plot-caption, .subline { font-size: .9375rem; line-height: 1.5; color: var(--muted); }
 .plot-caption { margin: 8px 24px 0; }
 .linked-views { display: grid; grid-template-columns: minmax(0, 1fr) clamp(170px, 18vw, 248px); align-items: center; margin-block: auto; }
@@ -70,8 +66,6 @@ h2 { font-size: clamp(1.5rem, 2.15vw, 1.95rem); line-height: 1.2; letter-spacing
 .legend { color: var(--muted); font-size: .8125rem; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 2px 16px 14px; }
 .legend > span { display: inline-flex; align-items: center; gap: 7px; }
 .line-key { display: block; width: 22px; border-top: 2px solid #147d78; }
-.crossing-key { display: block; width: 7px; height: 7px; transform: rotate(45deg); border: 1.5px solid #147d78; }
-.legend [hidden] { display: none; }
 .point-key { display: block; border-radius: 50%; width: 9px; height: 9px; background: #bb512a; }
 .update-bar { margin-top: auto; border-top: 1px solid var(--line); background: #f7faf7; padding: 15px 24px; flex-wrap: wrap; }
 .update-bar .small-title { font-size: .72rem; }
@@ -172,11 +166,10 @@ footer.shell { display: flex; justify-content: space-between; color: var(--muted
   .intro { padding-block: 26px 22px; }
   .subject { font-size: .7rem; }
   .lede { font-size: 1rem; }
-  .plot-head { margin: 16px 14px 0; gap: 7px; flex-wrap: wrap; }
+  .plot-head { margin: 16px 14px 0; }
   .plot-caption { margin: 9px 14px 0; }
   .plot-area { margin-inline: 4px; }
   .legend { gap: 7px 14px; }
-  .view-switch button { padding: 6px 8px; }
   .update-bar { padding: 12px 14px; }
   .parameters, .sequence-panel { padding: 16px; }
   #parameters { display: flex; }

@@ -64,30 +64,27 @@ export function createDial(svg) {
     "font-family": "var(--serif, Georgia, serif)", "font-size": 17,
   });
 
-  let previousModulus, previousFrom, previousInput, previousTo, previousPhase;
+  let previousModulus, previousInput, previousTo, previousPhase;
   return {
-    update({ m, from, input = from, to, position, progress }) {
+    update({ m, input, to, position, phase }) {
       if (previousModulus !== m) {
         drawScale(scale, m);
         modulusLabel.textContent = `mod ${m}`;
       }
-      if (previousModulus !== m || previousFrom !== from || previousTo !== to) {
-        start.setAttribute("transform", rotate(from, m));
+      if (previousModulus !== m || previousTo !== to) {
         target.setAttribute("transform", rotate(to, m));
       }
       hand.setAttribute("transform", rotate(position, m));
 
       // Keep the accessible description stable while the hand sweeps past ticks.
-      const phase = progress >= 1 ? "landed" : progress <= 0 ? "start" : "moving";
-      if (phase !== previousPhase || m !== previousModulus || from !== previousFrom || input !== previousInput || to !== previousTo) {
+      if (phase !== previousPhase || m !== previousModulus || input !== previousInput || to !== previousTo) {
         const state = phase === "landed" ? `The hand has landed at ${to}.`
-          : phase === "start" ? `The hand starts at ${from}.` : "The hand is moving.";
+          : phase === "start" ? "The hand starts at 0." : "The hand is moving.";
         const description = `Modulo ${m} dial. The residues increase clockwise from zero. Input ${input}, output ${to}. ${state}`;
         svg.setAttribute("aria-label", description);
         title.textContent = description;
       }
       previousModulus = m;
-      previousFrom = from;
       previousInput = input;
       previousTo = to;
       previousPhase = phase;
