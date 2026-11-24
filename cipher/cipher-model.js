@@ -1,6 +1,6 @@
-/* Generated from Stats 102C cipher_demo/data/pair_probabilities.csv and lexicon.csv.
+/* Generated from the pair_probabilities.csv and lexicon.csv files in cipher_demo/data.
    Rows and columns use A–Z followed by space. Lexicon entries with identical
-   probability share a line. The numerical weights match the lecture files. */
+   probability share a line. */
 (function (root) {
   "use strict";
   const pairProbabilities = [

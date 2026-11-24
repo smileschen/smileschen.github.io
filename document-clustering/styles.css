@@ -62,9 +62,8 @@ var { font-style: italic; }
   font-weight: 600;
 }
 
-.course { color: var(--blue-dark); font-weight: 800; text-decoration: none; }
-.course:hover { text-decoration: underline; text-underline-offset: 0.2em; }
-.header-divider { width: 1px; height: 1rem; background: var(--line); }
+.site-name { color: var(--blue-dark); font-weight: 800; text-decoration: none; }
+.site-name:hover { text-decoration: underline; text-underline-offset: 0.2em; }
 
 .intro {
   display: flex;
@@ -83,7 +82,7 @@ var { font-style: italic; }
 }
 
 .intro p { max-width: 47rem; color: var(--muted); }
-.intro .class-question { margin: 0.55rem 0 0.18rem; color: var(--ink); font-size: 1.12rem; font-weight: 650; }
+.intro .intro-question { margin: 0.55rem 0 0.18rem; color: var(--ink); font-size: 1.12rem; font-weight: 650; }
 
 .model-stats {
   display: grid;
@@ -307,7 +306,7 @@ mark {
   font-weight: 600;
 }
 
-.term-filter, .lecture-mode {
+.term-filter, .run-option {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -594,7 +593,8 @@ input[type="checkbox"] { width: 1rem; height: 1rem; flex: none; margin: 0; accen
 }
 .draw-example p + p { margin-top: 0.4rem; }
 
-.site-footer { padding: 1.3rem 0; color: var(--muted); font-size: 0.875rem; }
+.site-footer { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1rem; padding: 1.3rem 0; color: var(--muted); font-size: 0.875rem; }
+.site-footer a { text-underline-offset: 0.18em; }
 
 @media (min-width: 761px) {
   .right-column { align-self: stretch; }

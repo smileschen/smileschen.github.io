@@ -35,7 +35,6 @@ a { color: var(--teal); }
 .mast-inner { min-height: 64px; justify-content: space-between; gap: 20px; }
 .brand { gap: 10px; white-space: nowrap; }
 .brand strong { font-size: 1.04rem; letter-spacing: -.035em; }
-.course-name { color: var(--muted); font-size: .9rem; margin-left: 5px; border-left: 1px solid #c9d4d0; padding-left: 15px; }
 nav { gap: 25px; }
 nav a { text-decoration: none; color: #43565b; font-size: .9rem; padding: 10px 0; }
 nav a:hover, footer a:hover { color: var(--teal); text-decoration: underline; text-underline-offset: 4px; }
@@ -154,9 +153,7 @@ h2 { font-size: clamp(1.55rem,2.15vw,1.95rem); line-height: 1.15; }
 .field-guide caption { text-align: left; font-weight: 620; margin-bottom: 7px; }
 .field-guide th, .field-guide td { border-bottom: 1px solid #d5dfd9; text-align: left; padding: 8px; }
 .field-guide th { color: #31584c; }
-footer { display: flex; align-items: center; gap: 12px; min-height: 65px; border-top: 1px solid var(--line); font-size: .83rem; color: var(--muted); }
-footer strong { color: #2b443e; }
-footer a { margin-left: auto; }
+footer { display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: space-between; gap: 8px 16px; min-height: 65px; border-top: 1px solid var(--line); font-size: .83rem; color: var(--muted); }
 @media(max-width: 1000px) {
   .workspace { grid-template-columns: minmax(0,1.5fr) minmax(275px,1fr); gap: 14px; }
   .math-row { grid-template-columns: 1fr; gap: 2px; }
@@ -178,7 +175,6 @@ footer a { margin-left: auto; }
 @media(max-width: 550px) {
   .shell { width: calc(100% - 26px); }
   .mast-inner { min-height: 54px; }
-  .course-name { display: none; }
   nav { gap: 16px; }
   nav a { font-size: .85rem; }
   .intro { padding: 25px 0 19px; }
@@ -210,7 +206,6 @@ footer a { margin-left: auto; }
   .line-readouts input { width: 17ch; }
   .landmarks { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .field-guide th, .field-guide td { padding: 7px 3px; }
-  footer span { display: none; }
 }
 @media(max-width: 440px) {
   .register.wide { grid-template-columns: minmax(0,1fr) minmax(0, var(--exp)); max-width: 100%; row-gap: 10px; }

@@ -918,6 +918,10 @@ tr:last-child td {
   align-items: start;
 }
 
+.footer-site-link {
+  margin: 16px 0 0;
+}
+
 .footer-brand {
   display: flex;
   align-items: flex-start;

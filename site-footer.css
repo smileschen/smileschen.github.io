@@ -1,0 +1,8 @@
+.site-return {
+  margin-block-start: 1.5rem;
+  font-size: .9rem;
+}
+
+.site-return a {
+  text-underline-offset: .18em;
+}

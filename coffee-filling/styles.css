@@ -24,7 +24,7 @@ main { max-width: 1220px; margin: 0 auto; padding: 28px clamp(16px, 4vw, 52px) 4
 .chapter-anchor { position: absolute; top: 0 }
 h1, h2, h3, h4, p { margin: 0 }
 header { padding-bottom: 20px }
-.course, .progress {
+.progress {
   color: var(--green);
   font-size: .875rem;
   font-weight: 700;

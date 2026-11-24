@@ -3,7 +3,7 @@
 
   const passages = {
     hamlet: {
-      source: "William Shakespeare · Hamlet, Act III, scene i · lecture excerpt",
+      source: "William Shakespeare · Hamlet, Act III, scene i",
       text: "To be, or not to be, that is the question,\nWhether ’tis nobler in the mind to suffer\nThe slings and arrows of outrageous fortune,\nOr to take arms against a sea of troubles,\nAnd by opposing end them?"
     },
     austen: {
@@ -20,8 +20,8 @@
     }
   };
 
-  // The lecture passage uses 21 plaintext letters. Assign the unused cipher
+  // The Hamlet passage uses 21 plaintext letters. Assign the unused cipher
   // letters in alphabetical order to complete a key for the scrambler.
-  const lectureKey = "KNDVZCPEIGJHXTBSFYWRALMQOU";
-  window.CipherExamples = { passages, lectureKey };
+  const defaultKey = "KNDVZCPEIGJHXTBSFYWRALMQOU";
+  window.CipherExamples = { passages, defaultKey };
 })();

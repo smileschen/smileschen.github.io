@@ -83,7 +83,7 @@
     const currentFragment = document.createDocumentFragment();
     const proposedFragment = document.createDocumentFragment();
     const scores = new Map();
-    // Keep contractions together on screen. The lecture model scores each
+    // Keep contractions together on screen. The language model scores each
     // uninterrupted A–Z run separately, with a space boundary on each side.
     function contribution(word) {
       if (!scores.has(word)) {

@@ -138,10 +138,8 @@
   }
   .show-hex .nibble, .key-grid li { --group-ink: hsl(var(--hue) 95% var(--dark-ink, 77%)); }
   .masthead, .skip:focus { background: var(--surface); }
-  .course-name { border-color: var(--line); }
   nav a { color: var(--muted); }
   .subject { color: var(--teal); }
-  footer strong { color: var(--ink); }
 }
 @media(max-width: 880px) {
   .key-grid { grid-template-columns: repeat(8,minmax(0,1fr)); }

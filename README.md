@@ -32,7 +32,7 @@ Step through multivariate MCMC with the same two-dimensional normal target. Each
 
 # Substitution ciphers
 
-Use the Hamlet passage from Lectures 17 and 18 or bring your own message.
+Use a passage from Hamlet or bring your own message.
 
 - [Scramble a message](https://smileschen.github.io/cipher/)
 - [Step through the Metropolis decoder](https://smileschen.github.io/cipher/decipher.html)
@@ -56,7 +56,7 @@ Generate bag weights from a Normal hierarchy, estimate the machine means from we
 
 # Document clustering
 
-Step through the collapsed Gibbs sampler for Lecture 22’s two-book corpus.
+Step through a collapsed Gibbs sampler that groups passages from two books.
 
 - [Document clustering walkthrough](https://smileschen.github.io/document-clustering/)
 

@@ -1,4 +1,4 @@
-/* Substitution cipher and Metropolis sampler from the Stats 102C cipher lectures.
+/* Substitution cipher and Metropolis sampler.
    Every displayed key gives the ciphertext letters assigned to plaintext A–Z. */
 (function (root) {
   "use strict";
@@ -11,7 +11,7 @@
   function languageModel() {
     const model = root.CipherModel ||
       (typeof module !== "undefined" && module.exports && require("./cipher-model.js"));
-    if (!model) throw new Error("Load the lecture language model before deciphering.");
+    if (!model) throw new Error("Load the language model before deciphering.");
     return model;
   }
 

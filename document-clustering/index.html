@@ -3,28 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Step through the collapsed Gibbs sampler for the 19-document bag-of-words example in Stats 102C Lecture 22.">
-  <title>Document clustering | Stats 102C</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <meta name="description" content="Step through a collapsed Gibbs sampler that clusters 19 documents using word counts.">
+  <title>Document clustering</title>
+  <link rel="stylesheet" href="styles.css?v=3">
   <script defer src="corpus.js"></script>
   <script defer src="sampler.js?v=2"></script>
   <script defer src="word-lesson.js"></script>
   <script defer src="sweep-summary.js"></script>
-  <script defer src="walkthrough.js?v=2"></script>
+  <script defer src="walkthrough.js?v=3"></script>
 </head>
 <body>
   <header class="site-header">
     <div class="shell header-inner">
-      <a class="course" href="../">Stats 102C</a>
-      <span class="header-divider" aria-hidden="true"></span>
-      <span>Lecture 22</span>
+      <a class="site-name" href="../">Stats demos</a>
     </div>
   </header>
   <main class="shell">
     <header class="intro">
       <div>
         <h1>Document clustering</h1>
-        <p class="class-question">Can word counts group passages from the same book?</p>
+        <p class="intro-question">Can word counts group passages from the same book?</p>
         <p>The first run starts with alternating cluster assignments. You can see the book titles, but the Gibbs sampler uses only word counts to update each label.</p>
       </div>
       <dl class="model-stats" aria-label="Model dimensions">
@@ -56,8 +54,8 @@
             </div>
             <div class="setup-controls">
               <div class="run-options">
-                <label class="lecture-mode"><input type="checkbox" id="lecture-draw"> Use U = 0.60 for every draw (lecture example)</label>
-                <label class="lecture-mode"><input type="checkbox" id="predict-draw"> Pause at the draw to predict the cluster</label>
+                <label class="run-option"><input type="checkbox" id="fixed-draw"> Use U = 0.60 for every draw</label>
+                <label class="run-option"><input type="checkbox" id="predict-draw"> Pause at the draw to predict the cluster</label>
               </div>
               <button type="button" class="button subtle" id="reset">Reset</button>
             </div>
@@ -140,8 +138,11 @@
       </div>
 
     </div>
-    <footer class="site-footer">Course materials by Miles Chen · Stats 102C</footer>
   </main>
+  <footer class="shell site-footer">
+    <a href="https://smileschen.github.io/">Back to smileschen.github.io</a>
+    <span>Demo by Miles Chen</span>
+  </footer>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e251c81079eb47098b5eaf0c0209403a"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>

@@ -2,7 +2,7 @@
   "use strict";
 
   const {alphabet, randomKey, translate} = window.CipherEngine;
-  const {passages, lectureKey} = window.CipherExamples;
+  const {passages, defaultKey} = window.CipherExamples;
   const byId = id => document.getElementById(id);
   const input = byId("plaintext");
   const output = byId("ciphertext");
@@ -10,7 +10,7 @@
   const copyButton = byId("copy");
   const decoderButton = byId("open-decoder");
   const samples = [...document.querySelectorAll("[data-passage]")];
-  let key = lectureKey;
+  let key = defaultKey;
   let copyTimeout;
 
   function drawWheel() {

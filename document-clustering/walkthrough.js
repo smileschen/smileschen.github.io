@@ -507,7 +507,7 @@
   }
 
   function drawFunction() {
-    return get("lecture-draw").checked ? () => 0.60 : Math.random;
+    return get("fixed-draw").checked ? () => 0.60 : Math.random;
   }
 
   function selectStage(nextStage) {

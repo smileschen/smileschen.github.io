@@ -3,23 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Inspect substitution-key proposals and watch the Metropolis algorithm decipher a message from Stats 102C Lecture 18.">
-  <title>Metropolis decoder · Cipher lab · Stats 102C</title>
-  <link rel="stylesheet" href="styles.css?v=2">
+  <meta name="description" content="Inspect substitution-key proposals and watch the Metropolis algorithm decipher a message.">
+  <title>Metropolis decoder · Cipher lab</title>
+  <link rel="stylesheet" href="styles.css?v=3">
   <script defer src="cipher-model.js"></script>
-  <script defer src="cipher-engine.js?v=2"></script>
+  <script defer src="cipher-engine.js?v=3"></script>
   <script defer src="decipher.js?v=2"></script>
 </head>
 <body>
   <header class="topbar">
     <div class="shell nav-inner">
-      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">C</span><strong>Stats 102C</strong><span class="brand-divider"></span><span>Cipher lab</span></a>
+      <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true">C</span><strong>Cipher lab</strong></a>
       <nav aria-label="Cipher tools"><a href="index.html">Scrambler</a><a href="decipher.html" aria-current="page">Metropolis decoder</a></nav>
     </div>
   </header>
   <main class="shell">
     <section class="hero decoder-hero" aria-labelledby="page-title">
-      <div class="hero-copy"><p class="eyebrow">Lecture 18 <span>/</span> Metropolis sampling</p>
+      <div class="hero-copy"><p class="eyebrow">Metropolis sampling</p>
         <h1 id="page-title">Decipher a message</h1>
         <p>Start with a random key and watch the sampler search for English. Pause at any proposal to inspect the swap and the draw.</p>
       </div>
@@ -58,7 +58,7 @@ Ktv no bssbwitp ztv rezx?</textarea>
           <input id="lambda" type="range" min="0" max="1" step="0.01" value="0.07" aria-describedby="weight-help">
         </div>
         <div id="weight-help"><p>Log score = letter-pair score + λ × word score.</p>
-          <p>λ = 0 uses only letter pairs. The lecture default is 0.07. Moving the slider pauses the run and compares the same swap and draw under the new weight.</p>
+          <p>λ = 0 uses only letter pairs. The default is 0.07. Moving the slider pauses the run and compares the same swap and draw under the new weight.</p>
         </div>
       </div>
       <p class="subline">Each key lists the cipher letter beneath its plaintext partner. Read the key in reverse to decipher the message.</p>
@@ -98,7 +98,7 @@ Ktv no bssbwitp ztv rezx?</textarea>
           <div class="score-line">Best log score <strong id="best-score">—</strong></div>
         </section>
         <details class="panel model-details"><summary>How the log score works</summary>
-          <p>Each word contributes the log weights of neighboring letters, including a space at each end, plus λ times its log weight in the lecture lexicon. The pair weights come from <em>War and Peace</em>. An unknown word has weight 10<sup>−10</sup>.</p>
+          <p>Each word contributes the log weights of neighboring letters, including a space at each end, plus λ times its log weight in the lexicon. The pair weights come from <em>War and Peace</em>. An unknown word has weight 10<sup>−10</sup>.</p>
           <p>The word-by-word changes add up to the proposal’s score change, Δ. Moving λ starts a new score history with the displayed proposal as step 1.</p>
           <p>With a uniform key prior, this score is the log posterior up to a constant. Each proposal swaps two uniformly chosen entries. An improved score is always accepted, and a lower score can be accepted with probability e<sup>Δ</sup>.</p>
           <p>Decipher starts a fresh random key. Short passages can admit several plausible translations, and separate runs can find different readings.</p>
@@ -106,7 +106,7 @@ Ktv no bssbwitp ztv rezx?</textarea>
       </div>
     </div>
   </main>
-  <footer class="shell foot"><span>Stats 102C</span><span>Computational Statistics</span></footer>
+  <footer class="shell foot"><a href="https://smileschen.github.io/">Back to smileschen.github.io</a></footer>
 <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "e251c81079eb47098b5eaf0c0209403a"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
 </html>
