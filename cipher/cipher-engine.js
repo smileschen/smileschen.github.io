@@ -87,25 +87,93 @@
     return model.logWords.get(decoded) ?? model.unknownWord;
   }
 
-  // Each ASCII word contributes its two space boundaries, its internal pairs,
-  // and one lexicon lookup. Token totals therefore sum to the message score.
+  // Capture the individual terms only when a student opens a word breakdown.
+  function scoreToken(decoded, lambda, model, pairs) {
+    let previous = space;
+    let pairScore = 0;
+    for (let i = 0; i <= decoded.length; i++) {
+      const next = i < decoded.length ? decoded.charCodeAt(i) - 65 : space;
+      const logProbability = model.logPairs[previous * width + next];
+      pairScore += logProbability;
+      if (pairs) pairs.push({from: previous, to: next, probability: Math.exp(logProbability), logProbability});
+      previous = next;
+    }
+    const wordScore = logWordWeight(decoded, model);
+    return {pairScore, wordScore, total: pairScore + lambda * wordScore};
+  }
+
   function scoreWord(word, lambda = defaultLambda) {
     validateLambda(lambda);
     if (typeof word !== "string" || !/^[A-Za-z]+$/.test(word)) {
       throw new TypeError("Score one decoded A–Z word at a time.");
     }
-    const model = languageModel();
-    const decoded = word.toUpperCase();
-    let previous = space;
-    let pairScore = 0;
-    for (let i = 0; i < decoded.length; i++) {
-      const next = decoded.charCodeAt(i) - 65;
-      pairScore += model.logPairs[previous * width + next];
-      previous = next;
+    return scoreToken(word.toUpperCase(), lambda, languageModel());
+  }
+
+  const neighborCount = 4;
+  let frequencyGroups;
+
+  function nearbyWords(decoded, target, model) {
+    if (!frequencyGroups) {
+      // For ties we need at most four examples plus the selected word.
+      const groups = new Map();
+      for (const [word, weight] of model.logWords) {
+        if (!/^[A-Z]+$/.test(word)) continue;
+        if (!groups.has(weight)) groups.set(weight, []);
+        const tied = groups.get(weight);
+        if (tied.length <= neighborCount) tied.push(word);
+      }
+      frequencyGroups = Array.from(groups, ([weight, words]) => ({weight, words}));
+      frequencyGroups.sort((first, second) => first.weight - second.weight);
     }
-    pairScore += model.logPairs[previous * width + space];
-    const wordScore = logWordWeight(decoded, model);
-    return {pairScore, wordScore, total: pairScore + lambda * wordScore};
+    // Find the first group at or above this word's log probability, then
+    // walk outward in order of absolute log-probability difference.
+    let low = 0;
+    let high = frequencyGroups.length;
+    while (low < high) {
+      const mid = Math.floor((low + high) / 2);
+      if (frequencyGroups[mid].weight < target) low = mid + 1;
+      else high = mid;
+    }
+    let left = low - 1;
+    let right = low;
+    const neighbors = [];
+    while (neighbors.length < neighborCount && (left >= 0 || right < frequencyGroups.length)) {
+      const lower = frequencyGroups[left];
+      const upper = frequencyGroups[right];
+      const group = !upper || (lower && target - lower.weight <= upper.weight - target)
+        ? frequencyGroups[left--] : frequencyGroups[right++];
+      for (const word of group.words) {
+        if (word !== decoded) {
+          neighbors.push({word: word.toLowerCase(), probability: Math.exp(group.weight)});
+          if (neighbors.length === neighborCount) break;
+        }
+      }
+    }
+    return neighbors;
+  }
+
+  function explainWord(displayWord, lambda = defaultLambda) {
+    validateLambda(lambda);
+    const model = languageModel();
+    const tokens = [];
+    let pairScore = 0;
+    let wordScore = 0;
+    // Apostrophes and other separators create separate scored tokens, just
+    // as they do when preparing the complete message for the sampler.
+    for (const word of displayWord.match(/[A-Za-z]+/g) || []) {
+      const decoded = word.toUpperCase();
+      const pairs = [];
+      const score = scoreToken(decoded, lambda, model, pairs);
+      tokens.push({
+        word, pairs, ...score, known: model.logWords.has(decoded),
+        probability: Math.exp(score.wordScore), logProbability: score.wordScore,
+        neighbors: nearbyWords(decoded, score.wordScore, model)
+      });
+      pairScore += score.pairScore;
+      wordScore += score.wordScore;
+    }
+    return {pairScore, wordScore, total: pairScore + lambda * wordScore, tokens};
   }
 
   function scoreText(prepared, inverse, model, lambda) {
@@ -217,7 +285,7 @@
     };
   }
 
-  const api = {alphabet, defaultLambda, randomKey, translate, decode, scoreWord, createChain};
+  const api = {alphabet, defaultLambda, randomKey, translate, decode, scoreWord, explainWord, createChain};
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.CipherEngine = api;
 })(globalThis);

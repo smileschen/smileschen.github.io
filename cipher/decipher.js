@@ -13,8 +13,18 @@
   const lambdaInput = byId("lambda");
   const wordDetail = byId("word-detail");
   const detailPrompt = wordDetail.textContent;
-  const wordPairs = new WeakMap();
-  let inspectedPair = [];
+  const scoreDetails = byId("score-inspector");
+  const scorePanel = window.CipherScoreInspector;
+  const wordPicker = byId("score-word-picker");
+  const wordControl = byId("score-word-control");
+  const example = {before: "CUESTION", proposed: "QUESTION", example: true};
+  const displayedWords = /[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*/gu;
+  const changedWords = new Map();
+  let pickerWords = null;
+  let highlightedWord = null;
+  let selectedOffset = null;
+  let panelWord = null;
+  let panelLambda = null;
   const status = byId("run-status");
   const countFormat = new Intl.NumberFormat("en-US");
   const scoreFormat = new Intl.NumberFormat("en-US", {
@@ -93,9 +103,8 @@
       }
       return scores.get(word);
     }
-    const words = /[\p{L}\p{M}\p{N}]+(?:['’][\p{L}\p{M}\p{N}]+)*/gu;
     let lastEnd = 0;
-    for (const match of proposed.matchAll(words)) {
+    for (const match of proposed.matchAll(displayedWords)) {
       const word = match[0];
       const end = match.index + word.length;
       const oldWord = before.slice(match.index, end);
@@ -116,22 +125,26 @@
 
       const oldMark = document.createElement("mark");
       oldMark.className = "word-before";
-      oldMark.textContent = oldWord;
-      oldMark.title = detail;
       currentFragment.append(before.slice(lastEnd, match.index), oldMark);
 
       const newMark = document.createElement("mark");
       newMark.className = "word-proposed";
       newMark.dataset.direction = direction;
       newMark.dataset.strength = delta === 0 ? "0" : size < 1 ? "1" : size < 3 ? "2" : "3";
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "word-inspect";
-      button.textContent = word;
-      button.title = detail;
-      button.setAttribute("aria-label", detail);
-      newMark.append(button);
-      wordPairs.set(button, [oldMark, newMark]);
+      const pair = {offset: match.index, before: oldWord, proposed: word, detail, marks: [oldMark, newMark]};
+      changedWords.set(pair.offset, pair);
+      for (const [mark, side] of [[oldMark, "before"], [newMark, "proposed"]]) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "word-inspect";
+        button.dataset.offset = pair.offset;
+        button.dataset.side = side;
+        button.textContent = pair[side];
+        button.title = detail;
+        button.setAttribute("aria-label", `Inspect ${side === "before" ? "current" : "proposed"} word ${pair[side]}. ${detail}`);
+        button.setAttribute("aria-controls", scoreDetails.id);
+        mark.append(button);
+      }
       proposedFragment.append(proposed.slice(lastEnd, match.index), newMark);
       lastEnd = end;
     }
@@ -175,9 +188,12 @@
     byId("decision").dataset.decision = outcome;
   }
 
-  function render(proposal = null) {
+  function render(proposal = null, sameSwap = false) {
     lastProposal = proposal;
-    inspectedPair = [];
+    changedWords.clear();
+    pickerWords = null;
+    highlightedWord = null;
+    if (!sameSwap) selectedOffset = null;
     wordDetail.textContent = detailPrompt;
     const currentKey = proposal ? proposal.currentKey : chain?.key;
     const before = currentKey ? decode(input.value, currentKey) : empty;
@@ -202,6 +218,7 @@
     drawDecision(proposal);
     if (byId("best-text")) write("best-text", chain ? decode(input.value, chain.bestKey) : empty);
     write("best-score", chain ? scoreFormat.format(chain.bestScore) : empty);
+    if (scoreDetails.open) updateInspection();
   }
 
   function clearLog() {
@@ -235,7 +252,7 @@
     if (proposal.accepted) {
       prependAccepted([{ key: chain.key, score: chain.score, iteration: chain.iteration }]);
     }
-    render(proposal);
+    render(proposal, Boolean(replay));
     return proposal;
   }
 
@@ -293,6 +310,7 @@
   }
 
   function beginPlayback() {
+    scoreDetails.open = false;
     running = true;
     lastTick = performance.now();
     fraction = 0;
@@ -304,6 +322,7 @@
   startButton.addEventListener("click", () => {
     if (!hasLetters()) return;
     halt();
+    scoreDetails.open = false;
     chain = createChain(input.value, {lambda});
     clearLog();
     oneStep();
@@ -344,7 +363,10 @@
     write("lambda-value", newLambda.toFixed(2));
     if (newLambda === lambda) return;
     lambda = newLambda;
-    if (!lastProposal) return;
+    if (!lastProposal) {
+      if (scoreDetails.open) updateInspection();
+      return;
+    }
     halt();
     const {currentKey, swapped, u} = lastProposal;
     chain = createChain(input.value, {key: currentKey, lambda});
@@ -354,25 +376,113 @@
     setStatus("Paused · Same swap and draw at the new word weight", "paused");
   }
 
-  // Native buttons support both keyboard and touch. Activating or tabbing to
-  // a word freezes the live proposal so the displayed scores stay readable.
+  function highlightWord(pair) {
+    if (highlightedWord === pair) return;
+    if (highlightedWord?.marks) {
+      for (const mark of highlightedWord.marks) mark.classList.remove("is-inspected");
+    }
+    highlightedWord = pair;
+    if (pair.marks) {
+      for (const mark of pair.marks) mark.classList.add("is-inspected");
+    }
+    wordDetail.textContent = pair.detail;
+  }
+
+  function pauseForInspection() {
+    if (!running) return;
+    halt();
+    syncControls();
+    setStatus("Paused", "paused");
+  }
+
+  function buildWordPicker() {
+    pickerWords = new Map();
+    const changed = document.createElement("optgroup");
+    changed.label = "Changed by the swap";
+    const unchanged = document.createElement("optgroup");
+    unchanged.label = "Unchanged by the swap";
+    // Generate choices only on inspection. The offset identifies the exact
+    // occurrence even when a changed word appears more than once.
+    for (const match of byId("proposed-text").textContent.matchAll(displayedWords)) {
+      const spelling = match[0];
+      if (!/[a-z]/i.test(spelling)) continue;
+      const offset = match.index;
+      const pair = changedWords.get(offset);
+      const word = pair || {offset, before: spelling, proposed: spelling, detail: `“${spelling}” is unchanged (Δ 0.000).`};
+      word.ordinal = pickerWords.size + 1;
+      pickerWords.set(offset, word);
+      const label = pair ? `${word.before} → ${word.proposed}` : spelling;
+      const option = new Option(`${word.ordinal}. ${label}`, String(offset));
+      (pair ? changed : unchanged).append(option);
+    }
+    wordPicker.replaceChildren();
+    if (changed.childElementCount) wordPicker.append(changed);
+    if (unchanged.childElementCount) wordPicker.append(unchanged);
+  }
+
+  // Only build the detailed tables for the word a student is inspecting.
+  // A character offset distinguishes repeated occurrences through a λ replay.
+  function updateInspection(side) {
+    let word = example;
+    wordControl.hidden = !lastProposal;
+    if (lastProposal) {
+      if (!pickerWords) buildWordPicker();
+      word = pickerWords.get(selectedOffset) || changedWords.values().next().value || pickerWords.values().next().value;
+      if (!word) {
+        panelWord = null;
+        wordControl.hidden = true;
+        scorePanel.clear("This proposal contains no scored words.");
+        return;
+      }
+      if (selectedOffset !== word.offset) side = "proposed";
+      selectedOffset = word.offset;
+      wordPicker.value = String(word.offset);
+      highlightWord(word);
+    }
+    if (panelWord === word && panelLambda === lambda && (!side || scorePanel.side === side)) return;
+    panelWord = word;
+    panelLambda = lambda;
+    scorePanel.show({before: word.before, proposed: word.proposed, example: Boolean(word.example),
+      ordinal: word.ordinal, noChanges: Boolean(lastProposal) && changedWords.size === 0,
+      lambda, iteration: lastProposal?.iteration ?? 0, side});
+  }
+
   function inspectWord(event) {
     const button = event.target.closest(".word-inspect");
     if (!button) return;
-    if (running && event.type !== "pointerover") {
-      halt();
-      syncControls();
-      setStatus("Paused", "paused");
+    const word = changedWords.get(Number(button.dataset.offset));
+    if (!word) return;
+    // Keyboard focus pauses before a live update can replace the focused word.
+    if (event.type !== "pointerover") pauseForInspection();
+    if (event.type !== "click") {
+      if (!scoreDetails.open) highlightWord(word);
+      return;
     }
-    for (const mark of inspectedPair) mark.classList.remove("is-inspected");
-    inspectedPair = wordPairs.get(button);
-    for (const mark of inspectedPair) mark.classList.add("is-inspected");
-    wordDetail.textContent = button.title;
+    selectedOffset = word.offset;
+    scoreDetails.open = true;
+    updateInspection(button.dataset.side);
+    const summary = scoreDetails.querySelector("summary");
+    summary.focus({preventScroll: true});
+    summary.scrollIntoView({block: "start"});
   }
-  const proposedText = byId("proposed-text");
-  proposedText.addEventListener("pointerover", inspectWord);
-  proposedText.addEventListener("focusin", inspectWord);
-  proposedText.addEventListener("click", inspectWord);
+  for (const id of ["current-text", "proposed-text"]) {
+    const translation = byId(id);
+    translation.addEventListener("pointerover", inspectWord);
+    translation.addEventListener("focusin", inspectWord);
+    translation.addEventListener("click", inspectWord);
+  }
+  scoreDetails.querySelector("summary").addEventListener("click", () => {
+    if (!scoreDetails.open) pauseForInspection();
+  });
+  scoreDetails.addEventListener("toggle", () => {
+    if (!scoreDetails.open) return;
+    pauseForInspection();
+    updateInspection();
+  });
+  wordPicker.addEventListener("change", () => {
+    selectedOffset = Number(wordPicker.value);
+    updateInspection("proposed");
+  });
   lambdaInput.addEventListener("input", updateLambda);
   lambdaInput.addEventListener("change", updateLambda);
 
@@ -419,4 +529,9 @@
   if (transferred !== null) input.value = transferred;
   updateLambda();
   reset();
+  const section = window.location.hash;
+  if (section === "#score-inspector" || section === "#pair-matrix-details") {
+    scoreDetails.open = true;
+    if (section === "#pair-matrix-details") byId("pair-matrix-details").open = true;
+  }
 })();

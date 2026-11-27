@@ -6,9 +6,12 @@
   <meta name="description" content="Inspect substitution-key proposals and watch the Metropolis algorithm decipher a message.">
   <title>Metropolis decoder · Cipher lab</title>
   <link rel="stylesheet" href="styles.css?v=3">
+  <link rel="stylesheet" href="score-inspector.css">
   <script defer src="cipher-model.js"></script>
-  <script defer src="cipher-engine.js?v=3"></script>
-  <script defer src="decipher.js?v=2"></script>
+  <script defer src="cipher-engine.js?v=word-inspector"></script>
+  <script defer src="pair-matrix.js"></script>
+  <script defer src="score-inspector.js"></script>
+  <script defer src="decipher.js?v=word-inspector"></script>
 </head>
 <body>
   <header class="topbar">
@@ -83,9 +86,35 @@ Ktv no bssbwitp ztv rezx?</textarea>
         <span class="word-example word-proposed" data-direction="tie">Equal score</span>
         <span>Darker shades show larger changes.</span>
       </div>
-      <p class="word-detail" id="word-detail">Select a highlighted word in the proposed translation to see its score change.</p>
+      <p class="word-detail" id="word-detail">Hover over a changed word to preview its score. Click or tap it to pause and inspect the calculation.</p>
       <dl class="decision-row"><div><dt>Score change (Δ)</dt><dd id="score-change">—</dd></div><div><dt>Acceptance probability (α)</dt><dd id="acceptance">—</dd></div><div><dt>Uniform draw (u)</dt><dd id="random-u">—</dd></div><div><dt>Decision</dt><dd id="decision" data-decision="neutral">—</dd></div></dl>
       <p class="subline decision-note">Accept when u &lt; α. After a rejection, the next proposal starts from the same key.</p>
+      <details class="scoring-disclosure" id="score-inspector">
+        <summary id="score-heading">Inspect a word’s score</summary>
+        <label id="score-word-control" class="score-word-control" hidden>Word in this proposal <select id="score-word-picker"></select></label>
+        <p id="score-context" class="score-context"></p>
+        <div id="score-content" hidden>
+          <div id="score-comparison"></div>
+          <div class="score-selectors"><div id="score-forms"></div><div id="score-tokens"></div></div>
+          <div class="evidence-columns">
+            <section aria-labelledby="pair-calc-title"><h3 id="pair-calc-title">Letter-pair calculation</h3><div id="score-pairs"></div></section>
+            <section aria-labelledby="lexicon-title"><h3 id="lexicon-title">Lexicon probability</h3><div id="score-lexicon"></div></section>
+          </div>
+        </div>
+        <details id="pair-matrix-details" class="matrix-disclosure">
+          <summary>Explore the 27 × 27 letter-pair matrix</summary>
+          <p class="score-footnote" id="matrix-guide">Choose the first symbol from the row labels and the second from the column labels. A square (□) denotes a space. The model adds one to each pair count from <em>War and Peace</em>, then divides by the total of all 729 adjusted counts.</p>
+          <div class="matrix-tools">
+            <div class="matrix-legend"><span class="matrix-scale" aria-hidden="true"></span>Darker = more frequent <span class="matrix-used-key" aria-hidden="true"></span>Used in the selected word</div>
+            <label><input type="checkbox" id="matrix-numbers"> Show probabilities in cells</label>
+          </div>
+          <p class="matrix-readout" id="matrix-readout"></p>
+          <div class="matrix-scroll" role="region" aria-label="Scrollable letter-pair matrix">
+            <table id="pair-matrix" aria-describedby="matrix-guide matrix-navigation"><caption class="sr-only">Joint probabilities of two adjacent symbols in the language model</caption></table>
+          </div>
+          <p class="score-footnote" id="matrix-navigation">Hover or tap a cell to read its probability and natural log. Use the arrow keys to move between cells.</p>
+        </details>
+      </details>
     </section>
     <div class="decoder-bottom">
       <section class="panel" aria-labelledby="log-title"><div class="panel-top"><h2 id="log-title">Noisy output</h2></div>
